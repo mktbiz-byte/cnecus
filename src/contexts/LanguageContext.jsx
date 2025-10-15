@@ -125,20 +125,82 @@ const translations = {
     adminRequired: '管理者権限が必要です',
     noData: 'データがありません',
     loadingFailed: 'データの読み込みに失敗しました'
+  },
+  en: {
+    // Common
+    loading: 'Loading...',
+    error: 'An error occurred',
+    success: 'Success',
+    cancel: 'Cancel',
+    confirm: 'Confirm',
+    save: 'Save',
+    edit: 'Edit',
+    delete: 'Delete',
+    create: 'Create',
+    update: 'Update',
+    
+    // Navigation
+    home: 'Home',
+    campaigns: 'Campaigns',
+    mypage: 'My Page',
+    login: 'Sign In',
+    register: 'Sign Up',
+    logout: 'Sign Out',
+    
+    // Admin
+    admin: 'Admin',
+    dashboard: 'Dashboard',
+    campaignManagement: 'Campaign Management',
+    creatorManagement: 'Creator Management',
+    withdrawalManagement: 'Withdrawal Management',
+    
+    // Campaign
+    campaignTitle: 'Campaign Title',
+    brand: 'Brand',
+    description: 'Description',
+    reward: 'Reward',
+    status: 'Status',
+    active: 'Active',
+    inactive: 'Inactive',
+    draft: 'Draft',
+    completed: 'Completed',
+    
+    // Application
+    apply: 'Apply',
+    application: 'Application',
+    applications: 'Applications',
+    applicant: 'Applicant',
+    
+    // Statistics
+    totalCampaigns: 'Total Campaigns',
+    totalApplications: 'Total Applications',
+    totalUsers: 'Total Users',
+    totalRewards: 'Total Rewards',
+    
+    // Messages
+    loginRequired: 'Login required',
+    adminRequired: 'Admin access required',
+    noData: 'No data available',
+    loadingFailed: 'Failed to load data'
   }
 }
 
 export const LanguageProvider = ({ children }) => {
-  const [language, setLanguage] = useState('ja') // 기본값을 일본어로 설정
+  const [language, setLanguage] = useState('en') // US version default: English
 
   useEffect(() => {
-    // 홈페이지와 마이페이지는 항상 일본어로 설정
-    setLanguage('ja')
-    localStorage.setItem('cnec-language', 'ja')
+    // Load saved language preference, default to English for US version
+    const savedLanguage = localStorage.getItem('cnec-language')
+    if (savedLanguage && ['ko', 'ja', 'en'].includes(savedLanguage)) {
+      setLanguage(savedLanguage)
+    } else {
+      setLanguage('en')
+      localStorage.setItem('cnec-language', 'en')
+    }
   }, [])
 
   const changeLanguage = (newLanguage) => {
-    if (['ko', 'ja'].includes(newLanguage)) {
+    if (['ko', 'ja', 'en'].includes(newLanguage)) {
       setLanguage(newLanguage)
       localStorage.setItem('cnec-language', newLanguage)
     }
@@ -153,7 +215,8 @@ export const LanguageProvider = ({ children }) => {
     changeLanguage,
     t,
     isKorean: language === 'ko',
-    isJapanese: language === 'ja'
+    isJapanese: language === 'ja',
+    isEnglish: language === 'en'
   }
 
   return (

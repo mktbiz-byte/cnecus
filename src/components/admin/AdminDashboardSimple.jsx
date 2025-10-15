@@ -69,6 +69,24 @@ const AdminDashboardSimple = () => {
       loading: 'データを読み込み中...',
       error: 'データの読み込みに失敗しました。',
       admin: '管理者'
+    },
+    en: {
+      title: 'CNEC Admin Dashboard',
+      totalCampaigns: 'Total Campaigns',
+      activeCampaigns: 'Active Campaigns',
+      totalApplications: 'Total Applications',
+      totalUsers: 'Registered Users',
+      totalRewards: 'Total Rewards',
+      pendingApplications: 'Pending Applications',
+      campaignManagement: 'Campaign Management',
+      applicationManagement: 'Application Management',
+      userApproval: 'User Approval',
+      withdrawalManagement: 'Withdrawal Management',
+      emailTemplates: 'Email Templates',
+      logout: 'Logout',
+      loading: 'Loading data...',
+      error: 'Failed to load data.',
+      admin: 'Admin'
     }
   }
 

@@ -45,6 +45,7 @@ const AdminHeader = ({ title, subtitle }) => {
       language: '言語',
       korean: '한국어',
       japanese: '日本語',
+      english: 'English',
       backToSite: 'サイトに戻る',
       logout: 'ログアウト',
       menu: 'メニュー',
@@ -56,10 +57,28 @@ const AdminHeader = ({ title, subtitle }) => {
       emailTemplates: 'メールテンプレート',
       confirmedCreators: '確定クリエイター',
       snsUploads: 'SNSアップロード'
+    },
+    en: {
+      adminDashboard: 'CNEC Admin Dashboard',
+      language: 'Language',
+      korean: '한국어 (Korean)',
+      japanese: '日本語 (Japanese)',
+      english: 'English',
+      backToSite: 'Back to Site',
+      logout: 'Sign Out',
+      menu: 'Menu',
+      dashboard: 'Dashboard',
+      campaigns: 'Campaign Management',
+      applications: 'Application Management',
+      users: 'User Approval',
+      withdrawals: 'Withdrawal Management',
+      emailTemplates: 'Email Templates',
+      confirmedCreators: 'Confirmed Creators',
+      snsUploads: 'SNS Uploads'
     }
   }
 
-  const currentTexts = texts[language] || texts.ja
+  const currentTexts = texts[language] || texts.en
 
   const handleLogout = async () => {
     try {
@@ -130,6 +149,12 @@ const AdminHeader = ({ title, subtitle }) => {
                   className={language === 'ja' ? 'bg-purple-50' : ''}
                 >
                   {currentTexts.japanese}
+                </DropdownMenuItem>
+                <DropdownMenuItem 
+                  onClick={() => changeLanguage('en')}
+                  className={language === 'en' ? 'bg-purple-50' : ''}
+                >
+                  {currentTexts.english}
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
@@ -207,6 +232,13 @@ const AdminHeader = ({ title, subtitle }) => {
                     onClick={() => changeLanguage('ja')}
                   >
                     {currentTexts.japanese}
+                  </Button>
+                  <Button
+                    variant={language === 'en' ? 'default' : 'outline'}
+                    size="sm"
+                    onClick={() => changeLanguage('en')}
+                  >
+                    {currentTexts.english}
                   </Button>
                 </div>
               </div>

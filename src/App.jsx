@@ -7,8 +7,8 @@ import './App.css';
 
 // 모든 페이지 컴포넌트 import
 import HomePageUS from './components/HomePageUS';
-import LoginPageExactReplica from './components/LoginPageExactReplica';
-import SignupPageExactReplica from './components/SignupPageExactReplica';
+import LoginPageUS from './components/LoginPageUS';
+import SignupPageUS from './components/SignupPageUS';
 import CampaignApplicationPage from './components/CampaignApplicationPage';
 // import CompanyReport from './components/CompanyReport';
 // import CompanyReport from './components/CompanyReport_fixed';
@@ -71,8 +71,8 @@ const AppContent = () => {
         <Route path="/" element={<HomePageUS />} />
         
         {/* 인증 관련 */}
-        <Route path="/login" element={<LoginPageExactReplica />} />
-        <Route path="/signup" element={<SignupPageExactReplica />} />
+        <Route path="/login" element={<LoginPageUS />} />
+        <Route path="/signup" element={<SignupPageUS />} />
         <Route path="/auth/callback" element={<AuthCallbackSafe />} />
         
         {/* 사용자 페이지 */}
