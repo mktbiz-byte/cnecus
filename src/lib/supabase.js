@@ -960,6 +960,17 @@ export const database = {
     }
   },
 
+  // 은행 이체 관련 API (US 버전에서는 사용하지 않음)
+  bankTransfers: {
+    async getAll() {
+      return safeQuery(async () => {
+        console.log('Bank transfers getAll() - US version does not use bank transfers')
+        // US 버전에서는 PayPal만 사용하므로 빈 배열 반환
+        return []
+      })
+    }
+  },
+
   // 사용자 포인트 관련 API
   userPoints: {
     async getUserTotalPoints(userId) {
