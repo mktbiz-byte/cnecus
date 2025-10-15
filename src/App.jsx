@@ -6,7 +6,7 @@ import emailScheduler from './lib/emailScheduler';
 import './App.css';
 
 // 모든 페이지 컴포넌트 import
-import HomePageExactReplica from './components/HomePageExactReplica';
+import HomePageUS from './components/HomePageUS';
 import LoginPageExactReplica from './components/LoginPageExactReplica';
 import SignupPageExactReplica from './components/SignupPageExactReplica';
 import CampaignApplicationPage from './components/CampaignApplicationPage';
@@ -68,7 +68,7 @@ const AppContent = () => {
     <div className="App">
       <Routes>
         {/* 메인 페이지 */}
-        <Route path="/" element={<HomePageExactReplica />} />
+        <Route path="/" element={<HomePageUS />} />
         
         {/* 인증 관련 */}
         <Route path="/login" element={<LoginPageExactReplica />} />
