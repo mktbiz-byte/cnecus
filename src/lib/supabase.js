@@ -1,8 +1,8 @@
 import { createClient } from '@supabase/supabase-js'
 
-// Supabase 설정 - 환경변수 사용
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'https://psfwmzlnaboattocyupu.supabase.co'
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBzZndtemxuYWJvYXR0b2N5dXB1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTg2MTU2NzgsImV4cCI6MjA3NDE5MTY3OH0.59A4QPRwv8YjfasHu_NTTv0fH6YhG8L_mBkOZypfgwg'
+// Supabase 설정 - US 버전 프로젝트
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'https://ybsibqlaipsbvbyqlcny.supabase.co'
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inlic2licWxhaXBzYnZieXFsY255Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzcwMDc1NzksImV4cCI6MjA1MjU4MzU3OX0.cYlJe6jVLgqXxJLVFO_tUKPGVqJbT1jMJZvPxiOOQWo'
 
 // 현재 사이트 URL 감지
 const getCurrentSiteUrl = () => {
