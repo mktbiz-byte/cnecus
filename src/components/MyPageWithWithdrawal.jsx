@@ -277,12 +277,107 @@ const MyPageWithWithdrawal = () => {
         confirmRequired: '退会確認文を正確に入力してください。',
         reasonRequired: '退会理由を選択してください。',
         snsUploadSubmitted: 'SNS投稿およびポイント申請が完了しました。',
-        snsUrlRequired: 'SNS投稿URLを入力してください。'
+        snsUrlRequired: 'SNS投稿 URLを入力してください。'
+      }
+    },
+    en: {
+      title: 'My Page',
+      profile: 'Profile',
+      applications: 'Applications',
+      withdrawals: 'Withdrawals',
+      points: 'Points History',
+      accountSettings: 'Account Settings',
+      personalInfo: 'Personal Information',
+      name: 'Name',
+      email: 'Email',
+      phone: 'Phone',
+      address: 'Address',
+      joinDate: 'Join Date',
+      userRole: 'User Role',
+      currentPoints: 'Current Points',
+      totalEarned: 'Total Earned',
+      campaignApplications: 'Campaign Applications',
+      totalApplications: 'Total Applications',
+      approvedApplications: 'Approved',
+      completedCampaigns: 'Completed',
+      withdrawalHistory: 'Withdrawal History',
+      totalWithdrawn: 'Total Withdrawn',
+      pendingWithdrawals: 'Pending',
+      pointHistory: 'Point History',
+      transactionType: 'Type',
+      amount: 'Amount',
+      date: 'Date',
+      description: 'Description',
+      earned: 'Earned',
+      spent: 'Spent',
+      bonus: 'Bonus',
+      withdrawal: 'Withdrawal',
+      withdrawRequest: 'Request Withdrawal',
+      withdrawRequestTitle: 'Point Withdrawal Request',
+      withdrawAmount: 'Withdrawal Amount',
+      paypalEmail: 'PayPal Email',
+      paypalName: 'PayPal Account Name',
+      withdrawReason: 'Reason',
+      submitWithdrawRequest: 'Submit Request',
+      accountDeletion: 'Account Deletion',
+      deleteAccount: 'Delete Account',
+      deleteAccountWarning: 'Deleting your account will permanently remove all your data.',
+      deleteAccountDescription: 'Your account deletion request will be reviewed by administrators. After deletion, all data will be permanently removed and cannot be recovered.',
+      withdrawalReason: 'Reason for Deletion',
+      withdrawalDetails: 'Details',
+      confirmDeletion: 'Confirm Deletion',
+      confirmText: 'Are you sure you want to delete your account? Type "DELETE" to confirm.',
+      confirmPlaceholder: 'DELETE',
+      submitWithdrawal: 'Submit Deletion Request',
+      cancel: 'Cancel',
+      processing: 'Processing...',
+      logout: 'Logout',
+      goHome: 'Go Home',
+      noData: 'No data available',
+      edit: 'Edit',
+      save: 'Save',
+      skinType: 'Skin Type',
+      postalCode: 'Postal Code',
+      age: 'Age',
+      region: 'Region',
+      bio: 'Bio',
+      instagramFollowers: 'Instagram Followers',
+      tiktokFollowers: 'TikTok Followers',
+      youtubeSubscribers: 'YouTube Subscribers',
+      roles: {
+        user: 'User',
+        creator: 'Creator',
+        vip: 'VIP',
+        manager: 'Manager',
+        admin: 'Admin'
+      },
+      reasons: {
+        service: 'Service Dissatisfaction',
+        privacy: 'Privacy Concerns',
+        unused: 'Not Using Service',
+        other: 'Other'
+      },
+      snsUpload: 'SNS Upload',
+      snsUploadUrl: 'SNS Upload URL',
+      pointRequest: 'Request Points',
+      pointRequestTitle: 'SNS Upload & Point Request',
+      snsUploadDescription: 'Enter the URL of your SNS content and request points.',
+      additionalNotes: 'Additional Notes',
+      submitPointRequest: 'Submit Point Request',
+      pointRequestPending: 'Point Request Pending',
+      pointRequestApproved: 'Points Approved',
+      messages: {
+        withdrawalSubmitted: 'Account deletion request submitted. It will be reviewed by administrators.',
+        error: 'An error occurred. Please try again.',
+        confirmRequired: 'Please type the confirmation text correctly.',
+        reasonRequired: 'Please select a reason for deletion.',
+        snsUploadSubmitted: 'SNS upload and point request submitted successfully.',
+        snsUrlRequired: 'Please enter the SNS upload URL.'
       }
     }
   }
 
-  const t = texts[language] || texts.ko
+  const t = texts[language] || texts.en
 
   useEffect(() => {
     if (user) {
@@ -355,7 +450,6 @@ const MyPageWithWithdrawal = () => {
               user_id: item.user_id,
               amount: Math.abs(item.amount),
               status: status,
-              withdrawal_method: 'paypal',
               paypal_email: extractPayPalFromDescription(item.description),
               paypal_name: extractPayPalFromDescription(item.description),
               reason: item.description,
@@ -588,7 +682,6 @@ const MyPageWithWithdrawal = () => {
         .insert([{
           user_id: user.id,
           amount: requestAmount,
-          withdrawal_method: 'paypal',
           paypal_email: withdrawForm.paypalEmail,
           paypal_name: withdrawForm.paypalName,
           reason: withdrawForm.reason || (language === 'ja' ? 'ポイント出金申請' : '포인트 출금 신청'),
@@ -769,7 +862,8 @@ const MyPageWithWithdrawal = () => {
       return
     }
     
-    if (confirmText !== (language === 'ja' ? '退会します' : '탈퇴합니다')) {
+    const confirmTexts = { ko: '탈퇴합니다', ja: '退会します', en: 'DELETE' }
+    if (confirmText !== (confirmTexts[language] || confirmTexts.en)) {
       setError(t.messages.confirmRequired)
       return
     }
@@ -1521,9 +1615,7 @@ const MyPageWithWithdrawal = () => {
                       {withdrawals.map((withdrawal) => (
                         <tr key={withdrawal.id}>
                           <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                            {withdrawal.withdrawal_method === 'paypal' ? 'PayPal' : 
-                             withdrawal.withdrawal_method === 'bank' ? (language === 'ko' ? '은행 송금' : '銀行振込') : 
-                             withdrawal.withdrawal_method || 'PayPal'}
+                            PayPal
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                             ¥{withdrawal.amount?.toLocaleString() || '0'}
