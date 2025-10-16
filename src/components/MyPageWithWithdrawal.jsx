@@ -1083,7 +1083,7 @@ const MyPageWithWithdrawal = () => {
                         className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                       />
                     ) : (
-                      <p className="mt-1 text-sm text-gray-900">{profile?.name || '名前未設定'}</p>
+                      <p className="mt-1 text-sm text-gray-900">{profile?.name || 'Not Set'}</p>
                     )}
                   </div>
                   
@@ -1106,7 +1106,7 @@ const MyPageWithWithdrawal = () => {
                         placeholder="080-1234-5678"
                       />
                     ) : (
-                      <p className="mt-1 text-sm text-gray-900">{profile?.phone || '未登録'}</p>
+                      <p className="mt-1 text-sm text-gray-900">{profile?.phone || 'Not Registered'}</p>
                     )}
                   </div>
                   
@@ -1139,15 +1139,15 @@ const MyPageWithWithdrawal = () => {
                         onChange={(e) => setEditForm({...editForm, skin_type: e.target.value})}
                         className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                       >
-                        <option value="">選択してください</option>
-                        <option value="乾燥肌">乾燥肌</option>
-                        <option value="脂性肌">脂性肌</option>
-                        <option value="混合肌">混合肌</option>
-                        <option value="敏感肌">敏感肌</option>
-                        <option value="普通肌">普通肌</option>
+                        <option value="">Select</option>
+                        <option value="Dry">Dry</option>
+                        <option value="Oily">Oily</option>
+                        <option value="Combination">Combination</option>
+                        <option value="Sensitive">Sensitive</option>
+                        <option value="Normal">Normal</option>
                       </select>
                     ) : (
-                      <p className="mt-1 text-sm text-gray-900">{profile?.skin_type || '未設定'}</p>
+                      <p className="mt-1 text-sm text-gray-900">{profile?.skin_type || 'Not Set'}</p>
                     )}
                   </div>
                 </div>
@@ -1169,7 +1169,7 @@ const MyPageWithWithdrawal = () => {
                         max="100"
                       />
                     ) : (
-                      <p className="mt-1 text-sm text-gray-900">{profile?.age || '未設定'}</p>
+                      <p className="mt-1 text-sm text-gray-900">{profile?.age || 'Not Set'}</p>
                     )}
                   </div>
                   
@@ -1184,10 +1184,10 @@ const MyPageWithWithdrawal = () => {
                         value={editForm.region || ''}
                         onChange={(e) => setEditForm({...editForm, region: e.target.value})}
                         className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        placeholder={language === 'ja' ? '東京都' : '서울특별시'}
+                        placeholder="New York"
                       />
                     ) : (
-                      <p className="mt-1 text-sm text-gray-900">{profile?.region || '未設定'}</p>
+                      <p className="mt-1 text-sm text-gray-900">{profile?.region || 'Not Set'}</p>
                     )}
                   </div>
                   
@@ -1202,10 +1202,10 @@ const MyPageWithWithdrawal = () => {
                         onChange={(e) => setEditForm({...editForm, bio: e.target.value})}
                         className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                         rows="2"
-                        placeholder={language === 'ja' ? '自己紹介を入力してください...' : '자기소개를 입력하세요...'}
+                        placeholder="Enter your bio..."
                       />
                     ) : (
-                      <p className="mt-1 text-sm text-gray-900">{profile?.bio || '未設定'}</p>
+                      <p className="mt-1 text-sm text-gray-900">{profile?.bio || 'Not Set'}</p>
                     )}
                   </div>
                   
@@ -1241,7 +1241,7 @@ const MyPageWithWithdrawal = () => {
               {/* SNS 주소 섹션 */}
               <div className="mt-8 pt-6 border-t border-gray-200">
                 <h3 className="text-lg font-medium text-gray-900 mb-4">
-                  {'SNSアドレス'}
+                  {'SNS Information'}
                 </h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
@@ -1260,7 +1260,7 @@ const MyPageWithWithdrawal = () => {
                           <a href={profile.instagram_url} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">
                             {profile.instagram_url}
                           </a>
-                        ) : '未登録'}
+                        ) : 'Not Registered'}
                       </p>
                     )}
                   </div>
@@ -1281,7 +1281,7 @@ const MyPageWithWithdrawal = () => {
                           <a href={profile.tiktok_url} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">
                             {profile.tiktok_url}
                           </a>
-                        ) : '未登録'}
+                        ) : 'Not Registered'}
                       </p>
                     )}
                   </div>
@@ -1302,13 +1302,13 @@ const MyPageWithWithdrawal = () => {
                           <a href={profile.youtube_url} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">
                             {profile.youtube_url}
                           </a>
-                        ) : '未登録'}
+                        ) : 'Not Registered'}
                       </p>
                     )}
                   </div>
                   
                   <div>
-                    <label className="block text-sm font-medium text-gray-700">{language === 'ja' ? 'その他のSNS' : '기타 SNS'}</label>
+                    <label className="block text-sm font-medium text-gray-700">Other SNS</label>
                     {isEditing ? (
                       <input
                         type="url"
@@ -1323,7 +1323,7 @@ const MyPageWithWithdrawal = () => {
                           <a href={profile.other_sns_url} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">
                             {profile.other_sns_url}
                           </a>
-                        ) : '未登録'}
+                        ) : 'Not Registered'}
                       </p>
                     )}
                   </div>
@@ -1335,7 +1335,7 @@ const MyPageWithWithdrawal = () => {
               {/* SNS 팔로워 수 섹션 */}
               <div className="mt-8 pt-6 border-t border-gray-200">
                 <h3 className="text-lg font-medium text-gray-900 mb-4">
-                  {language === 'ja' ? 'SNSフォロワー数' : 'SNS 팔로워 수'}
+                  {'SNS Followers'}
                 </h3>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                   <div>
@@ -1351,7 +1351,7 @@ const MyPageWithWithdrawal = () => {
                       />
                     ) : (
                       <p className="mt-1 text-sm text-gray-900">
-                        {profile?.instagram_followers ? profile.instagram_followers.toLocaleString() : '未設定'}
+                        {profile?.instagram_followers ? profile.instagram_followers.toLocaleString() : 'Not Set'}
                       </p>
                     )}
                   </div>
@@ -1369,7 +1369,7 @@ const MyPageWithWithdrawal = () => {
                       />
                     ) : (
                       <p className="mt-1 text-sm text-gray-900">
-                        {profile?.tiktok_followers ? profile.tiktok_followers.toLocaleString() : '未設定'}
+                        {profile?.tiktok_followers ? profile.tiktok_followers.toLocaleString() : 'Not Set'}
                       </p>
                     )}
                   </div>
@@ -1387,7 +1387,7 @@ const MyPageWithWithdrawal = () => {
                       />
                     ) : (
                       <p className="mt-1 text-sm text-gray-900">
-                        {profile?.youtube_subscribers ? profile.youtube_subscribers.toLocaleString() : '未設定'}
+                        {profile?.youtube_subscribers ? profile.youtube_subscribers.toLocaleString() : 'Not Set'}
                       </p>
                     )}
                   </div>
