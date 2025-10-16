@@ -322,10 +322,10 @@ const CampaignApplicationUpdated = () => {
 
     // 개인정보 필수 필드 검증
     if (!applicationData.age || applicationData.age.toString().trim() === '' || applicationData.age < 1) {
-      errors.push('年齢を正しく入力してください')
+      errors.push('Please enter a valid age')
     }
     if (!applicationData.skin_type || applicationData.skin_type.trim() === '') {
-      errors.push('肌タイプを選択してください')
+      errors.push('Please select your skin type')
     }
 
     // 연락처 및 배송 정보 필수 필드 검증
@@ -430,8 +430,8 @@ const CampaignApplicationUpdated = () => {
   }
 
   const formatCurrency = (amount) => {
-    if (!amount) return '¥0'
-    return `¥${amount.toLocaleString()}`
+    if (!amount) return '$0'
+    return `$${amount.toLocaleString()}`
   }
 
   if (loading) {
@@ -439,7 +439,7 @@ const CampaignApplicationUpdated = () => {
       <div className="min-h-screen bg-gradient-to-br from-blue-50 to-purple-50 flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">読み込み中...</p>
+          <p className="text-gray-600">Loading...</p>
         </div>
       </div>
     )
@@ -686,7 +686,7 @@ const CampaignApplicationUpdated = () => {
                       type="text"
                       value={applicationData.applicant_name || userProfile?.name || ''}
                       onChange={(e) => setApplicationData(prev => ({ ...prev, applicant_name: e.target.value }))}
-                      placeholder="名前を入力してください"
+                      placeholder="Enter your name"
                       className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-purple-500 focus:border-purple-500"
                       required
                     />
@@ -728,12 +728,12 @@ const CampaignApplicationUpdated = () => {
                       className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-purple-500 focus:border-purple-500"
                       required
                     >
-                      <option value="">肌タイプを選択してください</option>
-                      <option value="dry">乾燥肌</option>
-                      <option value="oily">脂性肌</option>
-                      <option value="combination">混合肌</option>
-                      <option value="sensitive">敏感肌</option>
-                      <option value="normal">普通肌</option>
+                      <option value="">Select skin type</option>
+                      <option value="dry">Dry</option>
+                      <option value="oily">Oily</option>
+                      <option value="combination">Combination</option>
+                      <option value="sensitive">Sensitive</option>
+                      <option value="normal">Normal</option>
                     </select>
                   </div>
                 </div>
@@ -922,7 +922,7 @@ const CampaignApplicationUpdated = () => {
                             }))}
                             rows={campaign.question1_type === 'long' ? 5 : 3}
                             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-purple-500 focus:border-purple-500"
-                            placeholder="回答を入力してください"
+                            placeholder="Enter your answer..."
                             required
                           />
                         )}
@@ -968,7 +968,7 @@ const CampaignApplicationUpdated = () => {
                             }))}
                             rows={campaign.question2_type === 'long' ? 5 : 3}
                             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-purple-500 focus:border-purple-500"
-                            placeholder="回答を入力してください"
+                            placeholder="Enter your answer..."
                             required
                           />
                         )}
@@ -1014,7 +1014,7 @@ const CampaignApplicationUpdated = () => {
                             }))}
                             rows={campaign.question3_type === 'long' ? 5 : 3}
                             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
-                            placeholder="回答を入力してください"
+                            placeholder="Enter your answer..."
                             required
                           />
                         )}
@@ -1060,7 +1060,7 @@ const CampaignApplicationUpdated = () => {
                             }))}
                             rows={campaign.question4_type === 'long' ? 5 : 3}
                             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-purple-500 focus:border-purple-500"
-                            placeholder="回答を入力してください"
+                            placeholder="Enter your answer..."
                             required
                           />
                         )}
@@ -1080,7 +1080,7 @@ const CampaignApplicationUpdated = () => {
                   onChange={(e) => setApplicationData(prev => ({ ...prev, additional_info: e.target.value }))}
                   rows={4}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-purple-500 focus:border-purple-500"
-                  placeholder="追加でお伝えしたい内容がございましたらご記入ください。"
+                  placeholder="Please enter any additional information you would like to share..."
                 />
               </div>
 
