@@ -161,10 +161,75 @@ const CampaignApplicationUpdated = () => {
       addressRequired: '住所は必須です',
       phoneRequired: '電話番号は必須です',
       instagramRequired: 'Instagram URLは必須です'
+    },
+    en: {
+      title: 'Campaign Application',
+      backToCampaigns: 'Back to Campaigns',
+      campaignInfo: 'Campaign Information',
+      applicationForm: 'Application Form',
+      personalInfo: 'Personal Information',
+      contactInfo: 'Contact & Shipping Information',
+      snsInfo: 'SNS Information',
+      questions: 'Questions',
+      additionalInfo: 'Additional Information',
+      submit: 'Submit Application',
+      submitting: 'Submitting...',
+      alreadyApplied: 'You have already applied to this campaign',
+      applicationSuccess: 'Application submitted successfully!',
+      requiredField: 'Required',
+      optionalField: 'Optional',
+      reward: 'Reward',
+      participants: 'Participants',
+      deadline: 'Deadline',
+      period: 'Campaign Period',
+      requirements: 'Requirements',
+      description: 'Description',
+      brand: 'Brand',
+      category: 'Category',
+      profileIncomplete: 'Please complete your profile first',
+      goToProfile: 'Go to Profile',
+      campaignNotFound: 'Campaign not found',
+      loginRequired: 'Login required',
+      
+      // Form fields
+      name: 'Name',
+      email: 'Email',
+      age: 'Age',
+      skinType: 'Skin Type',
+      postalCode: 'Postal Code',
+      address: 'Address',
+      phoneNumber: 'Phone Number',
+      instagramUrl: 'Instagram URL',
+      youtubeUrl: 'YouTube URL',
+      tiktokUrl: 'TikTok URL',
+      
+      // Placeholders
+      postalCodePlaceholder: 'e.g., 12345',
+      addressPlaceholder: 'Enter your full address',
+      phoneNumberPlaceholder: 'e.g., 555-1234-5678',
+      instagramPlaceholder: 'https://instagram.com/username',
+      youtubePlaceholder: 'https://youtube.com/@username',
+      tiktokPlaceholder: 'https://tiktok.com/@username',
+      
+      // Validation messages
+      postalCodeRequired: 'Postal code is required',
+      addressRequired: 'Address is required',
+      phoneRequired: 'Phone number is required',
+      instagramRequired: 'Instagram URL is required',
+      
+      // Additional texts
+      targetPlatforms: 'Target SNS Platforms',
+      ageLabel: 'Age:',
+      skinTypeLabel: 'Skin Type:',
+      offlineVisitCondition: 'Offline Visit Requirement',
+      offlineVisitNote: 'Offline Visit Note',
+      offlineVisitAvailable: 'I can visit offline according to the above conditions',
+      people: '',  // Empty for English (e.g., "50" instead of "50명")
+      redirectingToHome: 'Redirecting to home page in 3 seconds...'
     }
   }
 
-  const t = texts[language] || texts.ko
+  const t = texts[language] || texts.en
 
   useEffect(() => {
     if (!user) {
@@ -410,7 +475,7 @@ const CampaignApplicationUpdated = () => {
             </div>
             {success}
           </div>
-          <p className="text-gray-600">3초 후 메인 페이지로 이동합니다...</p>
+          <p className="text-gray-600">{t.redirectingToHome || 'Redirecting to home page in 3 seconds...'}</p>
         </div>
       </div>
     )
@@ -488,7 +553,7 @@ const CampaignApplicationUpdated = () => {
                     </svg>
                     <div>
                       <p className="text-xs text-gray-500">{t.participants}</p>
-                      <p className="text-sm font-medium text-gray-900">{campaign.max_participants}명</p>
+                      <p className="text-sm font-medium text-gray-900">{campaign.max_participants}{language === 'ko' ? '명' : ''}</p>
                     </div>
                   </div>
 
@@ -518,7 +583,7 @@ const CampaignApplicationUpdated = () => {
                 {/* 대상 SNS 플랫폼 */}
                 {campaign.target_platforms && (
                   <div>
-                    <h4 className="text-sm font-medium text-gray-700 mb-2">대상 SNS 플랫폼</h4>
+                    <h4 className="text-sm font-medium text-gray-700 mb-2">{t.targetPlatforms || 'Target SNS Platforms'}</h4>
                     <div className="flex flex-wrap gap-2">
                       {(() => {
                         // target_platforms가 객체인 경우 처리
@@ -555,7 +620,7 @@ const CampaignApplicationUpdated = () => {
                     {/* 나이 조건 */}
                     {campaign.age_requirement && (
                       <div className="flex items-center text-sm text-gray-600">
-                        <span className="font-medium mr-2">나이:</span>
+                        <span className="font-medium mr-2">{t.ageLabel || 'Age:'}</span>
                         <span>{campaign.age_requirement}</span>
                       </div>
                     )}
@@ -563,7 +628,7 @@ const CampaignApplicationUpdated = () => {
                     {/* 피부타입 조건 */}
                     {campaign.skin_type_requirement && (
                       <div className="flex items-center text-sm text-gray-600">
-                        <span className="font-medium mr-2">피부타입:</span>
+                        <span className="font-medium mr-2">{t.skinTypeLabel || 'Skin Type:'}</span>
                         <span>{campaign.skin_type_requirement}</span>
                       </div>
                     )}
@@ -576,7 +641,7 @@ const CampaignApplicationUpdated = () => {
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
                           </svg>
-                          <span className="font-medium">오프라인 방문 조건</span>
+                          <span className="font-medium">{t.offlineVisitCondition || 'Offline Visit Requirement'}</span>
                         </div>
                         <p className="text-sm text-blue-700 whitespace-pre-wrap">{campaign.offline_visit_requirement}</p>
                       </div>
@@ -740,13 +805,13 @@ const CampaignApplicationUpdated = () => {
                               }))}
                               className="mr-2"
                             />
-                            <span className="text-sm">위 조건에 따른 오프라인 방문이 가능합니다</span>
+                            <span className="text-sm">{t.offlineVisitAvailable || 'I can visit offline according to the above conditions'}</span>
                           </label>
                         </div>
                         
                         <div>
                           <label className="block text-sm font-medium text-gray-700 mb-1">
-                            {language === 'ja' ? 'オフライン訪問関連メモ' : '오프라인 방문 관련 메모'}
+                            {t.offlineVisitNote || 'Offline Visit Note'}
                           </label>
                           <textarea
                             value={applicationData.offline_visit_notes || ''}
