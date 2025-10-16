@@ -58,7 +58,7 @@ const CampaignApplicationPage = () => {
   }, [campaignId, user, navigate])
 
   useEffect(() => {
-    // 사용자 정보로 폼 초기화
+    // Initialize form with user information
     if (user && userProfile) {
       setFormData(prev => ({
         ...prev,
@@ -84,7 +84,7 @@ const CampaignApplicationPage = () => {
       const campaignData = await database.campaigns.getById(campaignId)
       setCampaign(campaignData)
       
-      // 캠페인 질문들로 answers 초기화 (개별 질문 필드 사용)
+      // Initialize answers with campaign questions (using individual question fields)
       const initialAnswers = {}
       if (campaignData.question1) initialAnswers['1'] = ''
       if (campaignData.question2) initialAnswers['2'] = ''
@@ -137,19 +137,19 @@ const CampaignApplicationPage = () => {
       }
     }
 
-    // 이메일 형식 검증
+    // Email format validation
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
     if (!emailRegex.test(formData.user_email)) {
       return 'Please enter a valid email address.'
     }
 
-    // 나이 검증
+    // Age validation
     const age = parseInt(formData.age)
     if (isNaN(age) || age < 13 || age > 100) {
       return 'Please enter a valid age (13-100 years old).'
     }
 
-    // 캠페인 질문 답변 검증 (개별 질문 필드 사용)
+    // Campaign question answer validation (using individual question fields)
     for (let i = 1; i <= 4; i++) {
       const question = campaign?.[`question${i}`]
       const answer = formData.answers[i.toString()]
@@ -196,7 +196,7 @@ const CampaignApplicationPage = () => {
       
       setSuccess(true)
       
-      // 3초 후 마이페이지로 이동
+      // Navigate to my page after 3 seconds
       setTimeout(() => {
         navigate('/mypage')
       }, 3000)
@@ -286,7 +286,7 @@ const CampaignApplicationPage = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 to-blue-50 py-8">
       <div className="container mx-auto px-4 max-w-4xl">
-        {/* 뒤로가기 버튼 */}
+        {/* Back button */}
         <div className="mb-6">
           <Button
             variant="ghost"
@@ -298,7 +298,7 @@ const CampaignApplicationPage = () => {
           </Button>
         </div>
 
-        {/* 캠페인 정보 */}
+        {/* Campaign information */}
         <Card className="mb-8 shadow-xl border-0">
           <CardHeader>
             <div className="flex justify-between items-start">
@@ -334,7 +334,7 @@ const CampaignApplicationPage = () => {
           </CardHeader>
         </Card>
 
-        {/* 신청 폼 */}
+        {/* Application form */}
         <Card className="shadow-xl border-0">
           <CardHeader>
             <CardTitle className="text-xl">
@@ -348,7 +348,7 @@ const CampaignApplicationPage = () => {
           
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-6">
-              {/* 기본 정보 */}
+              {/* Basic information */}
               <div className="space-y-4">
                 <h3 className="text-lg font-semibold text-gray-800 flex items-center mb-4">
                   <User className="h-5 w-5 mr-2" />
@@ -424,7 +424,7 @@ const CampaignApplicationPage = () => {
                 </div>
               </div>
 
-              {/* SNS 정보 */}
+              {/* SNS information */}
               <div className="space-y-4">
                 <h3 className="text-lg font-semibold text-gray-800 flex items-center mb-4">
                   <Instagram className="h-5 w-5 mr-2" />
@@ -515,7 +515,7 @@ const CampaignApplicationPage = () => {
                 </div>
               </div>
 
-              {/* 캠페인 질문 */}
+              {/* Campaign questions */}
               {(campaign.question1 || campaign.question2 || campaign.question3 || campaign.question4) && (
                 <div className="space-y-4">
                   <h3 className="text-lg font-semibold text-gray-800">
