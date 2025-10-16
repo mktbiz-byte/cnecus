@@ -16,7 +16,8 @@ const CampaignCreationWithTranslator = () => {
     description: '',
     requirements: '',
     category: 'beauty',
-    reward_amount: '',
+    image_url: '',
+    reward_amount: ''
     max_participants: '',
     application_deadline: '',
     start_date: '',
@@ -129,7 +130,8 @@ const CampaignCreationWithTranslator = () => {
               description: campaign.description || '',
               requirements: campaign.requirements || '',
               category: campaign.category || 'beauty',
-              reward_amount: campaign.reward_amount || '',
+              image_url: campaign.image_url || '',
+              reward_amount: campaign.reward_amount || ''
               max_participants: campaign.max_participants || '',
               application_deadline: campaign.application_deadline || '',
               start_date: campaign.start_date || '',
@@ -361,6 +363,40 @@ const CampaignCreationWithTranslator = () => {
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                   placeholder="브랜드명을 입력하세요"
                 />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Image URL
+                </label>
+                <input
+                  type="text"
+                  value={campaignForm.image_url}
+                  onChange={(e) => setCampaignForm({...campaignForm, image_url: e.target.value})}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder="https://example.com/image.jpg"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Category *
+                </label>
+                <select
+                  value={campaignForm.category}
+                  onChange={(e) => setCampaignForm({...campaignForm, category: e.target.value})}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  <option value="beauty">Beauty</option>
+                  <option value="fitness">Fitness</option>
+                  <option value="food">Food & Lifestyle</option>
+                  <option value="fashion">Fashion</option>
+                  <option value="technology">Technology</option>
+                  <option value="travel">Travel</option>
+                  <option value="home">Home & Living</option>
+                  <option value="pet">Pet Care</option>
+                  <option value="other">Other</option>
+                </select>
               </div>
 
               <div>
