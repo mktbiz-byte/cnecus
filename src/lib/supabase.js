@@ -507,53 +507,35 @@ export const database = {
 
     async updateStatus(id, status) {
       return safeQuery(async () => {
-        console.log('상태 업데이트 시작:', id, status)
+        console.log('Application status update started:', id, status)
         
         const updateData = { 
           status,
           updated_at: new Date().toISOString()
         }
 
-        // 상태별 타임스탬프 추가 (컬럼이 존재하는 경우에만)
-        if (status === 'virtual_selected') {
-          updateData.virtual_selected_at = new Date().toISOString()
-        } else if (status === 'approved') {
+        // Add timestamp for approved status only (approved_at exists in schema)
+        if (status === 'approved') {
           updateData.approved_at = new Date().toISOString()
-        } else if (status === 'rejected') {
-          updateData.rejected_at = new Date().toISOString()
-        } else if (status === 'pending') {
-          // 가상선택 취소 시 타임스탬프 제거
-          updateData.virtual_selected_at = null
-          updateData.approved_at = null
-          updateData.rejected_at = null
+        } else if (status === 'completed') {
+          updateData.completed_at = new Date().toISOString()
         }
+        // Note: virtual_selected_at and rejected_at columns don't exist in schema
+        // Status is tracked via the 'status' field only
 
-        // applications 테이블을 우선 사용 (실제 데이터가 있는 테이블)
-        let { data, error } = await supabase
-          .from('applications')
+        // Use campaign_applications table (the actual table name)
+        const { data, error } = await supabase
+          .from('campaign_applications')
           .update(updateData)
           .eq('id', id)
           .select()
         
-        // applications 테이블에서 실패하면 campaign_applications 테이블 시도
-        if (error || !data || data.length === 0) {
-          console.log('applications 테이블 업데이트 실패, campaign_applications 테이블 시도')
-          const result = await supabase
-            .from('campaign_applications')
-            .update(updateData)
-            .eq('id', id)
-            .select()
-          
-          data = result.data
-          error = result.error
-        }
-        
         if (error) {
-          console.error('상태 업데이트 오류:', error)
+          console.error('Application status update error:', error)
           throw error
         }
         
-        console.log('상태 업데이트 성공:', data)
+        console.log('Application status update successful:', data)
         return data && data.length > 0 ? data[0] : null
       })
     },

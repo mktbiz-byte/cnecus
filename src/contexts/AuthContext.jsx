@@ -59,7 +59,10 @@ export const AuthProvider = ({ children }) => {
                 .insert({
                   user_id: session.user.id,
                   email: session.user.email,
-                  name: session.user.user_metadata?.full_name || session.user.email,
+                  name: session.user.user_metadata?.full_name || session.user.user_metadata?.name || session.user.email.split('@')[0],
+                  platform_region: session.user.user_metadata?.platform_region || 'us',
+                  country_code: session.user.user_metadata?.country_code || 'US',
+                  role: 'creator'
                 });
               
               if (insertError) {
@@ -165,15 +168,24 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  const signUpWithEmail = async (email, password, name) => {
+  const signUpWithEmail = async (email, password, metadata = {}) => {
     try {
+      // metadata can be either a string (name) or an object with user data
+      const userData = typeof metadata === 'string' 
+        ? { name: metadata }
+        : {
+            name: metadata.full_name || metadata.name || email.split('@')[0],
+            full_name: metadata.full_name || metadata.name || email.split('@')[0],
+            platform_region: metadata.platform_region || 'us',
+            country_code: metadata.country_code || 'US'
+          };
+      
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
         options: {
-          data: {
-            name: name
-          }
+          data: userData,
+          emailRedirectTo: `${window.location.origin}/auth/callback`
         }
       });
       

@@ -531,7 +531,7 @@ const HomePageUS = () => {
               <ul className="space-y-2 text-gray-400">
                 <li className="flex items-center">
                   <Mail className="h-4 w-4 mr-2" />
-                  support@cnec.us
+                  mkt@cnecbiz.com
                 </li>
               </ul>
             </div>
