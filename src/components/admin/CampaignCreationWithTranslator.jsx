@@ -17,7 +17,7 @@ const CampaignCreationWithTranslator = () => {
     requirements: '',
     category: 'beauty',
     image_url: '',
-    reward_amount: ''
+    reward_amount: '',
     max_participants: '',
     application_deadline: '',
     start_date: '',
@@ -131,7 +131,7 @@ const CampaignCreationWithTranslator = () => {
               requirements: campaign.requirements || '',
               category: campaign.category || 'beauty',
               image_url: campaign.image_url || '',
-              reward_amount: campaign.reward_amount || ''
+              reward_amount: campaign.reward_amount || '',
               max_participants: campaign.max_participants || '',
               application_deadline: campaign.application_deadline || '',
               start_date: campaign.start_date || '',
