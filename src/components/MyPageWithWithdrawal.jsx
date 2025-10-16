@@ -577,7 +577,7 @@ const MyPageWithWithdrawal = () => {
       // 나이 필드 (숫자 검증)
       if (editForm.age !== undefined) {
         try {
-          updateData.age = validateNumber(editForm.age, language === 'ja' ? '年齢' : language === 'ko' ? '나이' : '나이')
+          updateData.age = validateNumber(editForm.age, language === 'ja' ? '年齢' : '나이')
         } catch (err) {
           console.warn('나이 필드 검증 실패:', err.message)
           updateData.age = null
@@ -593,7 +593,7 @@ const MyPageWithWithdrawal = () => {
       // SNS 팔로워 수 필드들 (숫자 검증, 빈 값 허용)
       if (editForm.instagram_followers !== undefined) {
         try {
-          updateData.instagram_followers = validateNumber(editForm.instagram_followers, 'Instagram ' + (language === 'ja' ? 'フォロワー数' : language === 'ko' ? '팔로워 수' : '팔로워 수'))
+          updateData.instagram_followers = validateNumber(editForm.instagram_followers, 'Instagram ' + 'フォロワー数')
         } catch (err) {
           console.warn('Instagram 팔로워 수 검증 실패:', err.message)
           updateData.instagram_followers = null
@@ -602,7 +602,7 @@ const MyPageWithWithdrawal = () => {
       
       if (editForm.tiktok_followers !== undefined) {
         try {
-          updateData.tiktok_followers = validateNumber(editForm.tiktok_followers, 'TikTok ' + (language === 'ja' ? 'フォロワー数' : language === 'ko' ? '팔로워 수' : '팔로워 수'))
+          updateData.tiktok_followers = validateNumber(editForm.tiktok_followers, 'TikTok ' + 'フォロワー数')
         } catch (err) {
           console.warn('TikTok 팔로워 수 검증 실패:', err.message)
           updateData.tiktok_followers = null
@@ -611,7 +611,7 @@ const MyPageWithWithdrawal = () => {
       
       if (editForm.youtube_subscribers !== undefined) {
         try {
-          updateData.youtube_subscribers = validateNumber(editForm.youtube_subscribers, 'YouTube ' + (language === 'ja' ? '登録者数' : language === 'ko' ? '구독자 수' : '구독자 수'))
+          updateData.youtube_subscribers = validateNumber(editForm.youtube_subscribers, 'YouTube ' + '登録者数')
         } catch (err) {
           console.warn('YouTube 구독자 수 검증 실패:', err.message)
           updateData.youtube_subscribers = null
@@ -640,13 +640,13 @@ const MyPageWithWithdrawal = () => {
       // 로컬 상태 업데이트
       setProfile(prev => ({ ...prev, ...updateData }))
       
-      setSuccess(language === 'ja' ? 'プロフィールが正常に更新されました。' : language === 'ko' ? '프로필이 성공적으로 업데이트되었습니다.' : '프로필이 성공적으로 업데이트되었습니다.')
+      setSuccess'プロフィールが正常に更新されました。'
       setIsEditing(false)
       
       setTimeout(() => setSuccess(''), 5000)
     } catch (error) {
       console.error('프로필 업데이트 오류:', error)
-      setError(error.message || (language === 'ja' ? 'プロフィールの更新に失敗しました。' : language === 'ko' ? '프로필 업데이트에 실패했습니다.' : '프로필 업데이트에 실패했습니다.'))
+      setError(error.message || 'プロフィールの更新に失敗しました。')
     } finally {
       setProcessing(false)
     }
@@ -655,7 +655,7 @@ const MyPageWithWithdrawal = () => {
   // 출금 신청 처리 함수
   const handleWithdrawSubmit = async () => {
     if (!withdrawForm.amount || !withdrawForm.paypalEmail || !withdrawForm.paypalName) {
-      setError(language === 'ja' ? 'すべての必須項目を入力してください。' : language === 'ko' ? '모든 필수 항목을 입력해주세요.' : '모든 필수 항목을 입력해주세요.')
+      setError'すべての必須項目を入力してください。'
       return
     }
 
@@ -663,12 +663,12 @@ const MyPageWithWithdrawal = () => {
     const currentPoints = profile?.points || 0
 
     if (requestAmount > currentPoints) {
-      setError(language === 'ja' ? '保有ポイントより多い金額は出金できません。' : language === 'ko' ? '보유 포인트보다 많은 금액을 출금할 수 없습니다.' : '보유 포인트보다 많은 금액을 출금할 수 없습니다.')
+      setError'保有ポイントより多い金額は出金できません。'
       return
     }
 
     if (requestAmount < 1000) {
-      setError(language === 'ja' ? '最小出金額は1,000ポイントです。' : language === 'ko' ? '최소 출금 금액은 1,000포인트입니다.' : '최소 출금 금액은 1,000포인트입니다.')
+      setError'最小出金額は1,000ポイントです。'
       return
     }
 
@@ -684,7 +684,7 @@ const MyPageWithWithdrawal = () => {
           amount: requestAmount,
           paypal_email: withdrawForm.paypalEmail,
           paypal_name: withdrawForm.paypalName,
-          reason: withdrawForm.reason || (language === 'ja' ? 'ポイント出金申請' : language === 'ko' ? '포인트 출금 신청' : '포인트 출금 신청'),
+          reason: withdrawForm.reason || 'ポイント出金申請',
           status: 'pending',
           created_at: new Date().toISOString()
         }])
@@ -725,7 +725,7 @@ const MyPageWithWithdrawal = () => {
         // 포인트 기록 실패는 치명적이지 않으므로 계속 진행
       }
       
-      setSuccess(language === 'ja' ? '出金申請が完了しました。管理者の審査後に処理されます。' : language === 'ko' ? '출금 신청이 완료되었습니다. 관리자 검토 후 처리됩니다.' : '출금 신청이 완료되었습니다. 관리자 검토 후 처리됩니다.')
+      setSuccess'出金申請が完了しました。管理者の審査後に処理されます。'
       setShowWithdrawModal(false)
       setWithdrawForm({
         amount: '',
@@ -740,7 +740,7 @@ const MyPageWithWithdrawal = () => {
       setTimeout(() => setSuccess(''), 5000)
     } catch (error) {
       console.error('출금 신청 오류:', error)
-      setError(error.message || (language === 'ja' ? '出金申請中にエラーが発生しました。再度お試しください。' : language === 'ko' ? '출금 신청 중 오류가 발생했습니다. 다시 시도해주세요.' : '출금 신청 중 오류가 발생했습니다. 다시 시도해주세요.'))
+      setError(error.message || '出金申請中にエラーが発生しました。再度お試しください。')
     } finally {
       setProcessing(false)
     }
@@ -752,12 +752,12 @@ const MyPageWithWithdrawal = () => {
   const handleSnsUploadSubmit = async () => {
     try {
       if (!snsUploadForm.sns_upload_url || typeof snsUploadForm.sns_upload_url !== 'string' || !snsUploadForm.sns_upload_url.trim()) {
-        setError(t.messages?.snsUrlRequired || (language === 'ja' ? 'SNS投稿URLを入力してください。' : language === 'ko' ? 'SNS 업로드 URL을 입력해주세요.' : 'SNS 업로드 URL을 입력해주세요.'))
+        setError(t.messages?.snsUrlRequired || 'SNS投稿URLを入力してください。')
         return
       }
 
       if (!selectedApplication) {
-        setError(language === 'ja' ? '選択されたアプリケーションが見つかりません。' : language === 'ko' ? '선택된 신청을 찾을 수 없습니다.' : '선택된 신청을 찾을 수 없습니다.')
+        setError'選択されたアプリケーションが見つかりません。'
         return
       }
       
@@ -768,7 +768,7 @@ const MyPageWithWithdrawal = () => {
       try {
         new URL(snsUploadForm.sns_upload_url)
       } catch (urlError) {
-        setError(language === 'ja' ? '有効なURLを入力してください。' : language === 'ko' ? '유효한 URL을 입력해주세요.' : '유효한 URL을 입력해주세요.')
+        setError'有効なURLを入力してください。'
         setProcessing(false)
         return
       }
@@ -788,7 +788,7 @@ const MyPageWithWithdrawal = () => {
       
       if (updateError) {
         console.error('Application update error:', updateError)
-        throw new Error(language === 'ja' ? 'SNS投稿の更新に失敗しました。' : language === 'ko' ? 'SNS 업로드 업데이트에 실패했습니다.' : 'SNS 업로드 업데이트에 실패했습니다.')
+        throw new Error'SNS投稿の更新に失敗しました。'
       }
       
       // point_transactions 테이블에 포인트 신청 기록 추가
@@ -814,7 +814,7 @@ const MyPageWithWithdrawal = () => {
         // 포인트 기록 실패는 치명적이지 않으므로 계속 진행
       }
       
-      setSuccess(t.messages?.snsUploadSubmitted || (language === 'ja' ? 'SNS投稿およびポイント申請が完了しました。' : language === 'ko' ? 'SNS 업로드 및 포인트 신청이 완료되었습니다.' : 'SNS 업로드 및 포인트 신청이 완료되었습니다.'))
+      setSuccess(t.messages?.snsUploadSubmitted || 'SNS投稿およびポイント申請が完了しました。')
       setShowSnsUploadModal(false)
       setSnsUploadForm({ sns_upload_url: '', notes: '' })
       setSelectedApplication(null)
@@ -825,7 +825,7 @@ const MyPageWithWithdrawal = () => {
       setTimeout(() => setSuccess(''), 5000)
     } catch (error) {
       console.error('SNS 업로드 오류:', error)
-      setError(error.message || (language === 'ja' ? 'エラーが発生しました。再試行してください。' : language === 'ko' ? '오류가 발생했습니다. 다시 시도해주세요.' : '오류가 발생했습니다. 다시 시도해주세요.'))
+      setError(error.message || 'エラーが発生しました。再試行してください。')
     } finally {
       setProcessing(false)
     }
@@ -838,7 +838,7 @@ const MyPageWithWithdrawal = () => {
       setSuccess('')
       
       if (!application) {
-        setError(language === 'ja' ? 'アプリケーション情報が見つかりません。' : language === 'ko' ? '신청 정보를 찾을 수 없습니다.' : '신청 정보를 찾을 수 없습니다.')
+        setError'アプリケーション情報が見つかりません。'
         return
       }
 
@@ -852,7 +852,7 @@ const MyPageWithWithdrawal = () => {
       console.log('SNS 업로드 모달 열림:', application.id, application.campaign_title)
     } catch (error) {
       console.error('SNS 업로드 모달 열기 오류:', error)
-      setError(language === 'ja' ? 'モーダルを開けませんでした。' : language === 'ko' ? '모달을 열 수 없습니다.' : '모달을 열 수 없습니다.')
+      setError'モーダルを開けませんでした。'
     }
   }
 
@@ -934,11 +934,11 @@ const MyPageWithWithdrawal = () => {
       spend: t.spent,
       spent: t.spent,
       admin_subtract: t.spent,
-      pending: language === 'ja' ? '申請中' : language === 'ko' ? '신청중' : '신청중',
-      approved: language === 'ja' ? '承認済み' : language === 'ko' ? '승인됨' : 'Approved',
-      rejected: language === 'ja' ? '拒否済み' : language === 'ko' ? '거부됨' : '거부됨',
-      completed: language === 'ja' ? '完了' : language === 'ko' ? '완료' : 'Completed',
-      reward: language === 'ja' ? '報酬' : language === 'ko' ? '보상' : '보상'
+      pending: language === 'ja' ? '申請中' : '신청중',
+      approved: language === 'ja' ? '承認済み' : 'Approved',
+      rejected: language === 'ja' ? '拒否済み' : '거부됨',
+      completed: language === 'ja' ? '完了' : 'Completed',
+      reward: language === 'ja' ? '報酬' : '보상'
     }
     return types[type] || type
   }
@@ -1083,7 +1083,7 @@ const MyPageWithWithdrawal = () => {
                         className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                       />
                     ) : (
-                      <p className="mt-1 text-sm text-gray-900">{profile?.name || (language === 'ja' ? '名前未設定' : language === 'ko' ? '이름 없음' : 'No name')}</p>
+                      <p className="mt-1 text-sm text-gray-900">{profile?.name || '名前未設定'}</p>
                     )}
                   </div>
                   
@@ -1095,7 +1095,7 @@ const MyPageWithWithdrawal = () => {
                   <div>
                     <label className="block text-sm font-medium text-gray-700">
                       {t.phone}
-                      <span className="text-xs text-gray-500 ml-1">({language === 'ja' ? '任意' : language === 'ko' ? '선택사항' : 'Optional'})</span>
+                      <span className="text-xs text-gray-500 ml-1">({language === 'ja' ? '任意' : 'Optional'})</span>
                     </label>
                     {isEditing ? (
                       <input
@@ -1106,7 +1106,7 @@ const MyPageWithWithdrawal = () => {
                         placeholder="080-1234-5678"
                       />
                     ) : (
-                      <p className="mt-1 text-sm text-gray-900">{profile?.phone || (language === 'ja' ? '未登録' : language === 'ko' ? '등록되지 않음' : '등록되지 않음')}</p>
+                      <p className="mt-1 text-sm text-gray-900">{profile?.phone || '未登録'}</p>
                     )}
                   </div>
                   
@@ -1115,7 +1115,7 @@ const MyPageWithWithdrawal = () => {
                   <div>
                     <label className="block text-sm font-medium text-gray-700">
                       {t.address}
-                      <span className="text-xs text-gray-500 ml-1">({language === 'ja' ? '任意' : language === 'ko' ? '선택사항' : 'Optional'})</span>
+                      <span className="text-xs text-gray-500 ml-1">({language === 'ja' ? '任意' : 'Optional'})</span>
                     </label>
                     {isEditing ? (
                       <input
@@ -1123,10 +1123,10 @@ const MyPageWithWithdrawal = () => {
                         value={editForm.address || ''}
                         onChange={(e) => setEditForm({...editForm, address: e.target.value})}
                         className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        placeholder={language === 'ja' ? '東京都渋谷区...' : language === 'ko' ? '서울특별시 강남구...' : '서울특별시 강남구...'}
+                        placeholder={language === 'ja' ? '東京都渋谷区...' : '서울특별시 강남구...'}
                       />
                     ) : (
-                      <p className="mt-1 text-sm text-gray-900">{profile?.address || (language === 'ja' ? '未登録' : language === 'ko' ? '등록되지 않음' : '등록되지 않음')}</p>
+                      <p className="mt-1 text-sm text-gray-900">{profile?.address || '未登録'}</p>
                     )}
                   </div>
                   */}
@@ -1156,7 +1156,7 @@ const MyPageWithWithdrawal = () => {
                   <div>
                     <label className="block text-sm font-medium text-gray-700">
                       {t.age}
-                      <span className="text-xs text-gray-500 ml-1">({language === 'ja' ? '任意' : language === 'ko' ? '선택사항' : 'Optional'})</span>
+                      <span className="text-xs text-gray-500 ml-1">({language === 'ja' ? '任意' : 'Optional'})</span>
                     </label>
                     {isEditing ? (
                       <input
@@ -1169,14 +1169,14 @@ const MyPageWithWithdrawal = () => {
                         max="100"
                       />
                     ) : (
-                      <p className="mt-1 text-sm text-gray-900">{profile?.age || (language === 'ja' ? '未設定' : language === 'ko' ? '미설정' : 'Not set')}</p>
+                      <p className="mt-1 text-sm text-gray-900">{profile?.age || '未設定'}</p>
                     )}
                   </div>
                   
                   <div>
                     <label className="block text-sm font-medium text-gray-700">
                       {t.region}
-                      <span className="text-xs text-gray-500 ml-1">({language === 'ja' ? '任意' : language === 'ko' ? '선택사항' : 'Optional'})</span>
+                      <span className="text-xs text-gray-500 ml-1">({language === 'ja' ? '任意' : 'Optional'})</span>
                     </label>
                     {isEditing ? (
                       <input
@@ -1184,17 +1184,17 @@ const MyPageWithWithdrawal = () => {
                         value={editForm.region || ''}
                         onChange={(e) => setEditForm({...editForm, region: e.target.value})}
                         className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        placeholder={language === 'ja' ? '東京都' : language === 'ko' ? '서울특별시' : '서울특별시'}
+                        placeholder={language === 'ja' ? '東京都' : '서울특별시'}
                       />
                     ) : (
-                      <p className="mt-1 text-sm text-gray-900">{profile?.region || (language === 'ja' ? '未設定' : language === 'ko' ? '미설정' : 'Not set')}</p>
+                      <p className="mt-1 text-sm text-gray-900">{profile?.region || '未設定'}</p>
                     )}
                   </div>
                   
                   <div>
                     <label className="block text-sm font-medium text-gray-700">
                       {t.bio}
-                      <span className="text-xs text-gray-500 ml-1">({language === 'ja' ? '任意' : language === 'ko' ? '선택사항' : 'Optional'})</span>
+                      <span className="text-xs text-gray-500 ml-1">({language === 'ja' ? '任意' : 'Optional'})</span>
                     </label>
                     {isEditing ? (
                       <textarea
@@ -1202,17 +1202,17 @@ const MyPageWithWithdrawal = () => {
                         onChange={(e) => setEditForm({...editForm, bio: e.target.value})}
                         className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                         rows="2"
-                        placeholder={language === 'ja' ? '自己紹介を入力してください...' : language === 'ko' ? '자기소개를 입력하세요...' : '자기소개를 입력하세요...'}
+                        placeholder={language === 'ja' ? '自己紹介を入力してください...' : '자기소개를 입력하세요...'}
                       />
                     ) : (
-                      <p className="mt-1 text-sm text-gray-900">{profile?.bio || (language === 'ja' ? '未設定' : language === 'ko' ? '미설정' : 'Not set')}</p>
+                      <p className="mt-1 text-sm text-gray-900">{profile?.bio || '未設定'}</p>
                     )}
                   </div>
                   
                   <div>
                     <label className="block text-sm font-medium text-gray-700">{t.joinDate}</label>
                     <p className="mt-1 text-sm text-gray-900">
-                      {profile?.created_at ? new Date(profile.created_at).toLocaleDateString(language === 'ko' ? 'ko-KR' : 'ja-JP') : '-'}
+                      {profile?.created_at ? new Date(profile.created_at).toLocaleDateString('ja-JP') : '-'}
                     </p>
                   </div>
                   
@@ -1241,7 +1241,7 @@ const MyPageWithWithdrawal = () => {
               {/* SNS 주소 섹션 */}
               <div className="mt-8 pt-6 border-t border-gray-200">
                 <h3 className="text-lg font-medium text-gray-900 mb-4">
-                  {language === 'ko' ? 'SNS 주소' : 'SNSアドレス'}
+                  {'SNSアドレス'}
                 </h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
@@ -1260,7 +1260,7 @@ const MyPageWithWithdrawal = () => {
                           <a href={profile.instagram_url} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">
                             {profile.instagram_url}
                           </a>
-                        ) : (language === 'ja' ? '未登録' : language === 'ko' ? '등록되지 않음' : '등록되지 않음')}
+                        ) : '未登録'}
                       </p>
                     )}
                   </div>
@@ -1281,7 +1281,7 @@ const MyPageWithWithdrawal = () => {
                           <a href={profile.tiktok_url} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">
                             {profile.tiktok_url}
                           </a>
-                        ) : (language === 'ja' ? '未登録' : language === 'ko' ? '등록되지 않음' : '등록되지 않음')}
+                        ) : '未登録'}
                       </p>
                     )}
                   </div>
@@ -1302,13 +1302,13 @@ const MyPageWithWithdrawal = () => {
                           <a href={profile.youtube_url} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">
                             {profile.youtube_url}
                           </a>
-                        ) : (language === 'ja' ? '未登録' : language === 'ko' ? '등록되지 않음' : '등록되지 않음')}
+                        ) : '未登録'}
                       </p>
                     )}
                   </div>
                   
                   <div>
-                    <label className="block text-sm font-medium text-gray-700">{language === 'ja' ? 'その他のSNS' : language === 'ko' ? '기타 SNS' : '기타 SNS'}</label>
+                    <label className="block text-sm font-medium text-gray-700">{language === 'ja' ? 'その他のSNS' : '기타 SNS'}</label>
                     {isEditing ? (
                       <input
                         type="url"
@@ -1323,7 +1323,7 @@ const MyPageWithWithdrawal = () => {
                           <a href={profile.other_sns_url} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">
                             {profile.other_sns_url}
                           </a>
-                        ) : (language === 'ja' ? '未登録' : language === 'ko' ? '등록되지 않음' : '등록되지 않음')}
+                        ) : '未登録'}
                       </p>
                     )}
                   </div>
@@ -1335,7 +1335,7 @@ const MyPageWithWithdrawal = () => {
               {/* SNS 팔로워 수 섹션 */}
               <div className="mt-8 pt-6 border-t border-gray-200">
                 <h3 className="text-lg font-medium text-gray-900 mb-4">
-                  {language === 'ja' ? 'SNSフォロワー数' : language === 'ko' ? 'SNS 팔로워 수' : 'SNS 팔로워 수'}
+                  {language === 'ja' ? 'SNSフォロワー数' : 'SNS 팔로워 수'}
                 </h3>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                   <div>
@@ -1351,7 +1351,7 @@ const MyPageWithWithdrawal = () => {
                       />
                     ) : (
                       <p className="mt-1 text-sm text-gray-900">
-                        {profile?.instagram_followers ? profile.instagram_followers.toLocaleString() : (language === 'ja' ? '未設定' : language === 'ko' ? '설정되지 않음' : '설정되지 않음')}
+                        {profile?.instagram_followers ? profile.instagram_followers.toLocaleString() : '未設定'}
                       </p>
                     )}
                   </div>
@@ -1369,7 +1369,7 @@ const MyPageWithWithdrawal = () => {
                       />
                     ) : (
                       <p className="mt-1 text-sm text-gray-900">
-                        {profile?.tiktok_followers ? profile.tiktok_followers.toLocaleString() : (language === 'ja' ? '未設定' : language === 'ko' ? '설정되지 않음' : '설정되지 않음')}
+                        {profile?.tiktok_followers ? profile.tiktok_followers.toLocaleString() : '未設定'}
                       </p>
                     )}
                   </div>
@@ -1387,7 +1387,7 @@ const MyPageWithWithdrawal = () => {
                       />
                     ) : (
                       <p className="mt-1 text-sm text-gray-900">
-                        {profile?.youtube_subscribers ? profile.youtube_subscribers.toLocaleString() : (language === 'ja' ? '未設定' : language === 'ko' ? '설정되지 않음' : '설정되지 않음')}
+                        {profile?.youtube_subscribers ? profile.youtube_subscribers.toLocaleString() : '未設定'}
                       </p>
                     )}
                   </div>
@@ -1443,16 +1443,16 @@ const MyPageWithWithdrawal = () => {
                   <thead className="bg-gray-50">
                     <tr>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        {language === 'ko' ? '캠페인' : 'キャンペーン'}
+                        {'キャンペーン'}
                       </th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        {language === 'ko' ? '상태' : 'ステータス'}
+                        {'ステータス'}
                       </th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        {language === 'ko' ? '신청일' : '応募日'}
+                        {'応募日'}
                       </th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        {language === 'ko' ? '자료' : '資料'}
+                        {'資料'}
                       </th>
                     </tr>
                   </thead>
@@ -1468,7 +1468,7 @@ const MyPageWithWithdrawal = () => {
                         <tr key={application.id}>
                           <td className="px-6 py-4 whitespace-nowrap">
                             <div className="text-sm font-medium text-gray-900">
-                              {application.campaign_title || (language === 'ko' ? '캠페인 정보 없음' : 'キャンペーン情報なし')}
+                              {application.campaign_title || ('キャンペーン情報なし')}
                             </div>
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap">
@@ -1477,13 +1477,13 @@ const MyPageWithWithdrawal = () => {
                               application.status === 'rejected' ? 'bg-red-100 text-red-800' :
                               'bg-yellow-100 text-yellow-800'
                             }`}>
-                              {application.status === 'approved' ? (language === 'ko' ? '승인됨' : '承認済み') :
-                               application.status === 'rejected' ? (language === 'ko' ? '거절됨' : '拒否済み') : 
-                               (language === 'ko' ? '대기중' : '待機中')}
+                              {application.status === 'approved' ? ('承認済み') :
+                               application.status === 'rejected' ? ('拒否済み') : 
+                               ('待機中')}
                             </span>
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                            {new Date(application.created_at).toLocaleDateString(language === 'ko' ? 'ko-KR' : 'ja-JP')}
+                            {new Date(application.created_at).toLocaleDateString('ja-JP')}
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap">
                             {application.status === 'approved' ? (
@@ -1496,7 +1496,7 @@ const MyPageWithWithdrawal = () => {
                                       rel="noopener noreferrer"
                                       className="inline-flex items-center px-3 py-1 rounded-md text-xs font-medium bg-blue-100 text-blue-800 hover:bg-blue-200 transition-colors"
                                     >
-                                      📁 {language === 'ko' ? '구글 드라이브' : 'Google Drive'}
+                                      📁 {'Google Drive'}
                                     </a>
                                   )}
                                   {application.google_slides_url && (
@@ -1506,7 +1506,7 @@ const MyPageWithWithdrawal = () => {
                                       rel="noopener noreferrer"
                                       className="inline-flex items-center px-3 py-1 rounded-md text-xs font-medium bg-green-100 text-green-800 hover:bg-green-200 transition-colors"
                                     >
-                                      📊 {language === 'ko' ? '구글 슬라이드' : 'Google Slides'}
+                                      📊 {'Google Slides'}
                                     </a>
                                   )}
                                 </div>
@@ -1543,7 +1543,7 @@ const MyPageWithWithdrawal = () => {
                                 
                                 {(!application.google_drive_url && !application.google_slides_url) && (
                                   <span className="text-xs text-gray-400">
-                                    {language === 'ko' ? '자료 준비 중' : '資料準備中'}
+                                    {'資料準備中'}
                                   </span>
                                 )}
                               </div>
@@ -1565,7 +1565,7 @@ const MyPageWithWithdrawal = () => {
                     <AlertTriangle className="h-5 w-5 text-amber-600 mt-0.5 mr-3 flex-shrink-0" />
                     <div className="text-sm text-amber-800">
                       <p className="font-medium mb-1">
-                        {language === 'ko' ? '⚠️ SNS 업로드 주의사항' : '⚠️ SNS投稿注意事項'}
+                        {'⚠️ SNS投稿注意事項'}
                       </p>
                       <p>
                         {language === 'ko' 
@@ -1595,19 +1595,19 @@ const MyPageWithWithdrawal = () => {
                     <thead className="bg-gray-50">
                       <tr>
                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          {language === 'ko' ? '출금 방법' : '出金方法'}
+                          {'出金方法'}
                         </th>
                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          {language === 'ko' ? '금액' : '金額'}
+                          {'金額'}
                         </th>
                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          {language === 'ko' ? '상태' : 'ステータス'}
+                          {'ステータス'}
                         </th>
                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          {language === 'ko' ? '신청일' : '申請日'}
+                          {'申請日'}
                         </th>
                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          {language === 'ko' ? '처리일' : '処理日'}
+                          {'処理日'}
                         </th>
                       </tr>
                     </thead>
@@ -1627,18 +1627,18 @@ const MyPageWithWithdrawal = () => {
                               withdrawal.status === 'rejected' ? 'bg-red-100 text-red-800' :
                               'bg-yellow-100 text-yellow-800'
                             }`}>
-                              {withdrawal.status === 'completed' ? (language === 'ko' ? '완료' : '完了') :
-                               withdrawal.status === 'approved' ? (language === 'ko' ? '승인됨' : '承認済み') :
-                               withdrawal.status === 'rejected' ? (language === 'ko' ? '거절됨' : '拒否済み') : 
-                               (language === 'ko' ? '대기중' : '待機中')}
+                              {withdrawal.status === 'completed' ? ('完了') :
+                               withdrawal.status === 'approved' ? ('承認済み') :
+                               withdrawal.status === 'rejected' ? ('拒否済み') : 
+                               ('待機中')}
                             </span>
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                            {new Date(withdrawal.created_at).toLocaleDateString(language === 'ko' ? 'ko-KR' : 'ja-JP')}
+                            {new Date(withdrawal.created_at).toLocaleDateString('ja-JP')}
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                             {withdrawal.processed_at ? 
-                              new Date(withdrawal.processed_at).toLocaleDateString(language === 'ko' ? 'ko-KR' : 'ja-JP') : 
+                              new Date(withdrawal.processed_at).toLocaleDateString('ja-JP') : 
                               '-'
                             }
                           </td>
@@ -1717,7 +1717,7 @@ const MyPageWithWithdrawal = () => {
                     <AlertTriangle className="h-5 w-5 text-amber-600 mt-0.5 mr-3 flex-shrink-0" />
                     <div className="text-sm text-amber-800">
                       <p className="font-medium mb-1">
-                        {language === 'ko' ? '⚠️ SNS 업로드 주의사항' : '⚠️ SNS投稿注意事項'}
+                        {'⚠️ SNS投稿注意事項'}
                       </p>
                       <p>
                         {language === 'ko' 
@@ -1796,10 +1796,10 @@ const MyPageWithWithdrawal = () => {
                 {/* 포인트 가치 안내 */}
                 <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
                   <p className="text-sm text-blue-800 font-medium">
-                    💰 {language === 'ja' ? '1ポイント = 1円です' : language === 'ko' ? '1포인트 = 1엔입니다' : '1포인트 = 1엔입니다'}
+                    💰 {language === 'ja' ? '1ポイント = 1円です' : '1포인트 = 1엔입니다'}
                   </p>
                   <p className="text-xs text-blue-600 mt-1">
-                    {language === 'ja' ? 'PayPalで日本円として出金されます' : language === 'ko' ? 'PayPal로 일본 엔화로 출금됩니다' : 'PayPal로 일본 엔화로 출금됩니다'}
+                    {language === 'ja' ? 'PayPalで日本円として出金されます' : 'PayPal로 일본 엔화로 출금됩니다'}
                   </p>
                 </div>
 
@@ -1812,12 +1812,12 @@ const MyPageWithWithdrawal = () => {
                       type="number"
                       value={withdrawForm.amount}
                       onChange={(e) => setWithdrawForm({...withdrawForm, amount: e.target.value})}
-                      placeholder={language === 'ja' ? '出金するポイント数' : language === 'ko' ? '출금할 포인트 수' : '출금할 포인트 수'}
+                      placeholder={language === 'ja' ? '出金するポイント数' : '출금할 포인트 수'}
                       className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
                       max={profile?.points || 0}
                     />
                     <p className="text-sm text-gray-500 mt-1">
-                      {language === 'ja' ? '保有ポイント' : language === 'ko' ? '보유 포인트' : '보유 포인트'}: {profile?.points?.toLocaleString() || 0}P
+                      {language === 'ja' ? '保有ポイント' : '보유 포인트'}: {profile?.points?.toLocaleString() || 0}P
                       {withdrawForm.amount && (
                         <span className="ml-2 text-green-600 font-medium">
                           (≈ ¥{parseInt(withdrawForm.amount || 0).toLocaleString()})
@@ -1834,7 +1834,7 @@ const MyPageWithWithdrawal = () => {
                       type="email"
                       value={withdrawForm.paypalEmail}
                       onChange={(e) => setWithdrawForm({...withdrawForm, paypalEmail: e.target.value})}
-                      placeholder={language === 'ja' ? 'PayPal アカウントメール' : language === 'ko' ? 'PayPal 계정 이메일' : 'PayPal 계정 이메일'}
+                      placeholder={language === 'ja' ? 'PayPal アカウントメール' : 'PayPal 계정 이메일'}
                       className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
                     />
                   </div>
@@ -1847,7 +1847,7 @@ const MyPageWithWithdrawal = () => {
                       type="text"
                       value={withdrawForm.paypalName}
                       onChange={(e) => setWithdrawForm({...withdrawForm, paypalName: e.target.value})}
-                      placeholder={language === 'ja' ? 'PayPal アカウント名（実名）' : language === 'ko' ? 'PayPal 계정명 (실명)' : 'PayPal 계정명 (실명)'}
+                      placeholder={language === 'ja' ? 'PayPal アカウント名（実名）' : 'PayPal 계정명 (실명)'}
                       className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
                     />
                   </div>
@@ -1861,7 +1861,7 @@ const MyPageWithWithdrawal = () => {
                       onChange={(e) => setWithdrawForm({...withdrawForm, reason: e.target.value})}
                       rows={3}
                       className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
-                      placeholder={language === 'ja' ? '出金理由（任意）' : language === 'ko' ? '출금 사유 (선택사항)' : '출금 사유 (선택사항)'}
+                      placeholder={language === 'ja' ? '出金理由（任意）' : '출금 사유 (선택사항)'}
                     />
                   </div>
                 </div>
@@ -2014,11 +2014,11 @@ const MyPageWithWithdrawal = () => {
                       type="url"
                       value={snsUploadForm.sns_upload_url}
                       onChange={(e) => setSnsUploadForm({...snsUploadForm, sns_upload_url: e.target.value})}
-                      placeholder={language === 'ja' ? 'https://instagram.com/p/... または https://tiktok.com/@.../video/...' : language === 'ko' ? 'https://instagram.com/p/... 또는 https://tiktok.com/@.../video/...' : 'https://instagram.com/p/... 또는 https://tiktok.com/@.../video/...'}
+                      placeholder={language === 'ja' ? 'https://instagram.com/p/... または https://tiktok.com/@.../video/...' : 'https://instagram.com/p/... 또는 https://tiktok.com/@.../video/...'}
                       className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                     />
                     <p className="mt-1 text-xs text-gray-500">
-                      {language === 'ja' ? 'Instagram、TikTok、YouTubeなどのSNS投稿URLを入力してください' : language === 'ko' ? 'Instagram, TikTok, YouTube 등의 SNS 게시물 URL을 입력해주세요' : 'Instagram, TikTok, YouTube 등의 SNS 게시물 URL을 입력해주세요'}
+                      {language === 'ja' ? 'Instagram、TikTok、YouTubeなどのSNS投稿URLを入力してください' : 'Instagram, TikTok, YouTube 등의 SNS 게시물 URL을 입력해주세요'}
                     </p>
                   </div>
                   
@@ -2031,7 +2031,7 @@ const MyPageWithWithdrawal = () => {
                       onChange={(e) => setSnsUploadForm({...snsUploadForm, notes: e.target.value})}
                       rows={3}
                       className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      placeholder={language === 'ja' ? '追加情報があれば入力してください' : language === 'ko' ? '추가 정보가 있으면 입력해주세요' : '추가 정보가 있으면 입력해주세요'}
+                      placeholder={language === 'ja' ? '追加情報があれば入力してください' : '추가 정보가 있으면 입력해주세요'}
                     />
                   </div>
                 </div>
