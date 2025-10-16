@@ -712,7 +712,7 @@ const CampaignApplicationUpdated = () => {
                       type="number"
                       value={applicationData.age || userProfile?.age || ''}
                       onChange={(e) => setApplicationData(prev => ({ ...prev, age: e.target.value }))}
-                      placeholder="年齢を入力してください"
+                      placeholder="Enter your age"
                       className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-purple-500 focus:border-purple-500"
                       required
                     />
