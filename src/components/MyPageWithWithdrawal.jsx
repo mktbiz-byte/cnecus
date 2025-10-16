@@ -640,7 +640,7 @@ const MyPageWithWithdrawal = () => {
       // 로컬 상태 업데이트
       setProfile(prev => ({ ...prev, ...updateData }))
       
-      setSuccess'プロフィールが正常に更新されました。'
+      setSuccess('Profile updated successfully.')
       setIsEditing(false)
       
       setTimeout(() => setSuccess(''), 5000)
@@ -655,7 +655,7 @@ const MyPageWithWithdrawal = () => {
   // 출금 신청 처리 함수
   const handleWithdrawSubmit = async () => {
     if (!withdrawForm.amount || !withdrawForm.paypalEmail || !withdrawForm.paypalName) {
-      setError'すべての必須項目を入力してください。'
+      setError('Please fill in all required fields.')
       return
     }
 
@@ -663,12 +663,12 @@ const MyPageWithWithdrawal = () => {
     const currentPoints = profile?.points || 0
 
     if (requestAmount > currentPoints) {
-      setError'保有ポイントより多い金額は出金できません。'
+      setError('Cannot withdraw more than available points.')
       return
     }
 
     if (requestAmount < 1000) {
-      setError'最小出金額は1,000ポイントです。'
+      setError('Minimum withdrawal amount is 1,000 points.')
       return
     }
 
@@ -725,7 +725,7 @@ const MyPageWithWithdrawal = () => {
         // 포인트 기록 실패는 치명적이지 않으므로 계속 진행
       }
       
-      setSuccess'出金申請が完了しました。管理者の審査後に処理されます。'
+      setSuccess('Withdrawal request submitted. It will be processed after admin review.')
       setShowWithdrawModal(false)
       setWithdrawForm({
         amount: '',
@@ -757,7 +757,7 @@ const MyPageWithWithdrawal = () => {
       }
 
       if (!selectedApplication) {
-        setError'選択されたアプリケーションが見つかりません。'
+        setError('Selected application not found.')
         return
       }
       
@@ -768,7 +768,7 @@ const MyPageWithWithdrawal = () => {
       try {
         new URL(snsUploadForm.sns_upload_url)
       } catch (urlError) {
-        setError'有効なURLを入力してください。'
+        setError('Please enter a valid URL.')
         setProcessing(false)
         return
       }
@@ -838,7 +838,7 @@ const MyPageWithWithdrawal = () => {
       setSuccess('')
       
       if (!application) {
-        setError'アプリケーション情報が見つかりません。'
+        setError('Application information not found.')
         return
       }
 
@@ -852,7 +852,7 @@ const MyPageWithWithdrawal = () => {
       console.log('SNS 업로드 모달 열림:', application.id, application.campaign_title)
     } catch (error) {
       console.error('SNS 업로드 모달 열기 오류:', error)
-      setError'モーダルを開けませんでした。'
+      setError('Could not open modal.')
     }
   }
 
