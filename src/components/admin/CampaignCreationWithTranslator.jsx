@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { useLanguage } from '../../contexts/LanguageContext'
-import { database } from '../../lib/supabase'
+import { database, storage } from '../../lib/supabase'
 import AdminNavigation from './AdminNavigation'
 
 const CampaignCreationWithTranslator = () => {
@@ -50,6 +50,8 @@ const CampaignCreationWithTranslator = () => {
   const [processing, setProcessing] = useState(false)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
+  const [uploadingImage, setUploadingImage] = useState(false)
+  const [imageFile, setImageFile] = useState(null)
 
   // 번역기 상태
   const [koreanText, setKoreanText] = useState('')
@@ -112,6 +114,51 @@ const CampaignCreationWithTranslator = () => {
       setTranslationError(error.message || '번역 중 오류가 발생했습니다.')
     } finally {
       setIsTranslating(false)
+    }
+  }
+
+  // 이미지 업로드 핸들러
+  const handleImageUpload = async (e) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    // 파일 크기 체크 (5MB 제한)
+    if (file.size > 5 * 1024 * 1024) {
+      setError('이미지 파일 크기는 5MB 이하여야 합니다.')
+      return
+    }
+
+    // 파일 형식 체크
+    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp']
+    if (!allowedTypes.includes(file.type)) {
+      setError('JPG, PNG, WEBP 형식의 이미지만 업로드 가능합니다.')
+      return
+    }
+
+    try {
+      setUploadingImage(true)
+      setError('')
+      setImageFile(file)
+
+      // Supabase Storage에 업로드
+      const result = await storage.uploadCampaignImage(file)
+
+      if (result.success) {
+        // 업로드 성공 시 URL을 폼에 설정
+        setCampaignForm(prev => ({
+          ...prev,
+          image_url: result.url
+        }))
+        setSuccess('이미지가 성공적으로 업로드되었습니다!')
+        setTimeout(() => setSuccess(''), 3000)
+      } else {
+        throw new Error(result.error || '이미지 업로드에 실패했습니다.')
+      }
+    } catch (error) {
+      console.error('Image upload error:', error)
+      setError(error.message || '이미지 업로드 중 오류가 발생했습니다.')
+    } finally {
+      setUploadingImage(false)
     }
   }
 
@@ -367,15 +414,31 @@ const CampaignCreationWithTranslator = () => {
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Image URL
+                  Campaign Image
                 </label>
-                <input
-                  type="text"
-                  value={campaignForm.image_url}
-                  onChange={(e) => setCampaignForm({...campaignForm, image_url: e.target.value})}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  placeholder="https://example.com/image.jpg"
-                />
+                <div className="space-y-2">
+                  <input
+                    type="file"
+                    accept="image/jpeg,image/jpg,image/png,image/webp"
+                    onChange={handleImageUpload}
+                    disabled={uploadingImage}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                  {uploadingImage && (
+                    <p className="text-sm text-blue-600">Uploading image...</p>
+                  )}
+                  {campaignForm.image_url && (
+                    <div className="mt-2">
+                      <img 
+                        src={campaignForm.image_url} 
+                        alt="Campaign preview" 
+                        className="h-32 w-auto object-cover rounded border"
+                      />
+                      <p className="text-xs text-gray-500 mt-1">Image uploaded successfully</p>
+                    </div>
+                  )}
+                  <p className="text-xs text-gray-500">Max file size: 5MB. Formats: JPG, PNG, WEBP</p>
+                </div>
               </div>
 
               <div>
