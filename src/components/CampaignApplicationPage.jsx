@@ -349,7 +349,8 @@ const CampaignApplicationPage = () => {
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-6">
               {/* 기본 정보 */}
-              <div className="space-y                <h3 className="text-lg font-semibold text-gray-800 flex items-center mb-4">
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold text-gray-800 flex items-center mb-4">
                   <User className="h-5 w-5 mr-2" />
                   Basic Information
                 </h3>
@@ -424,7 +425,8 @@ const CampaignApplicationPage = () => {
               </div>
 
               {/* SNS 정보 */}
-              <div className="space-y-                <h3 className="text-lg font-semibold text-gray-800 flex items-center mb-4">
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold text-gray-800 flex items-center mb-4">
                   <Instagram className="h-5 w-5 mr-2" />
                   SNS Information
                 </h3>                
