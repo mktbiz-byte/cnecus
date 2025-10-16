@@ -97,7 +97,10 @@ const CampaignApplicationPage = () => {
       }))
     } catch (error) {
       console.error('Load campaign error:', error)
-      setError('Unable to load campaign information.')
+      setError(language === 'ko' 
+        ? '캠페인 정보를 불러올 수 없습니다.'
+        : 'キャンペーン情報を読み込めません。'
+      )
     } finally {
       setLoading(false)
     }
@@ -133,20 +136,26 @@ const CampaignApplicationPage = () => {
     
     for (const field of required) {
       if (!formData[field]) {
-        return 'Please fill in all required fields.'
+        return language === 'ko' 
+          ? '필수 항목을 모두 입력해주세요.'
+          : '必須項目をすべて入力してください。'
       }
     }
 
     // 이메일 형식 검증
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
     if (!emailRegex.test(formData.user_email)) {
-      return 'Please enter a valid email address.'
+      return language === 'ko' 
+        ? '올바른 이메일 형식을 입력해주세요.'
+        : '正しいメール形式を入力してください。'
     }
 
     // 나이 검증
     const age = parseInt(formData.age)
     if (isNaN(age) || age < 13 || age > 100) {
-      return 'Please enter a valid age (13-100 years old).'
+      return language === 'ko' 
+        ? '올바른 나이를 입력해주세요. (13-100세)'
+        : '正しい年齢を入力してください。（13-100歳）'
     }
 
     // 캠페인 질문 답변 검증 (개별 질문 필드 사용)
@@ -155,7 +164,9 @@ const CampaignApplicationPage = () => {
       const answer = formData.answers[i.toString()]
       
       if (question && !answer) {
-        return 'Please answer all required questions.'
+        return language === 'ko' 
+          ? '필수 질문에 답변해주세요.'
+          : '必須質問に回答してください。'
       }
     }
 
@@ -203,7 +214,10 @@ const CampaignApplicationPage = () => {
       
     } catch (error) {
       console.error('Submit application error:', error)
-      setError('An error occurred while submitting. Please try again.')
+      setError(language === 'ko' 
+        ? '신청 중 오류가 발생했습니다. 다시 시도해주세요.'
+        : '応募中にエラーが発生しました。再度お試しください。'
+      )
     } finally {
       setSubmitting(false)
     }
@@ -249,14 +263,16 @@ const CampaignApplicationPage = () => {
           <CardContent className="pt-8">
             <div className="text-6xl mb-4">🎉</div>
             <h2 className="text-2xl font-bold text-gray-800 mb-2">
-              Application Submitted!
+              {language === 'ko' ? '신청 완료!' : '応募完了！'}
             </h2>
             <p className="text-gray-600 mb-6">
-              Your campaign application has been successfully submitted. We will contact you after review.
-              
+              {language === 'ko' 
+                ? '캠페인 신청이 성공적으로 완료되었습니다. 검토 후 연락드리겠습니다.'
+                : 'キャンペーンの応募が正常に完了しました。審査後にご連絡いたします。'
+              }
             </p>
             <Button onClick={() => navigate('/mypage')} className="bg-purple-600 hover:bg-purple-700">
-              Go to My Page
+              {language === 'ko' ? '마이페이지로 이동' : 'マイページに移動'}
             </Button>
           </CardContent>
         </Card>
@@ -271,11 +287,11 @@ const CampaignApplicationPage = () => {
           <CardContent className="pt-8">
             <div className="text-6xl mb-4">❌</div>
             <h2 className="text-2xl font-bold text-gray-800 mb-2">
-              Campaign Not Found
+              {language === 'ko' ? '캠페인을 찾을 수 없습니다' : 'キャンペーンが見つかりません'}
             </h2>
             <p className="text-gray-600 mb-6">{error}</p>
             <Button onClick={() => navigate('/')} className="bg-purple-600 hover:bg-purple-700">
-              Back to Home
+              {language === 'ko' ? '홈으로 돌아가기' : 'ホームに戻る'}
             </Button>
           </CardContent>
         </Card>
@@ -294,7 +310,7 @@ const CampaignApplicationPage = () => {
             className="text-gray-600 hover:text-gray-800"
           >
             <ArrowLeft className="h-4 w-4 mr-2" />
-            Back to Campaigns
+            {language === 'ko' ? '캠페인 목록으로' : 'キャンペーン一覧へ'}
           </Button>
         </div>
 
@@ -324,10 +340,10 @@ const CampaignApplicationPage = () => {
                   {formatCurrency(campaign.reward_amount)}
                 </div>
                 <div className="text-sm text-gray-500">
-                  Reward
+                  {language === 'ko' ? '보상' : '報酬'}
                 </div>
                 <Badge className="bg-green-100 text-green-800 mt-2">
-                  Recruiting
+                  {language === 'ko' ? '모집중' : '募集中'}
                 </Badge>
               </div>
             </div>
@@ -338,40 +354,43 @@ const CampaignApplicationPage = () => {
         <Card className="shadow-xl border-0">
           <CardHeader>
             <CardTitle className="text-xl">
-              Campaign Application
+              {language === 'ko' ? '캠페인 신청' : 'キャンペーン応募'}
             </CardTitle>
             <CardDescription>
-              Please enter the information below accurately.
-              
+              {language === 'ko' 
+                ? '아래 정보를 정확히 입력해주세요.'
+                : '以下の情報を正確に入力してください。'
+              }
             </CardDescription>
           </CardHeader>
           
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-6">
               {/* 기본 정보 */}
-              <div className="space-y                <h3 className="text-lg font-semibold text-gray-800 flex items-center mb-4">
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold text-gray-800 flex items-center">
                   <User className="h-5 w-5 mr-2" />
-                  Basic Information
+                  {language === 'ko' ? '기본 정보' : '基本情報'}
                 </h3>
                 
                 <div className="grid md:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="user_name">
-                      Name *
+                      {language === 'ko' ? '이름' : '名前'} *
                     </Label>
                     <Input
                       id="user_name"
                       name="user_name"
                       value={formData.user_name}
                       onChange={handleInputChange}
-                      placeholder="Enter your name"
+                      placeholder={language === 'ko' ? '이름을 입력하세요' : '名前を入力してください'}
                       required
                     />
                   </div>
                   
                   <div className="space-y-2">
                     <Label htmlFor="user_email">
-                      Email *
+                      {language === 'ko' ? '이메일' : 'メールアドレス'} *
                     </Label>
                     <Input
                       id="user_email"
@@ -379,7 +398,7 @@ const CampaignApplicationPage = () => {
                       type="email"
                       value={formData.user_email}
                       onChange={handleInputChange}
-                      placeholder="Enter your email"
+                      placeholder={language === 'ko' ? '이메일을 입력하세요' : 'メールアドレスを入力してください'}
                       required
                     />
                   </div>
@@ -388,25 +407,25 @@ const CampaignApplicationPage = () => {
                 <div className="grid md:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="skin_type">
-                      Skin Type *
+                      {language === 'ko' ? '피부 타입' : '肌タイプ'} *
                     </Label>
                     <Select value={formData.skin_type} onValueChange={(value) => handleSelectChange('skin_type', value)}>
                       <SelectTrigger>
-                        <SelectValue placeholder="Select skin type" />
+                        <SelectValue placeholder={language === 'ko' ? '피부 타입 선택' : '肌タイプを選択'} />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="dry">Dry</SelectItem>
-                        <SelectItem value="oily">Oily</SelectItem>
-                        <SelectItem value="combination">Combination</SelectItem>
-                        <SelectItem value="sensitive">Sensitive</SelectItem>
-                        <SelectItem value="normal">Normal</SelectItem>
+                        <SelectItem value="dry">{language === 'ko' ? '건성' : '乾燥肌'}</SelectItem>
+                        <SelectItem value="oily">{language === 'ko' ? '지성' : '脂性肌'}</SelectItem>
+                        <SelectItem value="combination">{language === 'ko' ? '복합성' : '混合肌'}</SelectItem>
+                        <SelectItem value="sensitive">{language === 'ko' ? '민감성' : '敏感肌'}</SelectItem>
+                        <SelectItem value="normal">{language === 'ko' ? '보통' : '普通肌'}</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
                   
                   <div className="space-y-2">
                     <Label htmlFor="age">
-                      Age *
+                      {language === 'ko' ? '나이' : '年齢'} *
                     </Label>
                     <Input
                       id="age"
@@ -416,7 +435,7 @@ const CampaignApplicationPage = () => {
                       max="100"
                       value={formData.age}
                       onChange={handleInputChange}
-                      placeholder="Enter your age"
+                      placeholder={language === 'ko' ? '나이를 입력하세요' : '年齢を入力してください'}
                       required
                     />
                   </div>
@@ -424,10 +443,12 @@ const CampaignApplicationPage = () => {
               </div>
 
               {/* SNS 정보 */}
-              <div className="space-y-                <h3 className="text-lg font-semibold text-gray-800 flex items-center mb-4">
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold text-gray-800 flex items-center">
                   <Instagram className="h-5 w-5 mr-2" />
-                  SNS Information
-                </h3>                
+                  {language === 'ko' ? 'SNS 정보' : 'SNS情報'}
+                </h3>
+                
                 {/* Instagram */}
                 <div className="grid md:grid-cols-2 gap-4">
                   <div className="space-y-2">
@@ -442,7 +463,7 @@ const CampaignApplicationPage = () => {
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="instagram_followers">
-                      Instagram Followers
+                      {language === 'ko' ? 'Instagram 팔로워 수' : 'Instagramフォロワー数'}
                     </Label>
                     <Input
                       id="instagram_followers"
@@ -470,7 +491,7 @@ const CampaignApplicationPage = () => {
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="tiktok_followers">
-                      TikTok Followers
+                      {language === 'ko' ? 'TikTok 팔로워 수' : 'TikTokフォロワー数'}
                     </Label>
                     <Input
                       id="tiktok_followers"
@@ -498,7 +519,7 @@ const CampaignApplicationPage = () => {
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="youtube_followers">
-                      YouTube Subscribers
+                      {language === 'ko' ? 'YouTube 구독자 수' : 'YouTube登録者数'}
                     </Label>
                     <Input
                       id="youtube_followers"
@@ -517,7 +538,7 @@ const CampaignApplicationPage = () => {
               {(campaign.question1 || campaign.question2 || campaign.question3 || campaign.question4) && (
                 <div className="space-y-4">
                   <h3 className="text-lg font-semibold text-gray-800">
-                    Campaign Questions
+                    {language === 'ko' ? '캠페인 질문' : 'キャンペーン質問'}
                   </h3>
                   
                   {[1, 2, 3, 4].map((num) => {
@@ -538,7 +559,7 @@ const CampaignApplicationPage = () => {
                             id={`question_${num}`}
                             value={formData.answers[num.toString()] || ''}
                             onChange={(e) => handleAnswerChange(num.toString(), e.target.value)}
-                            placeholder="Enter your answer"
+                            placeholder={language === 'ko' ? '답변을 입력하세요' : '回答を入力してください'}
                             required
                           />
                         ) : questionType === 'checkbox' && questionOptions ? (
@@ -573,7 +594,7 @@ const CampaignApplicationPage = () => {
                             id={`question_${num}`}
                             value={formData.answers[num.toString()] || ''}
                             onChange={(e) => handleAnswerChange(num.toString(), e.target.value)}
-                            placeholder="Enter your answer"
+                            placeholder={language === 'ko' ? '답변을 입력하세요' : '回答を入力してください'}
                             required
                           />
                         )}
@@ -596,7 +617,7 @@ const CampaignApplicationPage = () => {
                   onClick={() => navigate('/')}
                   className="flex-1"
                 >
-                  Cancel
+                  {language === 'ko' ? '취소' : 'キャンセル'}
                 </Button>
                 <Button
                   type="submit"
@@ -606,7 +627,7 @@ const CampaignApplicationPage = () => {
                   {submitting ? (
                     <Loader2 className="h-4 w-4 animate-spin mr-2" />
                   ) : null}
-                  Submit Application
+                  {language === 'ko' ? '신청하기' : '応募する'}
                 </Button>
               </div>
             </form>
