@@ -112,7 +112,7 @@ const HomePageUS = () => {
       navigate('/login')
       return
     }
-    navigate('/campaign-application', { state: { campaignId } })
+    navigate(`/campaign-application?campaign_id=${campaignId}`)
   }
 
   const formatCurrency = (amount) => {
