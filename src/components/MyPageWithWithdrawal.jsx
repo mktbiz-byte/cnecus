@@ -788,7 +788,7 @@ const MyPageWithWithdrawal = () => {
       
       if (updateError) {
         console.error('Application update error:', updateError)
-        throw new Error'SNS投稿の更新に失敗しました。'
+        throw new Error('Failed to update SNS post.')
       }
       
       // point_transactions 테이블에 포인트 신청 기록 추가

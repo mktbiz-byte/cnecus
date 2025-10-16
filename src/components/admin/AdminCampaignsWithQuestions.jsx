@@ -237,12 +237,20 @@ const AdminCampaignsWithQuestions = () => {
                             <p>브랜드: {campaign.brand || '-'}</p>
                           </div>
                           <div className="ml-6 flex items-center text-sm text-gray-500">
+                            <p>카테고리: {campaign.category || '-'}</p>
+                          </div>
+                          <div className="ml-6 flex items-center text-sm text-gray-500">
                             <p>보상금: {formatCurrency(campaign.reward_amount)}</p>
                           </div>
                           <div className="ml-6 flex items-center text-sm text-gray-500">
                             <p>마감일: {formatDate(campaign.application_deadline)}</p>
                           </div>
                         </div>
+                        {campaign.image_url && (
+                          <div className="mt-2">
+                            <img src={campaign.image_url} alt={campaign.title} className="h-16 w-auto object-cover rounded" />
+                          </div>
+                        )}
                         <div className="mt-2 flex">
                           <div className="flex items-center text-sm text-blue-600 font-medium">
                             {(() => {
