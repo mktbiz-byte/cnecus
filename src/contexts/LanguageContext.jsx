@@ -186,17 +186,12 @@ const translations = {
 }
 
 export const LanguageProvider = ({ children }) => {
-  const [language, setLanguage] = useState('en') // US version default: English
+  const [language, setLanguage] = useState('en') // US version: Always English
 
   useEffect(() => {
-    // Load saved language preference, default to English for US version
-    const savedLanguage = localStorage.getItem('cnec-language')
-    if (savedLanguage && ['ko', 'ja', 'en'].includes(savedLanguage)) {
-      setLanguage(savedLanguage)
-    } else {
-      setLanguage('en')
-      localStorage.setItem('cnec-language', 'en')
-    }
+    // US version: Force English only, ignore localStorage
+    setLanguage('en')
+    localStorage.setItem('cnec-language', 'en')
   }, [])
 
   const changeLanguage = (newLanguage) => {
