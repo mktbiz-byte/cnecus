@@ -35,6 +35,8 @@ const AdminCampaigns = () => {
     title: '',
     brand: '',
     description: '',
+    image_url: '',
+    category: '',
     reward_amount: '',
     status: 'draft',
     platforms: [],
@@ -130,6 +132,8 @@ const AdminCampaigns = () => {
       title: '',
       brand: '',
       description: '',
+      image_url: '',
+      category: '',
       reward_amount: '',
       status: 'draft',
       platforms: [],
@@ -144,6 +148,8 @@ const AdminCampaigns = () => {
       title: campaign.title || '',
       brand: campaign.brand || '',
       description: campaign.description || '',
+      image_url: campaign.image_url || '',
+      category: campaign.category || '',
       reward_amount: campaign.reward_amount || '',
       status: campaign.status || 'draft',
       platforms: campaign.platforms || [],
@@ -171,6 +177,8 @@ const AdminCampaigns = () => {
         title: formData.title,
         brand: formData.brand,
         description: formData.description,
+        image_url: formData.image_url,
+        category: formData.category,
         reward_amount: parseInt(formData.reward_amount),
         status: formData.status,
         platforms: formData.platforms,
@@ -525,22 +533,59 @@ const AdminCampaigns = () => {
                 
                 <div className="space-y-2">
                   <Label htmlFor="description">
-                    {language === 'ko' ? '캠페인 설명' : 'キャンペーン説明'}
+                    {language === 'ko' ? 'Campaign Description' : 'Campaign Description'}
                   </Label>
                   <Textarea
                     id="description"
                     name="description"
                     value={formData.description}
                     onChange={handleInputChange}
-                    placeholder={language === 'ko' ? '캠페인에 대한 자세한 설명을 입력하세요' : 'キャンペーンの詳細説明を入力してください'}
+                    placeholder="Enter detailed campaign description"
                     rows={3}
                   />
                 </div>
                 
                 <div className="grid md:grid-cols-2 gap-4">
                   <div className="space-y-2">
+                    <Label htmlFor="image_url">
+                      Image URL
+                    </Label>
+                    <Input
+                      id="image_url"
+                      name="image_url"
+                      value={formData.image_url}
+                      onChange={handleInputChange}
+                      placeholder="https://example.com/image.jpg"
+                    />
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="category">
+                      Category *
+                    </Label>
+                    <Select value={formData.category} onValueChange={(value) => handleSelectChange('category', value)}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select category" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="Beauty">Beauty</SelectItem>
+                        <SelectItem value="Fitness">Fitness</SelectItem>
+                        <SelectItem value="Food & Lifestyle">Food & Lifestyle</SelectItem>
+                        <SelectItem value="Fashion">Fashion</SelectItem>
+                        <SelectItem value="Technology">Technology</SelectItem>
+                        <SelectItem value="Travel">Travel</SelectItem>
+                        <SelectItem value="Home & Living">Home & Living</SelectItem>
+                        <SelectItem value="Pet Care">Pet Care</SelectItem>
+                        <SelectItem value="Other">Other</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+                
+                <div className="grid md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
                     <Label htmlFor="reward_amount">
-                      {language === 'ko' ? '보상 금액 (¥)' : '報酬金額 (¥)'} *
+                      Reward Amount ($) *
                     </Label>
                     <Input
                       id="reward_amount"
