@@ -47,7 +47,10 @@ const CampaignApplicationUpdated = () => {
     
     // 오프라인 방문 관련
     offline_visit_available: false,
-    offline_visit_notes: ''
+    offline_visit_notes: '',
+    
+    // 초상권 동의
+    portrait_rights_consent: false
   })
 
   // 다국어 텍스트
@@ -216,6 +219,12 @@ const CampaignApplicationUpdated = () => {
       addressRequired: 'Address is required',
       phoneRequired: 'Phone number is required',
       instagramRequired: 'Instagram URL is required',
+      portraitRightsRequired: 'You must agree to the portrait rights consent',
+      
+      // Portrait Rights Consent
+      portraitRightsTitle: 'Portrait Rights & Content Usage Agreement',
+      portraitRightsConsent: 'I hereby grant permission for my likeness, image, and voice captured in video content created for this campaign to be used by the brand and CNEC platform for marketing, promotional, and commercial purposes for a period of one (1) year from the date of content submission. I understand that this content may be used across various media channels including but not limited to social media, websites, advertisements, and promotional materials.',
+      portraitRightsConsentShort: 'I agree to the use of my portrait rights in video content for 1 year',
       
       // Additional texts
       targetPlatforms: 'Target SNS Platforms',
@@ -356,6 +365,11 @@ const CampaignApplicationUpdated = () => {
       errors.push(language === 'ja' ? '質問 4は必須です' : '질문 4는 필수입니다')
     }
 
+    // 초상권 동의 검증
+    if (!applicationData.portrait_rights_consent) {
+      errors.push(t.portraitRightsRequired)
+    }
+
     return errors
   }
 
@@ -392,6 +406,7 @@ const CampaignApplicationUpdated = () => {
         additional_info: applicationData.additional_info || null,
         offline_visit_available: applicationData.offline_visit_available || false,
         offline_visit_notes: applicationData.offline_visit_notes || null,
+        portrait_rights_consent: applicationData.portrait_rights_consent || false,
         status: 'pending',
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
@@ -1069,6 +1084,31 @@ const CampaignApplicationUpdated = () => {
                   </div>
                 </div>
               )}
+
+              {/* 초상권 동의 섹션 */}
+              <div className="bg-yellow-50 border-2 border-yellow-300 rounded-lg p-6">
+                <h3 className="text-lg font-bold text-gray-900 mb-3">
+                  {t.portraitRightsTitle}
+                </h3>
+                <div className="bg-white rounded p-4 mb-4 text-sm text-gray-700 leading-relaxed">
+                  {t.portraitRightsConsent}
+                </div>
+                <label className="flex items-start cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={applicationData.portrait_rights_consent}
+                    onChange={(e) => setApplicationData(prev => ({
+                      ...prev,
+                      portrait_rights_consent: e.target.checked
+                    }))}
+                    className="mt-1 mr-3 h-5 w-5 text-purple-600 focus:ring-purple-500 border-gray-300 rounded"
+                    required
+                  />
+                  <span className="text-sm font-medium text-gray-900">
+                    {t.portraitRightsConsentShort} <span className="text-red-500">*</span>
+                  </span>
+                </label>
+              </div>
 
               {/* 추가 정보 섹션 */}
               <div>
