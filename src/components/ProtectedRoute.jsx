@@ -20,21 +20,42 @@ const ProtectedRoute = ({ children, requireAdmin = false }) => {
         return
       }
 
-      try {
-        // 사용자 프로필에서 관리자 권한 확인
-        const profile = await database.userProfiles.get(user.id)
-        
-        if (profile && (profile.role === 'admin' || profile.is_admin === true)) {
-          setIsAdmin(true)
-        } else {
-          setIsAdmin(false)
+      // 재시도 로직 추가
+      let retries = 3
+      let profile = null
+      
+      while (retries > 0 && !profile) {
+        try {
+          console.log(`관리자 권한 확인 시도 (${4 - retries}/3)...`)
+          // 사용자 프로필에서 관리자 권한 확인
+          profile = await database.userProfiles.get(user.id)
+          
+          if (profile) {
+            console.log('프로필 로드 성공:', profile)
+            if (profile.role === 'admin' || profile.is_admin === true) {
+              setIsAdmin(true)
+            } else {
+              console.log('관리자 권한 없음:', profile.role)
+              setIsAdmin(false)
+            }
+            break
+          }
+        } catch (error) {
+          console.error(`관리자 권한 확인 오류 (시도 ${4 - retries}/3):`, error)
+          retries--
+          
+          if (retries > 0) {
+            // 재시도 전 대기
+            await new Promise(resolve => setTimeout(resolve, 500))
+          } else {
+            // 모든 재시도 실패
+            console.error('모든 재시도 실패. Access Denied 표시.')
+            setIsAdmin(false)
+          }
         }
-      } catch (error) {
-        console.error('관리자 권한 확인 오류:', error)
-        setIsAdmin(false)
-      } finally {
-        setLoading(false)
       }
+      
+      setLoading(false)
     }
 
     checkAdminStatus()
