@@ -91,35 +91,34 @@ const SignupPageUS = () => {
   if (success) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center p-4">
-        <Card className="max-w-md w-full shadow-xl border-0 bg-white/80 backdrop-blur-sm">
-          <CardContent className="p-8 text-center">
-            <div className="mb-6">
-              <div className="mx-auto w-16 h-16 bg-green-100 rounded-full flex items-center justify-center">
-                <CheckCircle className="h-10 w-10 text-green-600" />
-              </div>
+        <div className="max-w-md mx-auto text-center bg-white rounded-lg shadow-2xl p-8">
+          <div className="mb-6">
+            <div className="mx-auto w-16 h-16 bg-green-100 rounded-full flex items-center justify-center">
+              <svg className="h-10 w-10 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+              </svg>
             </div>
-            <h2 className="text-2xl font-bold text-gray-800 mb-4">Check Your Email!</h2>
-            <p className="text-gray-600 mb-6">
-              We've sent a verification link to <strong>{formData.email}</strong>. 
-              Please check your inbox and click the link to activate your account.
-            </p>
-            <div className="space-y-3">
-              <Button
-                onClick={() => navigate('/login')}
-                className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white"
-              >
-                Go to Sign In
-              </Button>
-              <Button
-                onClick={() => navigate('/')}
-                variant="outline"
-                className="w-full"
-              >
-                Back to Home
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
+          </div>
+          <h2 className="text-2xl font-bold text-gray-800 mb-4">Check Your Email!</h2>
+          <p className="text-gray-600 mb-6">
+            We've sent a verification link to <strong>{formData.email}</strong>. 
+            Please check your inbox and click the link to activate your account.
+          </p>
+          <div className="space-y-3">
+            <button
+              onClick={() => navigate('/login')}
+              className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-medium py-3 px-4 rounded-md transition-colors"
+            >
+              Go to Sign In
+            </button>
+            <button
+              onClick={() => navigate('/')}
+              className="w-full border border-gray-300 hover:bg-gray-50 text-gray-700 font-medium py-3 px-4 rounded-md transition-colors"
+            >
+              Back to Home
+            </button>
+          </div>
+        </div>
       </div>
     )
   }
