@@ -710,6 +710,11 @@ const ApplicationsReportSimple = () => {
                               캠페인: {campaign.title || campaign.brand || '알 수 없음'}
                             </p>
                           </div>
+                          <div className="mt-1">
+                            <p className="text-sm text-gray-400">
+                              {t.appliedAt}: {formatDate(application.created_at)}
+                            </p>
+                          </div>
                         </div>
                       </div>
                       <div className="flex space-x-2">
