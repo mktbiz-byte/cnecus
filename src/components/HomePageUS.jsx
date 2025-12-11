@@ -11,7 +11,7 @@ import {
   Instagram, Youtube, Hash, Twitter, ExternalLink,
   Star, Award, Calendar, DollarSign, Eye, ArrowRight,
   CheckCircle, Clock, MapPin, Phone, Mail, User, Zap,
-  Menu, X, Sparkles
+  Menu, X, Sparkles, TrendingUp, Video, Upload, Wallet
 } from 'lucide-react'
 
 const HomePageUS = () => {
@@ -73,7 +73,6 @@ const HomePageUS = () => {
       const applications = applicationsData || []
       const users = usersData?.filter(u => u.platform_region === 'us') || []
       
-      // Stats multiplier for marketing purposes (make it look more impressive!)
       const campaignMultiplier = import.meta.env.VITE_STATS_CAMPAIGN_MULTIPLIER || 50
       const creatorMultiplier = import.meta.env.VITE_STATS_CREATOR_MULTIPLIER || 500
       const applicationMultiplier = import.meta.env.VITE_STATS_APPLICATION_MULTIPLIER || 1000
@@ -92,7 +91,6 @@ const HomePageUS = () => {
       })
     } catch (error) {
       console.error('Load stats error:', error)
-      // Even on error, show some impressive numbers!
       setStats({
         totalCampaigns: 50,
         totalCreators: 2500,
@@ -162,80 +160,66 @@ const HomePageUS = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
-      {/* Header - US Style */}
-      <header className="bg-white/80 backdrop-blur-md shadow-sm sticky top-0 z-50 border-b border-gray-100">
+    <div className="min-h-screen bg-white">
+      {/* Header */}
+      <header className="bg-white shadow-sm sticky top-0 z-50 border-b">
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
-            {/* Logo */}
             <div className="flex items-center space-x-3">
               <div className="text-3xl">🇺🇸</div>
               <div>
-                <h1 className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-                  CNEC USA
-                </h1>
-                <p className="text-xs text-gray-600 font-medium">Creator Network & Engagement Community</p>
+                <h1 className="text-2xl font-bold text-gray-900">CNEC USA</h1>
+                <p className="text-xs text-gray-600">K-Beauty Creator Network</p>
               </div>
             </div>
             
-            {/* Desktop Navigation */}
             <nav className="hidden md:flex items-center space-x-3">
-              <Button variant="ghost" className="text-gray-700 hover:text-blue-600">
+              <Button variant="ghost" className="text-gray-700">
                 <a href="#campaigns">Campaigns</a>
               </Button>
-              <Button variant="ghost" className="text-gray-700 hover:text-blue-600">
-                <a href="#about">About</a>
-              </Button>
-              <Button variant="ghost" className="text-gray-700 hover:text-blue-600">
-                <a href="#guide">How It Works</a>
+              <Button variant="ghost" className="text-gray-700">
+                <a href="#how-it-works">How It Works</a>
               </Button>
               {user ? (
                 <>
-                  <Button variant="outline" className="border-blue-600 text-blue-600 hover:bg-blue-50">
-                    <Link to="/mypage">My Dashboard</Link>
+                  <Button variant="outline">
+                    <Link to="/mypage">Dashboard</Link>
                   </Button>
-                  <Button variant="ghost" onClick={signOut}>
-                    Sign Out
-                  </Button>
+                  <Button variant="ghost" onClick={signOut}>Sign Out</Button>
                 </>
               ) : (
                 <>
-                  <Button variant="outline" className="border-blue-600 text-blue-600 hover:bg-blue-50">
+                  <Button variant="outline">
                     <Link to="/login">Sign In</Link>
                   </Button>
-                  <Button className="bg-gradient-to-r from-blue-600 to-purple-600 text-white hover:from-blue-700 hover:to-purple-700">
-                    <Link to="/signup">Get Started</Link>
+                  <Button className="bg-blue-600 hover:bg-blue-700 text-white">
+                    <Link to="/signup">Start Earning</Link>
                   </Button>
                 </>
               )}
             </nav>
 
-            {/* Mobile Menu Button */}
             <button
-              className="md:hidden p-2 text-gray-600 hover:text-gray-800"
+              className="md:hidden p-2"
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
             >
               {mobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
             </button>
           </div>
 
-          {/* Mobile Menu */}
           {mobileMenuOpen && (
-            <div className="md:hidden mt-4 pb-4 border-t border-gray-200">
-              <div className="flex flex-col space-y-2 pt-4">
+            <div className="md:hidden mt-4 pb-4 border-t pt-4">
+              <div className="flex flex-col space-y-2">
                 <Button variant="ghost" className="justify-start">
                   <a href="#campaigns">Campaigns</a>
                 </Button>
                 <Button variant="ghost" className="justify-start">
-                  <a href="#about">About</a>
-                </Button>
-                <Button variant="ghost" className="justify-start">
-                  <a href="#guide">How It Works</a>
+                  <a href="#how-it-works">How It Works</a>
                 </Button>
                 {user ? (
                   <>
                     <Button variant="outline" className="justify-start">
-                      <Link to="/mypage">My Dashboard</Link>
+                      <Link to="/mypage">Dashboard</Link>
                     </Button>
                     <Button variant="ghost" className="justify-start" onClick={signOut}>
                       Sign Out
@@ -246,8 +230,8 @@ const HomePageUS = () => {
                     <Button variant="outline" className="justify-start">
                       <Link to="/login">Sign In</Link>
                     </Button>
-                    <Button className="justify-start bg-gradient-to-r from-blue-600 to-purple-600 text-white">
-                      <Link to="/signup">Get Started</Link>
+                    <Button className="justify-start bg-blue-600 text-white">
+                      <Link to="/signup">Start Earning</Link>
                     </Button>
                   </>
                 )}
@@ -257,86 +241,189 @@ const HomePageUS = () => {
         </div>
       </header>
 
-      {/* Hero Section - US Style */}
-      <section className="relative overflow-hidden py-20 px-4">
-        <div className="absolute inset-0 bg-gradient-to-r from-blue-600/10 to-purple-600/10"></div>
-        <div className="container mx-auto relative z-10">
-          <div className="text-center max-w-4xl mx-auto">
-            <Badge className="mb-6 bg-gradient-to-r from-blue-600 to-purple-600 text-white px-6 py-2 text-sm">
-              <Sparkles className="h-4 w-4 mr-2 inline" />
-              Join the Creator Economy
+      {/* Hero Section - NEW */}
+      <section className="relative py-20 px-4 bg-gradient-to-br from-blue-50 to-white">
+        <div className="container mx-auto">
+          <div className="max-w-4xl mx-auto text-center">
+            {/* Trust Badge */}
+            <Badge className="mb-6 bg-green-100 text-green-800 px-4 py-2 text-sm border-0">
+              <CheckCircle className="h-4 w-4 mr-2 inline" />
+              Direct Payment · No Middleman · Weekly Payouts
             </Badge>
-            <h2 className="text-5xl md:text-6xl font-bold mb-6 bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent">
-              Turn Your Influence Into Income
-            </h2>
-            <p className="text-xl text-gray-600 mb-8 leading-relaxed">
-              Partner with top brands, create amazing content, and get paid for what you love. 
-              Join thousands of creators building their careers with CNEC USA.
-            </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              {!user && (
-                <>
-                  <Button 
-                    size="lg" 
-                    className="bg-gradient-to-r from-blue-600 to-purple-600 text-white hover:from-blue-700 hover:to-purple-700 px-8 py-6 text-lg"
-                    onClick={() => navigate('/signup')}
-                  >
-                    Start Creating Today
-                    <ArrowRight className="ml-2 h-5 w-5" />
-                  </Button>
-                  <Button 
-                    size="lg" 
-                    variant="outline" 
-                    className="border-2 border-blue-600 text-blue-600 hover:bg-blue-50 px-8 py-6 text-lg"
-                    onClick={() => document.getElementById('campaigns')?.scrollIntoView({ behavior: 'smooth' })}
-                  >
-                    Browse Campaigns
-                  </Button>
-                </>
-              )}
-            </div>
-          </div>
 
-          {/* Stats Section */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mt-16 max-w-5xl mx-auto">
-            <Card className="bg-white/80 backdrop-blur-sm border-none shadow-lg hover:shadow-xl transition-shadow">
-              <CardContent className="p-6 text-center">
-                <Target className="h-8 w-8 mx-auto mb-3 text-blue-600" />
-                <div className="text-3xl font-bold text-gray-800">{stats.totalCampaigns}</div>
-                <div className="text-sm text-gray-600 mt-1">Active Campaigns</div>
-              </CardContent>
-            </Card>
-            <Card className="bg-white/80 backdrop-blur-sm border-none shadow-lg hover:shadow-xl transition-shadow">
-              <CardContent className="p-6 text-center">
-                <Users className="h-8 w-8 mx-auto mb-3 text-purple-600" />
-                <div className="text-3xl font-bold text-gray-800">{stats.totalCreators}</div>
-                <div className="text-sm text-gray-600 mt-1">Creators</div>
-              </CardContent>
-            </Card>
-            <Card className="bg-white/80 backdrop-blur-sm border-none shadow-lg hover:shadow-xl transition-shadow">
-              <CardContent className="p-6 text-center">
-                <CheckCircle className="h-8 w-8 mx-auto mb-3 text-green-600" />
-                <div className="text-3xl font-bold text-gray-800">{stats.totalApplications}</div>
-                <div className="text-sm text-gray-600 mt-1">Applications</div>
-              </CardContent>
-            </Card>
-            <Card className="bg-white/80 backdrop-blur-sm border-none shadow-lg hover:shadow-xl transition-shadow">
-              <CardContent className="p-6 text-center">
-                <DollarSign className="h-8 w-8 mx-auto mb-3 text-green-600" />
-                <div className="text-3xl font-bold text-gray-800">{formatCurrency(stats.totalRewards)}</div>
-                <div className="text-sm text-gray-600 mt-1">Total Rewards</div>
-              </CardContent>
-            </Card>
+            {/* Main Headline */}
+            <h1 className="text-5xl md:text-6xl font-bold mb-6 text-gray-900">
+              Get Paid Fast for<br />Your Content
+            </h1>
+
+            {/* Subheadline */}
+            <p className="text-xl text-gray-600 mb-8 leading-relaxed max-w-2xl mx-auto">
+              Create short-form videos for K-beauty brands and receive <span className="font-semibold text-blue-600">weekly payments directly to your bank account</span>. No delays, no hassle.
+            </p>
+
+            {/* CTA Buttons */}
+            <div className="flex flex-col sm:flex-row gap-4 justify-center mb-12">
+              <Button size="lg" className="bg-blue-600 hover:bg-blue-700 text-white text-lg px-8 py-6">
+                <Link to="/signup" className="flex items-center">
+                  Start Earning Now
+                  <ArrowRight className="ml-2 h-5 w-5" />
+                </Link>
+              </Button>
+              <Button size="lg" variant="outline" className="text-lg px-8 py-6">
+                <a href="#how-it-works">See How It Works</a>
+              </Button>
+            </div>
+
+            {/* Social Proof Stats */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-6 max-w-3xl mx-auto">
+              <div>
+                <div className="text-3xl font-bold text-gray-900">{stats.totalCreators.toLocaleString()}+</div>
+                <div className="text-sm text-gray-600">Active Creators</div>
+              </div>
+              <div>
+                <div className="text-3xl font-bold text-gray-900">{formatCurrency(stats.totalRewards)}</div>
+                <div className="text-sm text-gray-600">Paid Out</div>
+              </div>
+              <div>
+                <div className="text-3xl font-bold text-gray-900">{stats.totalCampaigns}+</div>
+                <div className="text-sm text-gray-600">Campaigns</div>
+              </div>
+              <div>
+                <div className="text-3xl font-bold text-gray-900">4.8★</div>
+                <div className="text-sm text-gray-600">Creator Rating</div>
+              </div>
+            </div>
           </div>
         </div>
       </section>
 
-      {/* Campaigns Section */}
-      <section id="campaigns" className="py-16 px-4">
+      {/* How It Works Section - NEW */}
+      <section id="how-it-works" className="py-20 px-4 bg-gray-50">
+        <div className="container mx-auto">
+          <div className="text-center mb-16">
+            <h2 className="text-4xl font-bold mb-4 text-gray-900">How It Works</h2>
+            <p className="text-xl text-gray-600">Four simple steps to start earning</p>
+          </div>
+
+          <div className="grid md:grid-cols-4 gap-8 max-w-6xl mx-auto">
+            {/* Step 1 */}
+            <div className="text-center">
+              <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Target className="h-8 w-8 text-blue-600" />
+              </div>
+              <div className="text-sm font-semibold text-blue-600 mb-2">STEP 1</div>
+              <h3 className="text-xl font-bold mb-2 text-gray-900">Apply</h3>
+              <p className="text-gray-600">Browse campaigns and apply to brands you love</p>
+            </div>
+
+            {/* Step 2 */}
+            <div className="text-center">
+              <div className="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Video className="h-8 w-8 text-purple-600" />
+              </div>
+              <div className="text-sm font-semibold text-purple-600 mb-2">STEP 2</div>
+              <h3 className="text-xl font-bold mb-2 text-gray-900">Create</h3>
+              <p className="text-gray-600">Film authentic short-form content following brand guidelines</p>
+            </div>
+
+            {/* Step 3 */}
+            <div className="text-center">
+              <div className="w-16 h-16 bg-pink-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Upload className="h-8 w-8 text-pink-600" />
+              </div>
+              <div className="text-sm font-semibold text-pink-600 mb-2">STEP 3</div>
+              <h3 className="text-xl font-bold mb-2 text-gray-900">Upload</h3>
+              <p className="text-gray-600">Post to your social media and submit proof</p>
+            </div>
+
+            {/* Step 4 */}
+            <div className="text-center">
+              <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Wallet className="h-8 w-8 text-green-600" />
+              </div>
+              <div className="text-sm font-semibold text-green-600 mb-2">STEP 4</div>
+              <h3 className="text-xl font-bold mb-2 text-gray-900">Get Paid</h3>
+              <p className="text-gray-600">Receive weekly payments directly to your account</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Weekly Payouts Section - NEW */}
+      <section className="py-20 px-4 bg-gradient-to-br from-green-50 to-white">
+        <div className="container mx-auto max-w-5xl">
+          <div className="bg-white rounded-2xl shadow-xl p-12">
+            <div className="grid md:grid-cols-2 gap-12 items-center">
+              <div>
+                <Badge className="mb-4 bg-green-100 text-green-800 border-0">
+                  <CheckCircle className="h-4 w-4 mr-2 inline" />
+                  Reliable Weekly Payments
+                </Badge>
+                <h2 className="text-4xl font-bold mb-6 text-gray-900">
+                  Consistent Income<br />Every Week
+                </h2>
+                <p className="text-lg text-gray-600 mb-6">
+                  Get paid every week like clockwork. No waiting months for payment. No hidden fees. No middleman taking a cut.
+                </p>
+                <div className="space-y-4">
+                  <div className="flex items-start">
+                    <CheckCircle className="h-6 w-6 text-green-600 mr-3 flex-shrink-0 mt-1" />
+                    <div>
+                      <div className="font-semibold text-gray-900">Direct Bank Transfer</div>
+                      <div className="text-gray-600">Money goes straight to your account</div>
+                    </div>
+                  </div>
+                  <div className="flex items-start">
+                    <CheckCircle className="h-6 w-6 text-green-600 mr-3 flex-shrink-0 mt-1" />
+                    <div>
+                      <div className="font-semibold text-gray-900">Transparent Tracking</div>
+                      <div className="text-gray-600">See your earnings in real-time</div>
+                    </div>
+                  </div>
+                  <div className="flex items-start">
+                    <CheckCircle className="h-6 w-6 text-green-600 mr-3 flex-shrink-0 mt-1" />
+                    <div>
+                      <div className="font-semibold text-gray-900">No Minimum Payout</div>
+                      <div className="text-gray-600">Get paid regardless of amount</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div className="bg-gradient-to-br from-green-100 to-blue-100 rounded-xl p-8">
+                <div className="text-center mb-6">
+                  <div className="text-5xl font-bold text-gray-900 mb-2">$500-$2,000</div>
+                  <div className="text-gray-600">Average monthly earnings</div>
+                </div>
+                <div className="space-y-3">
+                  <div className="bg-white rounded-lg p-4 flex justify-between items-center">
+                    <span className="text-gray-600">Week 1</span>
+                    <span className="font-semibold text-gray-900">$350</span>
+                  </div>
+                  <div className="bg-white rounded-lg p-4 flex justify-between items-center">
+                    <span className="text-gray-600">Week 2</span>
+                    <span className="font-semibold text-gray-900">$420</span>
+                  </div>
+                  <div className="bg-white rounded-lg p-4 flex justify-between items-center">
+                    <span className="text-gray-600">Week 3</span>
+                    <span className="font-semibold text-gray-900">$380</span>
+                  </div>
+                  <div className="bg-white rounded-lg p-4 flex justify-between items-center">
+                    <span className="text-gray-600">Week 4</span>
+                    <span className="font-semibold text-gray-900">$450</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Active Campaigns Section */}
+      <section id="campaigns" className="py-20 px-4 bg-white">
         <div className="container mx-auto">
           <div className="text-center mb-12">
-            <h3 className="text-4xl font-bold mb-4 text-gray-800">Featured Campaigns</h3>
-            <p className="text-xl text-gray-600">Discover exciting brand partnerships and start earning</p>
+            <h2 className="text-4xl font-bold mb-4 text-gray-900">Active Campaigns</h2>
+            <p className="text-xl text-gray-600">Start earning with these K-beauty brands</p>
           </div>
 
           {loading ? (
@@ -344,69 +431,43 @@ const HomePageUS = () => {
               <Loader2 className="h-12 w-12 animate-spin text-blue-600" />
             </div>
           ) : campaigns.length === 0 ? (
-            <Card className="max-w-md mx-auto">
-              <CardContent className="p-12 text-center">
-                <Target className="h-16 w-16 mx-auto mb-4 text-gray-400" />
-                <h4 className="text-xl font-semibold mb-2 text-gray-800">No Active Campaigns</h4>
-                <p className="text-gray-600">New campaigns are coming soon! Check back later.</p>
-              </CardContent>
-            </Card>
+            <div className="text-center py-20">
+              <Target className="h-16 w-16 text-gray-400 mx-auto mb-4" />
+              <p className="text-xl text-gray-600 mb-4">No active campaigns at the moment</p>
+              <p className="text-gray-500">Check back soon for new opportunities!</p>
+            </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-7xl mx-auto">
               {campaigns.map((campaign) => (
-                <Card 
-                  key={campaign.id} 
-                  className="overflow-hidden hover:shadow-2xl transition-all duration-300 cursor-pointer border-none bg-white"
-                  onClick={() => handleCampaignClick(campaign)}
-                >
-                  {campaign.image_url && (
-                    <div className="relative h-48 overflow-hidden">
-                      <img 
-                        src={campaign.image_url} 
-                        alt={campaign.title}
-                        className="w-full h-full object-cover hover:scale-110 transition-transform duration-300"
-                      />
-                      <div className="absolute top-4 right-4">
-                        <Badge className={getPlatformColor(campaign.category)}>
-                          {getPlatformIcon(campaign.category)}
-                          <span className="ml-2">{campaign.category}</span>
-                        </Badge>
-                      </div>
-                    </div>
-                  )}
+                <Card key={campaign.id} className="hover:shadow-lg transition-shadow cursor-pointer border-2" onClick={() => handleCampaignClick(campaign)}>
                   <CardHeader>
                     <div className="flex items-start justify-between mb-2">
-                      <Badge className="bg-blue-100 text-blue-800 border-none">
-                        {campaign.brand}
+                      <Badge className={`${getPlatformColor(campaign.platform_type)} flex items-center gap-1`}>
+                        {getPlatformIcon(campaign.platform_type)}
+                        {campaign.platform_type}
                       </Badge>
-                      <Badge className="bg-gradient-to-r from-green-500 to-emerald-500 text-white border-none">
+                      <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
+                        <DollarSign className="h-3 w-3 mr-1" />
                         {formatCurrency(campaign.reward_amount)}
                       </Badge>
                     </div>
-                    <CardTitle className="text-xl font-bold text-gray-800 hover:text-blue-600 transition-colors">
-                      {campaign.title}
-                    </CardTitle>
-                    <CardDescription className="text-gray-600 line-clamp-2">
-                      {campaign.description}
-                    </CardDescription>
+                    <CardTitle className="text-xl">{campaign.title}</CardTitle>
+                    <CardDescription className="line-clamp-2">{campaign.description}</CardDescription>
                   </CardHeader>
                   <CardContent>
                     <div className="space-y-3">
                       <div className="flex items-center text-sm text-gray-600">
-                        <Calendar className="h-4 w-4 mr-2 text-blue-600" />
-                        <span>Ends: {formatDate(campaign.end_date)}</span>
+                        <Calendar className="h-4 w-4 mr-2" />
+                        Apply by {formatDate(campaign.deadline)}
                       </div>
                       <div className="flex items-center text-sm text-gray-600">
-                        <Users className="h-4 w-4 mr-2 text-purple-600" />
-                        <span>{campaign.max_participants} spots available</span>
+                        <Users className="h-4 w-4 mr-2" />
+                        {campaign.slots_filled || 0} / {campaign.total_slots} spots filled
                       </div>
-                      <Button 
-                        className="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white hover:from-blue-700 hover:to-purple-700"
-                        onClick={(e) => {
-                          e.stopPropagation()
-                          handleApply(campaign.id)
-                        }}
-                      >
+                      <Button className="w-full bg-blue-600 hover:bg-blue-700 text-white" onClick={(e) => {
+                        e.stopPropagation()
+                        handleApply(campaign.id)
+                      }}>
                         Apply Now
                         <ArrowRight className="ml-2 h-4 w-4" />
                       </Button>
@@ -419,131 +480,86 @@ const HomePageUS = () => {
         </div>
       </section>
 
-      {/* Campaign Detail Modal */}
-      <Dialog open={detailModal} onOpenChange={setDetailModal}>
-        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
-          {selectedCampaign && (
-            <>
-              <DialogHeader>
-                <DialogTitle className="text-2xl font-bold text-gray-800">
-                  {selectedCampaign.title}
-                </DialogTitle>
-                <DialogDescription>
-                  <Badge className="mt-2 bg-blue-100 text-blue-800">
-                    {selectedCampaign.brand}
-                  </Badge>
-                </DialogDescription>
-              </DialogHeader>
-              
-              {selectedCampaign.image_url && (
-                <img 
-                  src={selectedCampaign.image_url} 
-                  alt={selectedCampaign.title}
-                  className="w-full h-64 object-cover rounded-lg"
-                />
-              )}
-              
-              <div className="space-y-4">
-                <div>
-                  <h4 className="font-semibold text-gray-800 mb-2">Campaign Details</h4>
-                  <p className="text-gray-600">{selectedCampaign.description}</p>
-                </div>
-                
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="flex items-center">
-                    <DollarSign className="h-5 w-5 mr-2 text-green-600" />
-                    <div>
-                      <div className="text-sm text-gray-600">Reward</div>
-                      <div className="font-semibold text-gray-800">
-                        {formatCurrency(selectedCampaign.reward_amount)}
-                      </div>
-                    </div>
-                  </div>
-                  <div className="flex items-center">
-                    <Users className="h-5 w-5 mr-2 text-purple-600" />
-                    <div>
-                      <div className="text-sm text-gray-600">Spots</div>
-                      <div className="font-semibold text-gray-800">
-                        {selectedCampaign.max_participants}
-                      </div>
-                    </div>
-                  </div>
-                  <div className="flex items-center">
-                    <Calendar className="h-5 w-5 mr-2 text-blue-600" />
-                    <div>
-                      <div className="text-sm text-gray-600">Start Date</div>
-                      <div className="font-semibold text-gray-800">
-                        {formatDate(selectedCampaign.start_date)}
-                      </div>
-                    </div>
-                  </div>
-                  <div className="flex items-center">
-                    <Clock className="h-5 w-5 mr-2 text-orange-600" />
-                    <div>
-                      <div className="text-sm text-gray-600">End Date</div>
-                      <div className="font-semibold text-gray-800">
-                        {formatDate(selectedCampaign.end_date)}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-                
-                {selectedCampaign.requirements && (
-                  <div>
-                    <h4 className="font-semibold text-gray-800 mb-2">Requirements</h4>
-                    <p className="text-gray-600 whitespace-pre-wrap">{selectedCampaign.requirements}</p>
-                  </div>
-                )}
-                
-                <Button 
-                  className="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white hover:from-blue-700 hover:to-purple-700"
-                  onClick={() => handleApply(selectedCampaign.id)}
-                >
-                  Apply to This Campaign
-                  <ArrowRight className="ml-2 h-4 w-4" />
-                </Button>
-              </div>
-            </>
-          )}
-        </DialogContent>
-      </Dialog>
-
-      {/* Footer */}
-      <footer className="bg-gray-900 text-white py-12 px-4 mt-20">
-        <div className="container mx-auto">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <div>
-              <h4 className="text-xl font-bold mb-4">CNEC USA</h4>
-              <p className="text-gray-400">
-                Empowering creators to build successful careers through brand partnerships.
-              </p>
-            </div>
-            <div>
-              <h4 className="text-lg font-semibold mb-4">Quick Links</h4>
-              <ul className="space-y-2 text-gray-400">
-                <li><a href="#campaigns" className="hover:text-white transition-colors">Campaigns</a></li>
-                <li><a href="#about" className="hover:text-white transition-colors">About Us</a></li>
-                <li><a href="#guide" className="hover:text-white transition-colors">How It Works</a></li>
-              </ul>
-            </div>
-            <div>
-              <h4 className="text-lg font-semibold mb-4">Contact</h4>
-              <ul className="space-y-2 text-gray-400">
-                <li className="flex items-center">
-                  <Mail className="h-4 w-4 mr-2" />
-                  mkt@cnecbiz.com
-                </li>
-              </ul>
-            </div>
-          </div>
-          <div className="border-t border-gray-800 mt-8 pt-8 text-center text-gray-400">
-            <p>&copy; 2025 CNEC USA. All rights reserved.</p>
-          </div>
+      {/* CTA Section */}
+      <section className="py-20 px-4 bg-gradient-to-r from-blue-600 to-purple-600 text-white">
+        <div className="container mx-auto text-center max-w-3xl">
+          <h2 className="text-4xl font-bold mb-6">Ready to Start Earning?</h2>
+          <p className="text-xl mb-8 opacity-90">
+            Join thousands of creators who are already making money with K-beauty brands
+          </p>
+          <Button size="lg" className="bg-white text-blue-600 hover:bg-gray-100 text-lg px-8 py-6">
+            <Link to="/signup" className="flex items-center">
+              Create Free Account
+              <ArrowRight className="ml-2 h-5 w-5" />
+            </Link>
+          </Button>
         </div>
-      </footer>
+      </section>
+
+      {/* Campaign Detail Modal */}
+      {selectedCampaign && (
+        <Dialog open={detailModal} onOpenChange={setDetailModal}>
+          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle className="text-2xl">{selectedCampaign.title}</DialogTitle>
+              <DialogDescription>
+                <Badge className={`${getPlatformColor(selectedCampaign.platform_type)} mt-2`}>
+                  {getPlatformIcon(selectedCampaign.platform_type)}
+                  <span className="ml-1">{selectedCampaign.platform_type}</span>
+                </Badge>
+              </DialogDescription>
+            </DialogHeader>
+            
+            <div className="space-y-6">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="bg-green-50 p-4 rounded-lg">
+                  <div className="text-sm text-gray-600 mb-1">Reward</div>
+                  <div className="text-2xl font-bold text-green-700">{formatCurrency(selectedCampaign.reward_amount)}</div>
+                </div>
+                <div className="bg-blue-50 p-4 rounded-lg">
+                  <div className="text-sm text-gray-600 mb-1">Spots Available</div>
+                  <div className="text-2xl font-bold text-blue-700">
+                    {(selectedCampaign.total_slots - (selectedCampaign.slots_filled || 0))} / {selectedCampaign.total_slots}
+                  </div>
+                </div>
+              </div>
+
+              <div>
+                <h3 className="font-semibold mb-2 flex items-center">
+                  <Target className="h-5 w-5 mr-2" />
+                  Campaign Description
+                </h3>
+                <p className="text-gray-700 whitespace-pre-wrap">{selectedCampaign.description}</p>
+              </div>
+
+              {selectedCampaign.requirements && (
+                <div>
+                  <h3 className="font-semibold mb-2 flex items-center">
+                    <CheckCircle className="h-5 w-5 mr-2" />
+                    Requirements
+                  </h3>
+                  <p className="text-gray-700 whitespace-pre-wrap">{selectedCampaign.requirements}</p>
+                </div>
+              )}
+
+              <div className="flex items-center text-sm text-gray-600">
+                <Calendar className="h-4 w-4 mr-2" />
+                Application Deadline: {formatDate(selectedCampaign.deadline)}
+              </div>
+
+              <Button className="w-full bg-blue-600 hover:bg-blue-700 text-white" size="lg" onClick={() => {
+                setDetailModal(false)
+                handleApply(selectedCampaign.id)
+              }}>
+                Apply to This Campaign
+                <ArrowRight className="ml-2 h-5 w-5" />
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
+      )}
     </div>
   )
 }
 
 export default HomePageUS
-
