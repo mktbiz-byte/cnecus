@@ -159,12 +159,13 @@ const HomePageUS = () => {
     }
   }
 
-  const getPrimaryPlatform = (targetPlatforms) => {
-    if (!targetPlatforms) return 'instagram'
-    if (targetPlatforms.instagram) return 'instagram'
-    if (targetPlatforms.tiktok) return 'tiktok'
-    if (targetPlatforms.youtube) return 'youtube'
-    return 'instagram'
+  const getActivePlatforms = (targetPlatforms) => {
+    if (!targetPlatforms) return ['instagram']
+    const platforms = []
+    if (targetPlatforms.instagram) platforms.push('instagram')
+    if (targetPlatforms.tiktok) platforms.push('tiktok')
+    if (targetPlatforms.youtube) platforms.push('youtube')
+    return platforms.length > 0 ? platforms : ['instagram']
   }
 
   return (
@@ -459,10 +460,14 @@ const HomePageUS = () => {
                   )}
                   <CardHeader>
                     <div className="flex items-start justify-between mb-2">
-                      <Badge className={`${getPlatformColor(getPrimaryPlatform(campaign.target_platforms))} flex items-center gap-1.5 px-3 py-1`}>
-                        <span className="flex items-center">{getPlatformIcon(getPrimaryPlatform(campaign.target_platforms))}</span>
-                        <span className="font-medium capitalize">{getPrimaryPlatform(campaign.target_platforms)}</span>
-                      </Badge>
+                      <div className="flex gap-1.5 flex-wrap">
+                        {getActivePlatforms(campaign.target_platforms).map((platform) => (
+                          <Badge key={platform} className={`${getPlatformColor(platform)} flex items-center gap-1 px-2 py-0.5 text-xs`}>
+                            <span className="flex items-center">{getPlatformIcon(platform)}</span>
+                            <span className="font-medium capitalize">{platform}</span>
+                          </Badge>
+                        ))}
+                      </div>
                       <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
                         <DollarSign className="h-3 w-3 mr-1" />
                         {formatCurrency(campaign.reward_amount)}
@@ -479,7 +484,7 @@ const HomePageUS = () => {
                       </div>
                       <div className="flex items-center text-sm text-gray-600">
                         <Users className="h-4 w-4 mr-2" />
-                        {campaign.slots_filled || 0} / {campaign.total_slots} spots filled
+                        {campaign.total_slots} spots available
                       </div>
                       <Button className="w-full bg-blue-600 hover:bg-blue-700 text-white" onClick={(e) => {
                         e.stopPropagation()
