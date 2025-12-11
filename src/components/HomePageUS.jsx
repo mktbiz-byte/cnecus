@@ -484,7 +484,7 @@ const HomePageUS = () => {
                       </div>
                       <div className="flex items-center text-sm text-gray-600">
                         <Users className="h-4 w-4 mr-2" />
-                        {campaign.total_slots} spots available
+                        {campaign.max_participants || campaign.total_slots} spots available
                       </div>
                       <Button className="w-full bg-blue-600 hover:bg-blue-700 text-white" onClick={(e) => {
                         e.stopPropagation()
@@ -541,7 +541,7 @@ const HomePageUS = () => {
                 <div className="bg-blue-50 p-4 rounded-lg">
                   <div className="text-sm text-gray-600 mb-1">Spots Available</div>
                   <div className="text-2xl font-bold text-blue-700">
-                    {(selectedCampaign.total_slots - (selectedCampaign.slots_filled || 0))} / {selectedCampaign.total_slots}
+                    {(selectedCampaign.max_participants || selectedCampaign.total_slots) - (selectedCampaign.slots_filled || 0)} / {selectedCampaign.max_participants || selectedCampaign.total_slots}
                   </div>
                 </div>
               </div>
