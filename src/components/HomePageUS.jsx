@@ -159,6 +159,14 @@ const HomePageUS = () => {
     }
   }
 
+  const getPrimaryPlatform = (targetPlatforms) => {
+    if (!targetPlatforms) return 'instagram'
+    if (targetPlatforms.instagram) return 'instagram'
+    if (targetPlatforms.tiktok) return 'tiktok'
+    if (targetPlatforms.youtube) return 'youtube'
+    return 'instagram'
+  }
+
   return (
     <div className="min-h-screen bg-white">
       {/* Header */}
@@ -440,10 +448,10 @@ const HomePageUS = () => {
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-7xl mx-auto">
               {campaigns.map((campaign) => (
                 <Card key={campaign.id} className="hover:shadow-lg transition-shadow cursor-pointer border-2 overflow-hidden" onClick={() => handleCampaignClick(campaign)}>
-                  {campaign.product_image_url && (
+                  {campaign.image_url && (
                     <div className="w-full h-48 overflow-hidden bg-gray-100">
                       <img 
-                        src={campaign.product_image_url} 
+                        src={campaign.image_url} 
                         alt={campaign.title}
                         className="w-full h-full object-cover"
                       />
@@ -451,9 +459,9 @@ const HomePageUS = () => {
                   )}
                   <CardHeader>
                     <div className="flex items-start justify-between mb-2">
-                      <Badge className={`${getPlatformColor(campaign.platform_type)} flex items-center gap-1.5 px-3 py-1`}>
-                        <span className="flex items-center">{getPlatformIcon(campaign.platform_type)}</span>
-                        <span className="font-medium capitalize">{campaign.platform_type}</span>
+                      <Badge className={`${getPlatformColor(getPrimaryPlatform(campaign.target_platforms))} flex items-center gap-1.5 px-3 py-1`}>
+                        <span className="flex items-center">{getPlatformIcon(getPrimaryPlatform(campaign.target_platforms))}</span>
+                        <span className="font-medium capitalize">{getPrimaryPlatform(campaign.target_platforms)}</span>
                       </Badge>
                       <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
                         <DollarSign className="h-3 w-3 mr-1" />
