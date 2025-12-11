@@ -439,7 +439,16 @@ const HomePageUS = () => {
           ) : (
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-7xl mx-auto">
               {campaigns.map((campaign) => (
-                <Card key={campaign.id} className="hover:shadow-lg transition-shadow cursor-pointer border-2" onClick={() => handleCampaignClick(campaign)}>
+                <Card key={campaign.id} className="hover:shadow-lg transition-shadow cursor-pointer border-2 overflow-hidden" onClick={() => handleCampaignClick(campaign)}>
+                  {campaign.product_image_url && (
+                    <div className="w-full h-48 overflow-hidden bg-gray-100">
+                      <img 
+                        src={campaign.product_image_url} 
+                        alt={campaign.title}
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                  )}
                   <CardHeader>
                     <div className="flex items-start justify-between mb-2">
                       <Badge className={`${getPlatformColor(campaign.platform_type)} flex items-center gap-1`}>
