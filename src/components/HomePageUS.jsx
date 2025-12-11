@@ -451,9 +451,9 @@ const HomePageUS = () => {
                   )}
                   <CardHeader>
                     <div className="flex items-start justify-between mb-2">
-                      <Badge className={`${getPlatformColor(campaign.platform_type)} flex items-center gap-1`}>
-                        {getPlatformIcon(campaign.platform_type)}
-                        {campaign.platform_type}
+                      <Badge className={`${getPlatformColor(campaign.platform_type)} flex items-center gap-1.5 px-3 py-1`}>
+                        <span className="flex items-center">{getPlatformIcon(campaign.platform_type)}</span>
+                        <span className="font-medium capitalize">{campaign.platform_type}</span>
                       </Badge>
                       <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
                         <DollarSign className="h-3 w-3 mr-1" />
