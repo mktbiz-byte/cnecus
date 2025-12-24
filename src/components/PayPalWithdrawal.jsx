@@ -27,8 +27,37 @@ const PayPalWithdrawal = () => {
     confirm_email: ''
   })
 
-  // 다국어 텍스트
+  // Multi-language texts
   const texts = {
+    en: {
+      title: 'PayPal Withdrawal',
+      currentPoints: 'Current Points',
+      minimumWithdrawal: 'Minimum withdrawal: 10P',
+      withdrawalHistory: 'Withdrawal History',
+      requestWithdrawal: 'Request Withdrawal',
+      amount: 'Withdrawal Amount',
+      paypalEmail: 'PayPal Email',
+      paypalName: 'PayPal Account Name',
+      confirmEmail: 'Confirm PayPal Email',
+      submit: 'Submit Request',
+      cancel: 'Cancel',
+      status: {
+        pending: 'Pending',
+        processing: 'Processing',
+        completed: 'Completed',
+        rejected: 'Rejected'
+      },
+      errors: {
+        insufficientPoints: 'Insufficient points',
+        minimumAmount: 'Minimum withdrawal is 10P',
+        emailMismatch: 'PayPal emails do not match',
+        invalidEmail: 'Please enter a valid email address',
+        required: 'This field is required'
+      },
+      success: {
+        withdrawalRequested: 'Withdrawal request submitted. Processing takes 1-3 business days.'
+      }
+    },
     ko: {
       title: 'PayPal 출금',
       currentPoints: '현재 포인트',
@@ -89,7 +118,7 @@ const PayPalWithdrawal = () => {
     }
   }
 
-  const t = texts[language] || texts.ko
+  const t = texts[language] || texts.en
 
   useEffect(() => {
     if (user) {

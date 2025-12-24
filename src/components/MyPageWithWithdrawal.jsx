@@ -550,12 +550,12 @@ const MyPageWithWithdrawal = () => {
     // 숫자로 변환 시도
     const numValue = Number(value)
     if (isNaN(numValue)) {
-      throw new Error(language === 'ja' ? `${fieldName}は数値で入力してください。` : `${fieldName}은(는) 숫자로 입력해주세요.`)
+      throw new Error(`${fieldName} must be a number.`)
     }
     
     // 음수는 허용하지 않음 (나이, 팔로워 수 등)
     if (numValue < 0) {
-      throw new Error(language === 'ja' ? `${fieldName}は0以上の数値で入力してください。` : `${fieldName}은(는) 0 이상의 숫자로 입력해주세요.`)
+      throw new Error(`${fieldName} must be 0 or greater.`)
     }
     
     return numValue
@@ -577,7 +577,7 @@ const MyPageWithWithdrawal = () => {
       // 나이 필드 (숫자 검증)
       if (editForm.age !== undefined) {
         try {
-          updateData.age = validateNumber(editForm.age, language === 'ja' ? '年齢' : '나이')
+          updateData.age = validateNumber(editForm.age, 'Age')
         } catch (err) {
           console.warn('나이 필드 검증 실패:', err.message)
           updateData.age = null
@@ -684,7 +684,7 @@ const MyPageWithWithdrawal = () => {
           amount: requestAmount,
           paypal_email: withdrawForm.paypalEmail,
           paypal_name: withdrawForm.paypalName,
-          reason: withdrawForm.reason || 'ポイント出金申請',
+          reason: withdrawForm.reason || 'Point Withdrawal Request',
           status: 'pending',
           created_at: new Date().toISOString()
         }])
@@ -706,7 +706,7 @@ const MyPageWithWithdrawal = () => {
 
       if (profileUpdateError) {
         console.error('프로필 포인트 업데이트 오류:', profileUpdateError)
-        throw new Error('포인트 차감에 실패했습니다.')
+        throw new Error('Failed to deduct points.')
       }
 
       // 포인트 차감 기록을 point_transactions에 추가 (출금 신청이 아닌 포인트 사용으로 기록)
@@ -716,7 +716,7 @@ const MyPageWithWithdrawal = () => {
           user_id: user.id,
           amount: -requestAmount,
           transaction_type: 'spent',
-          description: language === 'ja' ? `ポイント使用: 出金申請` : `포인트 사용: 출금 신청`,
+          description: 'Points used: Withdrawal request',
           created_at: new Date().toISOString()
         }])
 
@@ -814,7 +814,7 @@ const MyPageWithWithdrawal = () => {
         // 포인트 기록 실패는 치명적이지 않으므로 계속 진행
       }
       
-      setSuccess(t.messages?.snsUploadSubmitted || 'SNS投稿およびポイント申請が完了しました。')
+      setSuccess(t.messages?.snsUploadSubmitted || 'SNS upload and point request submitted successfully.')
       setShowSnsUploadModal(false)
       setSnsUploadForm({ sns_upload_url: '', notes: '' })
       setSelectedApplication(null)
@@ -825,7 +825,7 @@ const MyPageWithWithdrawal = () => {
       setTimeout(() => setSuccess(''), 5000)
     } catch (error) {
       console.error('SNS 업로드 오류:', error)
-      setError(error.message || 'エラーが発生しました。再試行してください。')
+      setError(error.message || 'An error occurred. Please try again.')
     } finally {
       setProcessing(false)
     }
@@ -934,11 +934,11 @@ const MyPageWithWithdrawal = () => {
       spend: t.spent,
       spent: t.spent,
       admin_subtract: t.spent,
-      pending: language === 'ja' ? '申請中' : '신청중',
-      approved: language === 'ja' ? '承認済み' : 'Approved',
-      rejected: language === 'ja' ? '拒否済み' : '거부됨',
-      completed: language === 'ja' ? '完了' : 'Completed',
-      reward: language === 'ja' ? '報酬' : '보상'
+      pending: 'Pending',
+      approved: 'Approved',
+      rejected: 'Rejected',
+      completed: 'Completed',
+      reward: 'Reward'
     }
     return types[type] || type
   }
@@ -960,7 +960,7 @@ const MyPageWithWithdrawal = () => {
             <div>
               <h1 className="text-3xl font-bold text-gray-900">{t.title}</h1>
               <p className="mt-2 text-gray-600">
-{language === 'ja' ? `${profile?.name || user?.email}さんのアカウント情報` : `${profile?.name || user?.email}님의 계정 정보`}
+{`${profile?.name || user?.email}'s Account Information`}
               </p>
             </div>
             <div className="flex space-x-3">
@@ -1095,7 +1095,7 @@ const MyPageWithWithdrawal = () => {
                   <div>
                     <label className="block text-sm font-medium text-gray-700">
                       {t.phone}
-                      <span className="text-xs text-gray-500 ml-1">({language === 'ja' ? '任意' : 'Optional'})</span>
+                      <span className="text-xs text-gray-500 ml-1">(Optional)</span>
                     </label>
                     {isEditing ? (
                       <input
@@ -1103,7 +1103,7 @@ const MyPageWithWithdrawal = () => {
                         value={editForm.phone}
                         onChange={(e) => setEditForm({...editForm, phone: e.target.value})}
                         className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        placeholder="080-1234-5678"
+                        placeholder="(555) 123-4567"
                       />
                     ) : (
                       <p className="mt-1 text-sm text-gray-900">{profile?.phone || 'Not Registered'}</p>
@@ -1115,7 +1115,7 @@ const MyPageWithWithdrawal = () => {
                   <div>
                     <label className="block text-sm font-medium text-gray-700">
                       {t.address}
-                      <span className="text-xs text-gray-500 ml-1">({language === 'ja' ? '任意' : 'Optional'})</span>
+                      <span className="text-xs text-gray-500 ml-1">(Optional)</span>
                     </label>
                     {isEditing ? (
                       <input
@@ -1156,7 +1156,7 @@ const MyPageWithWithdrawal = () => {
                   <div>
                     <label className="block text-sm font-medium text-gray-700">
                       {t.age}
-                      <span className="text-xs text-gray-500 ml-1">({language === 'ja' ? '任意' : 'Optional'})</span>
+                      <span className="text-xs text-gray-500 ml-1">(Optional)</span>
                     </label>
                     {isEditing ? (
                       <input
@@ -1176,7 +1176,7 @@ const MyPageWithWithdrawal = () => {
                   <div>
                     <label className="block text-sm font-medium text-gray-700">
                       {t.region}
-                      <span className="text-xs text-gray-500 ml-1">({language === 'ja' ? '任意' : 'Optional'})</span>
+                      <span className="text-xs text-gray-500 ml-1">(Optional)</span>
                     </label>
                     {isEditing ? (
                       <input
@@ -1194,7 +1194,7 @@ const MyPageWithWithdrawal = () => {
                   <div>
                     <label className="block text-sm font-medium text-gray-700">
                       {t.bio}
-                      <span className="text-xs text-gray-500 ml-1">({language === 'ja' ? '任意' : 'Optional'})</span>
+                      <span className="text-xs text-gray-500 ml-1">(Optional)</span>
                     </label>
                     {isEditing ? (
                       <textarea
@@ -1212,7 +1212,7 @@ const MyPageWithWithdrawal = () => {
                   <div>
                     <label className="block text-sm font-medium text-gray-700">{t.joinDate}</label>
                     <p className="mt-1 text-sm text-gray-900">
-                      {profile?.created_at ? new Date(profile.created_at).toLocaleDateString('ja-JP') : '-'}
+                      {profile?.created_at ? new Date(profile.created_at).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) : '-'}
                     </p>
                   </div>
                   
@@ -1477,13 +1477,13 @@ const MyPageWithWithdrawal = () => {
                               application.status === 'rejected' ? 'bg-red-100 text-red-800' :
                               'bg-yellow-100 text-yellow-800'
                             }`}>
-                              {application.status === 'approved' ? ('承認済み') :
-                               application.status === 'rejected' ? ('拒否済み') : 
-                               ('待機中')}
+                              {application.status === 'approved' ? ('Approved') :
+                               application.status === 'rejected' ? ('Rejected') :
+                               ('Pending')}
                             </span>
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                            {new Date(application.created_at).toLocaleDateString('ja-JP')}
+                            {new Date(application.created_at).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })}
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap">
                             {application.status === 'approved' ? (
@@ -1565,13 +1565,10 @@ const MyPageWithWithdrawal = () => {
                     <AlertTriangle className="h-5 w-5 text-amber-600 mt-0.5 mr-3 flex-shrink-0" />
                     <div className="text-sm text-amber-800">
                       <p className="font-medium mb-1">
-                        {'⚠️ SNS投稿注意事項'}
+                        {'⚠️ SNS Posting Guidelines'}
                       </p>
                       <p>
-                        {language === 'ko' 
-                          ? 'SNS 업로드는 영상이 1회 수정된 후 업로드 해주세요. 절대 바로 올리지 마세요.' 
-                          : 'SNS投稿は動画を1回修正してからアップロードしてください。絶対にそのまま投稿しないでください。'
-                        }
+                        Please upload to SNS only after your video has been reviewed and approved. Do not post immediately without approval.
                       </p>
                     </div>
                   </div>
@@ -1618,7 +1615,7 @@ const MyPageWithWithdrawal = () => {
                             PayPal
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                            ¥{withdrawal.amount?.toLocaleString() || '0'}
+                            ${withdrawal.amount?.toLocaleString() || '0'}
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap">
                             <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
@@ -1627,18 +1624,18 @@ const MyPageWithWithdrawal = () => {
                               withdrawal.status === 'rejected' ? 'bg-red-100 text-red-800' :
                               'bg-yellow-100 text-yellow-800'
                             }`}>
-                              {withdrawal.status === 'completed' ? ('完了') :
-                               withdrawal.status === 'approved' ? ('承認済み') :
-                               withdrawal.status === 'rejected' ? ('拒否済み') : 
-                               ('待機中')}
+                              {withdrawal.status === 'completed' ? ('Completed') :
+                               withdrawal.status === 'approved' ? ('Approved') :
+                               withdrawal.status === 'rejected' ? ('Rejected') :
+                               ('Pending')}
                             </span>
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                            {new Date(withdrawal.created_at).toLocaleDateString('ja-JP')}
+                            {new Date(withdrawal.created_at).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })}
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                            {withdrawal.processed_at ? 
-                              new Date(withdrawal.processed_at).toLocaleDateString('ja-JP') : 
+                            {withdrawal.processed_at ?
+                              new Date(withdrawal.processed_at).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' }) :
                               '-'
                             }
                           </td>
@@ -1701,7 +1698,7 @@ const MyPageWithWithdrawal = () => {
                             </div>
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                            {new Date(transaction.created_at).toLocaleDateString('ko-KR')}
+                            {new Date(transaction.created_at).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })}
                           </td>
                         </tr>
                       ))
@@ -1717,13 +1714,10 @@ const MyPageWithWithdrawal = () => {
                     <AlertTriangle className="h-5 w-5 text-amber-600 mt-0.5 mr-3 flex-shrink-0" />
                     <div className="text-sm text-amber-800">
                       <p className="font-medium mb-1">
-                        {'⚠️ SNS投稿注意事項'}
+                        {'⚠️ SNS Posting Guidelines'}
                       </p>
                       <p>
-                        {language === 'ko' 
-                          ? 'SNS 업로드는 영상이 1회 수정된 후 업로드 해주세요. 절대 바로 올리지 마세요.' 
-                          : 'SNS投稿は動画を1回修正してからアップロードしてください。絶対にそのまま投稿しないでください。'
-                        }
+                        Please upload to SNS only after your video has been reviewed and approved. Do not post immediately without approval.
                       </p>
                     </div>
                   </div>
@@ -1793,13 +1787,13 @@ const MyPageWithWithdrawal = () => {
                   </div>
                 )}
                 
-                {/* 포인트 가치 안내 */}
+                {/* Point value guide */}
                 <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
                   <p className="text-sm text-blue-800 font-medium">
-                    💰 {language === 'ja' ? '1ポイント = 1円です' : '1포인트 = 1엔입니다'}
+                    💰 1 Point = $1.00 USD
                   </p>
                   <p className="text-xs text-blue-600 mt-1">
-                    {language === 'ja' ? 'PayPalで日本円として出金されます' : 'PayPal로 일본 엔화로 출금됩니다'}
+                    Withdrawals are processed via PayPal in USD
                   </p>
                 </div>
 
@@ -1812,15 +1806,15 @@ const MyPageWithWithdrawal = () => {
                       type="number"
                       value={withdrawForm.amount}
                       onChange={(e) => setWithdrawForm({...withdrawForm, amount: e.target.value})}
-                      placeholder={language === 'ja' ? '出金するポイント数' : '출금할 포인트 수'}
+                      placeholder="Enter points to withdraw"
                       className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
                       max={profile?.points || 0}
                     />
                     <p className="text-sm text-gray-500 mt-1">
-                      {language === 'ja' ? '保有ポイント' : '보유 포인트'}: {profile?.points?.toLocaleString() || 0}P
+                      Available Points: {profile?.points?.toLocaleString() || 0}P
                       {withdrawForm.amount && (
                         <span className="ml-2 text-green-600 font-medium">
-                          (≈ ¥{parseInt(withdrawForm.amount || 0).toLocaleString()})
+                          (≈ ${parseInt(withdrawForm.amount || 0).toLocaleString()} USD)
                         </span>
                       )}
                     </p>
@@ -1834,7 +1828,7 @@ const MyPageWithWithdrawal = () => {
                       type="email"
                       value={withdrawForm.paypalEmail}
                       onChange={(e) => setWithdrawForm({...withdrawForm, paypalEmail: e.target.value})}
-                      placeholder={language === 'ja' ? 'PayPal アカウントメール' : 'PayPal 계정 이메일'}
+                      placeholder="your-paypal@email.com"
                       className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
                     />
                   </div>
@@ -1847,7 +1841,7 @@ const MyPageWithWithdrawal = () => {
                       type="text"
                       value={withdrawForm.paypalName}
                       onChange={(e) => setWithdrawForm({...withdrawForm, paypalName: e.target.value})}
-                      placeholder={language === 'ja' ? 'PayPal アカウント名（実名）' : 'PayPal 계정명 (실명)'}
+                      placeholder="Your full name as registered on PayPal"
                       className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
                     />
                   </div>
@@ -1861,7 +1855,7 @@ const MyPageWithWithdrawal = () => {
                       onChange={(e) => setWithdrawForm({...withdrawForm, reason: e.target.value})}
                       rows={3}
                       className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
-                      placeholder={language === 'ja' ? '出金理由（任意）' : '출금 사유 (선택사항)'}
+                      placeholder="Reason for withdrawal (optional)"
                     />
                   </div>
                 </div>
@@ -2014,11 +2008,11 @@ const MyPageWithWithdrawal = () => {
                       type="url"
                       value={snsUploadForm.sns_upload_url}
                       onChange={(e) => setSnsUploadForm({...snsUploadForm, sns_upload_url: e.target.value})}
-                      placeholder={language === 'ja' ? 'https://instagram.com/p/... または https://tiktok.com/@.../video/...' : 'https://instagram.com/p/... 또는 https://tiktok.com/@.../video/...'}
+                      placeholder="https://instagram.com/p/... or https://tiktok.com/@.../video/..."
                       className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                     />
                     <p className="mt-1 text-xs text-gray-500">
-                      {language === 'ja' ? 'Instagram、TikTok、YouTubeなどのSNS投稿URLを入力してください' : 'Instagram, TikTok, YouTube 등의 SNS 게시물 URL을 입력해주세요'}
+                      Enter the URL of your Instagram, TikTok, or YouTube post
                     </p>
                   </div>
                   
@@ -2031,7 +2025,7 @@ const MyPageWithWithdrawal = () => {
                       onChange={(e) => setSnsUploadForm({...snsUploadForm, notes: e.target.value})}
                       rows={3}
                       className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      placeholder={language === 'ja' ? '追加情報があれば入力してください' : '추가 정보가 있으면 입력해주세요'}
+                      placeholder="Enter any additional information (optional)"
                     />
                   </div>
                 </div>
