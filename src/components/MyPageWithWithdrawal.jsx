@@ -2,10 +2,11 @@ import React, { useState, useEffect } from 'react'
 import { useAuth } from '../contexts/AuthContext'
 import { useLanguage } from '../contexts/LanguageContext'
 import { database, supabase } from '../lib/supabase'
-import { 
-  User, Mail, Phone, MapPin, Calendar, Award, 
-  CreditCard, Download, Settings, LogOut, 
-  AlertTriangle, Trash2, Shield, Eye, EyeOff, X
+import {
+  User, Mail, Phone, MapPin, Calendar, Award,
+  CreditCard, Download, Settings, LogOut,
+  AlertTriangle, Trash2, Shield, Eye, EyeOff, X,
+  Camera, Loader2
 } from 'lucide-react'
 
 // PayPal 정보 추출 헬퍼 함수
@@ -78,6 +79,7 @@ const MyPageWithWithdrawal = () => {
 
   // 프로필 편집 관련 상태
   const [isEditing, setIsEditing] = useState(false)
+  const [uploadingImage, setUploadingImage] = useState(false)
   const [editForm, setEditForm] = useState({
     name: '',
     phone: '',
@@ -85,7 +87,7 @@ const MyPageWithWithdrawal = () => {
     age: '',
     region: '',
     skin_type: '',
-
+    profile_image_url: '',
     instagram_url: '',
     tiktok_url: '',
     youtube_url: '',
@@ -398,12 +400,11 @@ const MyPageWithWithdrawal = () => {
         setEditForm({
           name: profileData.name || '',
           phone: profileData.phone || '',
-          // address: profileData.address || '', // 데이터베이스 스키마 적용 후 활성화
           bio: profileData.bio || '',
           age: profileData.age || '',
           region: profileData.region || '',
           skin_type: profileData.skin_type || '',
-
+          profile_image_url: profileData.profile_image_url || '',
           instagram_url: profileData.instagram_url || '',
           tiktok_url: profileData.tiktok_url || '',
           youtube_url: profileData.youtube_url || '',
@@ -535,6 +536,70 @@ const MyPageWithWithdrawal = () => {
     }
   }
 
+  // 프로필 이미지 업로드 함수
+  const handleImageUpload = async (e) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    // 파일 유효성 검사
+    if (!file.type.startsWith('image/')) {
+      setError('Please select an image file')
+      return
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      setError('Image must be less than 5MB')
+      return
+    }
+
+    try {
+      setUploadingImage(true)
+      setError('')
+
+      // 고유 파일명 생성
+      const fileExt = file.name.split('.').pop()
+      const fileName = `${user.id}-${Date.now()}.${fileExt}`
+      const filePath = `profiles/${fileName}`
+
+      // Supabase Storage에 업로드
+      const { data, error: uploadError } = await supabase.storage
+        .from('avatars')
+        .upload(filePath, file, { upsert: true })
+
+      if (uploadError) {
+        console.error('Upload error:', uploadError)
+        setError('Image upload failed. Please try again.')
+        return
+      }
+
+      // Public URL 가져오기
+      const { data: { publicUrl } } = supabase.storage
+        .from('avatars')
+        .getPublicUrl(filePath)
+
+      // editForm 업데이트
+      setEditForm(prev => ({ ...prev, profile_image_url: publicUrl }))
+
+      // DB에도 바로 저장
+      const { error: updateError } = await supabase
+        .from('user_profiles')
+        .update({ profile_image_url: publicUrl, updated_at: new Date().toISOString() })
+        .eq('user_id', user.id)
+
+      if (updateError) {
+        console.error('DB update error:', updateError)
+      } else {
+        setProfile(prev => ({ ...prev, profile_image_url: publicUrl }))
+        setSuccess('Profile photo uploaded!')
+        setTimeout(() => setSuccess(''), 3000)
+      }
+    } catch (error) {
+      console.error('Image upload error:', error)
+      setError('Failed to upload image')
+    } finally {
+      setUploadingImage(false)
+    }
+  }
+
   const handleProfileSave = async () => {
     try {
       setProcessing(true)
@@ -571,6 +636,7 @@ const MyPageWithWithdrawal = () => {
       if (editForm.region !== undefined) updateData.region = editForm.region?.trim() || null
       if (editForm.skin_type !== undefined) updateData.skin_type = editForm.skin_type?.trim() || null
       if (editForm.age !== undefined) updateData.age = editForm.age ? parseInt(editForm.age) : null
+      if (editForm.profile_image_url !== undefined) updateData.profile_image_url = editForm.profile_image_url || null
 
       // SNS URL 필드들
       if (editForm.instagram_url !== undefined) updateData.instagram_url = editForm.instagram_url?.trim() || null
@@ -1041,7 +1107,45 @@ const MyPageWithWithdrawal = () => {
                   <p className="text-red-800">{error}</p>
                 </div>
               )}
-              
+
+              {/* Profile Photo Section */}
+              <div className="mb-6 flex items-center gap-4">
+                <div className="relative">
+                  <div className="w-24 h-24 rounded-full bg-gradient-to-br from-purple-400 to-pink-400 flex items-center justify-center overflow-hidden border-4 border-white shadow-lg">
+                    {(editForm.profile_image_url || profile?.profile_image_url) ? (
+                      <img
+                        src={editForm.profile_image_url || profile?.profile_image_url}
+                        alt="Profile"
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <span className="text-white text-3xl font-bold">
+                        {profile?.name?.charAt(0)?.toUpperCase() || 'U'}
+                      </span>
+                    )}
+                  </div>
+                  <label className="absolute bottom-0 right-0 w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center cursor-pointer hover:bg-blue-700 transition-colors shadow-md">
+                    {uploadingImage ? (
+                      <Loader2 className="h-4 w-4 text-white animate-spin" />
+                    ) : (
+                      <Camera className="h-4 w-4 text-white" />
+                    )}
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={handleImageUpload}
+                      className="hidden"
+                      disabled={uploadingImage}
+                    />
+                  </label>
+                </div>
+                <div>
+                  <p className="font-semibold text-gray-800">{profile?.name || 'Your Name'}</p>
+                  <p className="text-sm text-gray-500">{profile?.email || user?.email}</p>
+                  <p className="text-xs text-gray-400 mt-1">Click camera icon to upload photo</p>
+                </div>
+              </div>
+
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-4">
                   <div>
