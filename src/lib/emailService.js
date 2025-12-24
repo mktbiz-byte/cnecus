@@ -1,19 +1,19 @@
-// 이메일 발송 서비스
+// Email Service for CNEC US Platform
 import { supabase } from './supabase'
 
-// 이메일 템플릿 정의
+// Email Templates - US English Version
 const EMAIL_TEMPLATES = {
-  // 1. 회원가입 완료
+  // 1. Signup Complete
   SIGNUP_COMPLETE: {
-    subject: '【CNEC Japan】会員登録が完了しました',
+    subject: '[CNEC US] Welcome! Your account has been created',
     template: (data) => `
 <!DOCTYPE html>
 <html>
 <head>
     <meta charset="UTF-8">
-    <title>CNEC Japan - 会員登録完了</title>
+    <title>CNEC US - Registration Complete</title>
     <style>
-        body { font-family: 'Hiragino Sans', 'Yu Gothic', sans-serif; line-height: 1.6; color: #333; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; }
         .container { max-width: 600px; margin: 0 auto; padding: 20px; }
         .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0; }
         .content { background: white; padding: 30px; border: 1px solid #e0e0e0; }
@@ -25,40 +25,40 @@ const EMAIL_TEMPLATES = {
 <body>
     <div class="container">
         <div class="header">
-            <h1>🎬 CNEC Japan</h1>
-            <p>K-Beauty × ショート動画専門プラットフォーム</p>
+            <h1>CNEC US</h1>
+            <p>K-Beauty x Short-Form Video Platform</p>
         </div>
         <div class="content">
-            <h2>会員登録が完了しました！</h2>
-            <p>${data.name}様</p>
-            
-            <p>CNEC Japanへのご登録、誠にありがとうございます。<br>
-            あなたのアカウントが正常に作成されました。</p>
-            
+            <h2>Welcome to CNEC US!</h2>
+            <p>Hi ${data.name},</p>
+
+            <p>Thank you for joining CNEC US!<br>
+            Your account has been successfully created.</p>
+
             <div class="highlight">
-                <h3>📧 登録情報</h3>
-                <p><strong>お名前:</strong> ${data.name}</p>
-                <p><strong>メールアドレス:</strong> ${data.email}</p>
-                <p><strong>登録日時:</strong> ${new Date().toLocaleDateString('ja-JP')}</p>
+                <h3>Account Information</h3>
+                <p><strong>Name:</strong> ${data.name}</p>
+                <p><strong>Email:</strong> ${data.email}</p>
+                <p><strong>Registration Date:</strong> ${new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</p>
             </div>
-            
-            <h3>🚀 次のステップ</h3>
+
+            <h3>Next Steps</h3>
             <ol>
-                <li><strong>プロフィール完成:</strong> SNSアカウントや詳細情報を登録</li>
-                <li><strong>キャンペーン参加:</strong> 興味のあるK-Beautyキャンペーンに応募</li>
-                <li><strong>コンテンツ制作:</strong> 承認後、魅力的な動画を制作</li>
-                <li><strong>報酬獲得:</strong> ポイントを獲得して日本の銀行口座へ送金</li>
+                <li><strong>Complete Your Profile:</strong> Add your social media accounts and details</li>
+                <li><strong>Browse Campaigns:</strong> Apply to K-Beauty campaigns that interest you</li>
+                <li><strong>Create Content:</strong> After approval, create engaging video content</li>
+                <li><strong>Earn Rewards:</strong> Get paid directly to your US bank account</li>
             </ol>
-            
+
             <div style="text-align: center;">
-                <a href="https://cnec.jp/" class="button">マイページを見る</a>
+                <a href="https://cnec-us.com/" class="button">View My Dashboard</a>
             </div>
-            
-            <p>ご質問やサポートが必要な場合は、いつでもお気軽にお問い合わせください。</p>
+
+            <p>If you have any questions, please don't hesitate to contact us.</p>
         </div>
         <div class="footer">
-            <p>© 2025 CNEC Japan. All rights reserved.</p>
-            <p>このメールは自動送信されています。</p>
+            <p>&copy; 2025 CNEC US. All rights reserved.</p>
+            <p>This is an automated email.</p>
         </div>
     </div>
 </body>
@@ -66,17 +66,17 @@ const EMAIL_TEMPLATES = {
     `
   },
 
-  // 2. 캠페인 신청 완료
+  // 2. Campaign Application Submitted
   APPLICATION_SUBMITTED: {
-    subject: '【CNEC Japan】キャンペーン応募を受け付けました',
+    subject: '[CNEC US] Your campaign application has been received',
     template: (data) => `
 <!DOCTYPE html>
 <html>
 <head>
     <meta charset="UTF-8">
-    <title>CNEC Japan - キャンペーン応募完了</title>
+    <title>CNEC US - Application Submitted</title>
     <style>
-        body { font-family: 'Hiragino Sans', 'Yu Gothic', sans-serif; line-height: 1.6; color: #333; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; }
         .container { max-width: 600px; margin: 0 auto; padding: 20px; }
         .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0; }
         .content { background: white; padding: 30px; border: 1px solid #e0e0e0; }
@@ -88,47 +88,47 @@ const EMAIL_TEMPLATES = {
 <body>
     <div class="container">
         <div class="header">
-            <h1>🎬 CNEC Japan</h1>
-            <p>キャンペーン応募完了</p>
+            <h1>CNEC US</h1>
+            <p>Application Received</p>
         </div>
         <div class="content">
-            <h2>キャンペーン応募を受け付けました</h2>
-            <p>${data.name}様</p>
-            
-            <p>以下のキャンペーンへの応募を受け付けました。<br>
-            審査結果は2-3営業日以内にご連絡いたします。</p>
-            
+            <h2>Your application has been submitted!</h2>
+            <p>Hi ${data.name},</p>
+
+            <p>We've received your application for the campaign below.<br>
+            You'll hear back from us within 2-3 business days.</p>
+
             <div class="campaign-info">
-                <h3>📋 応募キャンペーン情報</h3>
-                <p><strong>キャンペーン名:</strong> ${data.campaignTitle}</p>
-                <p><strong>ブランド:</strong> ${data.brandName}</p>
-                <p><strong>報酬金額:</strong> ${data.rewardAmount}円</p>
-                <p><strong>応募日時:</strong> ${new Date().toLocaleDateString('ja-JP')}</p>
-                <p><strong>ステータス:</strong> <span class="status-badge">審査中</span></p>
+                <h3>Campaign Details</h3>
+                <p><strong>Campaign:</strong> ${data.campaignTitle}</p>
+                <p><strong>Brand:</strong> ${data.brandName}</p>
+                <p><strong>Reward:</strong> $${data.rewardAmount}</p>
+                <p><strong>Applied:</strong> ${new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</p>
+                <p><strong>Status:</strong> <span class="status-badge">Under Review</span></p>
             </div>
-            
-            <h3>📝 提出いただいた情報</h3>
+
+            <h3>What You Submitted</h3>
             <ul>
-                <li>基本情報（お名前、年齢、連絡先）</li>
-                <li>肌タイプ・肌悩み情報</li>
-                <li>配送先住所</li>
-                <li>SNSアカウント情報</li>
-                <li>応募動機・企画案</li>
+                <li>Basic information (name, age, contact)</li>
+                <li>Skin type and concerns</li>
+                <li>Shipping address</li>
+                <li>Social media accounts</li>
+                <li>Application motivation and ideas</li>
             </ul>
-            
-            <h3>🔍 審査について</h3>
-            <p>以下の基準で審査を行います：</p>
+
+            <h3>Review Process</h3>
+            <p>We evaluate applications based on:</p>
             <ul>
-                <li>SNSアカウントの活動状況</li>
-                <li>フォロワー数と エンゲージメント率</li>
-                <li>コンテンツの質と一貫性</li>
-                <li>ブランドとの親和性</li>
+                <li>Social media account activity</li>
+                <li>Follower count and engagement rate</li>
+                <li>Content quality and consistency</li>
+                <li>Brand fit</li>
             </ul>
-            
-            <p>審査結果は登録いただいたメールアドレスにご連絡いたします。</p>
+
+            <p>We'll notify you of the results via email.</p>
         </div>
         <div class="footer">
-            <p>© 2025 CNEC Japan. All rights reserved.</p>
+            <p>&copy; 2025 CNEC US. All rights reserved.</p>
         </div>
     </div>
 </body>
@@ -136,17 +136,17 @@ const EMAIL_TEMPLATES = {
     `
   },
 
-  // 3. 캠페인 확정 (승인)
+  // 3. Campaign Application Approved
   APPLICATION_APPROVED: {
-    subject: '【CNEC Japan】🎉 キャンペーン参加が確定しました！',
+    subject: '[CNEC US] Congratulations! You\'ve been selected for a campaign!',
     template: (data) => `
 <!DOCTYPE html>
 <html>
 <head>
     <meta charset="UTF-8">
-    <title>CNEC Japan - キャンペーン参加確定</title>
+    <title>CNEC US - You're Selected!</title>
     <style>
-        body { font-family: 'Hiragino Sans', 'Yu Gothic', sans-serif; line-height: 1.6; color: #333; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; }
         .container { max-width: 600px; margin: 0 auto; padding: 20px; }
         .header { background: linear-gradient(135deg, #28a745 0%, #20c997 100%); color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0; }
         .content { background: white; padding: 30px; border: 1px solid #e0e0e0; }
@@ -159,55 +159,55 @@ const EMAIL_TEMPLATES = {
 <body>
     <div class="container">
         <div class="header">
-            <h1>🎉 おめでとうございます！</h1>
-            <p>キャンペーン参加が確定しました</p>
+            <h1>Congratulations!</h1>
+            <p>You've been selected for a campaign</p>
         </div>
         <div class="content">
             <div class="success-box">
-                <h2>✅ ${data.campaignTitle}</h2>
-                <p><strong>${data.name}様のキャンペーン参加が正式に確定いたしました！</strong></p>
+                <h2>${data.campaignTitle}</h2>
+                <p><strong>${data.name}, you've been officially selected for this campaign!</strong></p>
             </div>
-            
-            <h3>📅 重要な日程</h3>
+
+            <h3>Important Dates</h3>
             <div class="deadline-box">
-                <p><strong>🎬 動画投稿締切:</strong> ${data.deadline}</p>
-                <p><strong>📦 商品発送予定:</strong> ${data.shippingDate}</p>
-                <p><strong>💰 報酬金額:</strong> ${data.rewardAmount}円</p>
+                <p><strong>Submission Deadline:</strong> ${data.deadline}</p>
+                <p><strong>Expected Shipping:</strong> ${data.shippingDate}</p>
+                <p><strong>Reward:</strong> $${data.rewardAmount}</p>
             </div>
-            
-            <h3>📋 次のステップ</h3>
+
+            <h3>Next Steps</h3>
             <ol>
-                <li><strong>キャンペーン資料の確認</strong><br>
-                    下記リンクからガイドラインと素材をダウンロードしてください</li>
-                <li><strong>商品の受け取り</strong><br>
-                    登録住所に商品をお送りします</li>
-                <li><strong>コンテンツ制作</strong><br>
-                    ガイドラインに沿って魅力的な動画を制作</li>
-                <li><strong>SNS投稿</strong><br>
-                    指定ハッシュタグを使用してSNSに投稿</li>
-                <li><strong>投稿URLの報告</strong><br>
-                    マイページから投稿URLを報告</li>
+                <li><strong>Review Campaign Materials</strong><br>
+                    Download guidelines and assets from the links below</li>
+                <li><strong>Receive Your Products</strong><br>
+                    We'll ship to your registered address</li>
+                <li><strong>Create Content</strong><br>
+                    Follow the guidelines to create engaging video content</li>
+                <li><strong>Post to Social Media</strong><br>
+                    Use the required hashtags when posting</li>
+                <li><strong>Submit Your Post URL</strong><br>
+                    Report your post URL through your dashboard</li>
             </ol>
-            
+
             <div style="text-align: center;">
-                ${data.googleDriveLink ? `<a href="${data.googleDriveLink}" class="button">📁 Google Drive</a>` : ''}
-                ${data.googleSlidesLink ? `<a href="${data.googleSlidesLink}" class="button">📊 Google Slides</a>` : ''}
-                <a href="https://cnec.jp/mypage" class="button">📱 マイページ</a>
+                ${data.googleDriveLink ? `<a href="${data.googleDriveLink}" class="button">Google Drive</a>` : ''}
+                ${data.googleSlidesLink ? `<a href="${data.googleSlidesLink}" class="button">Google Slides</a>` : ''}
+                <a href="https://cnec-us.com/mypage" class="button">My Dashboard</a>
             </div>
-            
-            <h3>⚠️ 重要な注意事項</h3>
+
+            <h3>Important Notes</h3>
             <ul>
-                <li>投稿締切を必ずお守りください</li>
-                <li>ガイドラインに沿った内容で投稿してください</li>
-                <li>指定ハッシュタグの使用は必須です</li>
-                <li>投稿後は必ずURLを報告してください</li>
+                <li>Please meet the submission deadline</li>
+                <li>Follow the content guidelines</li>
+                <li>Required hashtags must be used</li>
+                <li>Submit your post URL after publishing</li>
             </ul>
-            
-            <p>ご質問がございましたら、いつでもお気軽にお問い合わせください。<br>
-            素晴らしいコンテンツの制作をお待ちしております！</p>
+
+            <p>If you have any questions, please reach out to us anytime.<br>
+            We look forward to seeing your amazing content!</p>
         </div>
         <div class="footer">
-            <p>© 2025 CNEC Japan. All rights reserved.</p>
+            <p>&copy; 2025 CNEC US. All rights reserved.</p>
         </div>
     </div>
 </body>
@@ -215,17 +215,17 @@ const EMAIL_TEMPLATES = {
     `
   },
 
-  // 4. 가이드 전달 (자료 업로드 완료)
+  // 4. Campaign Guide Delivered
   GUIDE_DELIVERED: {
-    subject: '【CNEC Japan】📋 キャンペーンガイドをお送りします',
+    subject: '[CNEC US] Your campaign materials are ready!',
     template: (data) => `
 <!DOCTYPE html>
 <html>
 <head>
     <meta charset="UTF-8">
-    <title>CNEC Japan - キャンペーンガイド</title>
+    <title>CNEC US - Campaign Guide</title>
     <style>
-        body { font-family: 'Hiragino Sans', 'Yu Gothic', sans-serif; line-height: 1.6; color: #333; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; }
         .container { max-width: 600px; margin: 0 auto; padding: 20px; }
         .header { background: linear-gradient(135deg, #6f42c1 0%, #e83e8c 100%); color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0; }
         .content { background: white; padding: 30px; border: 1px solid #e0e0e0; }
@@ -237,54 +237,54 @@ const EMAIL_TEMPLATES = {
 <body>
     <div class="container">
         <div class="header">
-            <h1>📋 キャンペーンガイド</h1>
-            <p>制作に必要な資料をお送りします</p>
+            <h1>Campaign Materials Ready</h1>
+            <p>Everything you need for your content</p>
         </div>
         <div class="content">
-            <h2>キャンペーン資料の準備が完了しました</h2>
-            <p>${data.name}様</p>
-            
-            <p>${data.campaignTitle}のキャンペーン資料とガイドラインの準備が完了いたしました。<br>
-            以下のリンクから必要な資料をダウンロードしてください。</p>
-            
+            <h2>Your campaign materials are ready!</h2>
+            <p>Hi ${data.name},</p>
+
+            <p>The materials and guidelines for <strong>${data.campaignTitle}</strong> are now available.<br>
+            Please download everything you need from the links below.</p>
+
             <div class="guide-box">
-                <h3>📁 利用可能な資料</h3>
+                <h3>Available Materials</h3>
                 <ul>
-                    <li>📖 キャンペーンガイドライン</li>
-                    <li>🎨 ブランド素材・ロゴ</li>
-                    <li>📝 投稿テンプレート</li>
-                    <li>🏷️ 必須ハッシュタグリスト</li>
-                    <li>📊 商品情報・特徴</li>
-                    <li>🎬 参考動画・事例</li>
+                    <li>Campaign Guidelines</li>
+                    <li>Brand Assets & Logos</li>
+                    <li>Posting Templates</li>
+                    <li>Required Hashtag List</li>
+                    <li>Product Information & Features</li>
+                    <li>Reference Videos & Examples</li>
                 </ul>
             </div>
-            
+
             <div style="text-align: center;">
-                ${data.googleDriveLink ? `<a href="${data.googleDriveLink}" class="button">📁 Google Drive で開く</a>` : ''}
-                ${data.googleSlidesLink ? `<a href="${data.googleSlidesLink}" class="button">📊 Google Slides で開く</a>` : ''}
+                ${data.googleDriveLink ? `<a href="${data.googleDriveLink}" class="button">Open Google Drive</a>` : ''}
+                ${data.googleSlidesLink ? `<a href="${data.googleSlidesLink}" class="button">Open Google Slides</a>` : ''}
             </div>
-            
-            <h3>📅 スケジュール確認</h3>
+
+            <h3>Schedule Reminder</h3>
             <ul>
-                <li><strong>商品発送:</strong> ${data.shippingDate}</li>
-                <li><strong>投稿締切:</strong> ${data.deadline}</li>
-                <li><strong>3日前リマインド:</strong> ${data.reminder3Days}</li>
-                <li><strong>1日前リマインド:</strong> ${data.reminder1Day}</li>
+                <li><strong>Product Shipping:</strong> ${data.shippingDate}</li>
+                <li><strong>Submission Deadline:</strong> ${data.deadline}</li>
+                <li><strong>3-Day Reminder:</strong> ${data.reminder3Days}</li>
+                <li><strong>1-Day Reminder:</strong> ${data.reminder1Day}</li>
             </ul>
-            
-            <h3>💡 制作のポイント</h3>
+
+            <h3>Content Tips</h3>
             <ul>
-                <li>ガイドラインを必ずお読みください</li>
-                <li>ブランドの世界観を大切にしてください</li>
-                <li>商品の魅力を自然に伝えてください</li>
-                <li>指定ハッシュタグを忘れずに使用してください</li>
+                <li>Read the guidelines carefully</li>
+                <li>Stay true to the brand's aesthetic</li>
+                <li>Showcase the product naturally</li>
+                <li>Don't forget the required hashtags</li>
             </ul>
-            
-            <p>資料をご確認いただき、素晴らしいコンテンツの制作をお願いいたします。<br>
-            ご不明な点がございましたら、お気軽にお問い合わせください。</p>
+
+            <p>Please review the materials and create amazing content!<br>
+            Reach out if you have any questions.</p>
         </div>
         <div class="footer">
-            <p>© 2025 CNEC Japan. All rights reserved.</p>
+            <p>&copy; 2025 CNEC US. All rights reserved.</p>
         </div>
     </div>
 </body>
@@ -292,17 +292,17 @@ const EMAIL_TEMPLATES = {
     `
   },
 
-  // 5. 영상 마감일 3일전 알림
+  // 5. Deadline Reminder - 3 Days
   DEADLINE_REMINDER_3DAYS: {
-    subject: '【CNEC Japan】⏰ 投稿締切まで3日です - リマインダー',
+    subject: '[CNEC US] Reminder: 3 days until submission deadline',
     template: (data) => `
 <!DOCTYPE html>
 <html>
 <head>
     <meta charset="UTF-8">
-    <title>CNEC Japan - 投稿締切リマインダー</title>
+    <title>CNEC US - 3 Day Reminder</title>
     <style>
-        body { font-family: 'Hiragino Sans', 'Yu Gothic', sans-serif; line-height: 1.6; color: #333; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; }
         .container { max-width: 600px; margin: 0 auto; padding: 20px; }
         .header { background: linear-gradient(135deg, #fd7e14 0%, #ffc107 100%); color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0; }
         .content { background: white; padding: 30px; border: 1px solid #e0e0e0; }
@@ -315,52 +315,52 @@ const EMAIL_TEMPLATES = {
 <body>
     <div class="container">
         <div class="header">
-            <h1>⏰ 投稿締切リマインダー</h1>
-            <p>締切まで3日です</p>
+            <h1>Deadline Reminder</h1>
+            <p>3 days remaining</p>
         </div>
         <div class="content">
-            <div class="countdown">⏰ 残り 3日</div>
-            
-            <h2>投稿締切が近づいています</h2>
-            <p>${data.name}様</p>
-            
-            <p>${data.campaignTitle}の投稿締切まで<strong>3日</strong>となりました。<br>
-            制作の進捗はいかがでしょうか？</p>
-            
+            <div class="countdown">3 Days Left</div>
+
+            <h2>Your deadline is approaching</h2>
+            <p>Hi ${data.name},</p>
+
+            <p>Just a friendly reminder that the submission deadline for <strong>${data.campaignTitle}</strong> is in <strong>3 days</strong>.<br>
+            How's your content coming along?</p>
+
             <div class="warning-box">
-                <h3>📅 重要な日程</h3>
-                <p><strong>投稿締切:</strong> ${data.deadline}</p>
-                <p><strong>残り時間:</strong> 3日</p>
-                <p><strong>報酬金額:</strong> ${data.rewardAmount}円</p>
+                <h3>Important Dates</h3>
+                <p><strong>Deadline:</strong> ${data.deadline}</p>
+                <p><strong>Time Remaining:</strong> 3 days</p>
+                <p><strong>Reward:</strong> $${data.rewardAmount}</p>
             </div>
-            
-            <h3>✅ 投稿前チェックリスト</h3>
+
+            <h3>Pre-Submission Checklist</h3>
             <ul>
-                <li>□ ガイドラインに沿った内容になっているか</li>
-                <li>□ 商品の魅力が伝わる内容になっているか</li>
-                <li>□ 指定ハッシュタグを使用しているか</li>
-                <li>□ 投稿文に必要な情報が含まれているか</li>
-                <li>□ 動画の品質は十分か</li>
+                <li>Content follows the guidelines</li>
+                <li>Product is featured prominently</li>
+                <li>Required hashtags are included</li>
+                <li>Caption includes necessary information</li>
+                <li>Video quality is good</li>
             </ul>
-            
-            <h3>📋 投稿後の手順</h3>
+
+            <h3>After Posting</h3>
             <ol>
-                <li>SNSに動画を投稿</li>
-                <li>投稿URLをコピー</li>
-                <li>マイページから投稿URLを報告</li>
-                <li>報酬の確定を待つ</li>
+                <li>Post your video to social media</li>
+                <li>Copy the post URL</li>
+                <li>Submit the URL through your dashboard</li>
+                <li>Wait for reward confirmation</li>
             </ol>
-            
+
             <div style="text-align: center;">
-                <a href="https://cnec.jp/mypage" class="button">📱 マイページで報告</a>
-                ${data.googleDriveLink ? `<a href="${data.googleDriveLink}" class="button">📁 資料を確認</a>` : ''}
+                <a href="https://cnec-us.com/mypage" class="button">Submit Post URL</a>
+                ${data.googleDriveLink ? `<a href="${data.googleDriveLink}" class="button">View Materials</a>` : ''}
             </div>
-            
-            <p>まだ投稿がお済みでない場合は、お早めの投稿をお願いいたします。<br>
-            ご質問やサポートが必要でしたら、いつでもお気軽にお問い合わせください。</p>
+
+            <p>If you haven't posted yet, please submit your content soon.<br>
+            Need help? We're here for you!</p>
         </div>
         <div class="footer">
-            <p>© 2025 CNEC Japan. All rights reserved.</p>
+            <p>&copy; 2025 CNEC US. All rights reserved.</p>
         </div>
     </div>
 </body>
@@ -368,17 +368,17 @@ const EMAIL_TEMPLATES = {
     `
   },
 
-  // 6. 영상 마감일 1일전 알림
+  // 6. Deadline Reminder - 1 Day
   DEADLINE_REMINDER_1DAY: {
-    subject: '【CNEC Japan】🚨 投稿締切まで1日です - 最終リマインダー',
+    subject: '[CNEC US] URGENT: 1 day until submission deadline',
     template: (data) => `
 <!DOCTYPE html>
 <html>
 <head>
     <meta charset="UTF-8">
-    <title>CNEC Japan - 最終リマインダー</title>
+    <title>CNEC US - Final Reminder</title>
     <style>
-        body { font-family: 'Hiragino Sans', 'Yu Gothic', sans-serif; line-height: 1.6; color: #333; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; }
         .container { max-width: 600px; margin: 0 auto; padding: 20px; }
         .header { background: linear-gradient(135deg, #dc3545 0%, #fd7e14 100%); color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0; }
         .content { background: white; padding: 30px; border: 1px solid #e0e0e0; }
@@ -391,49 +391,49 @@ const EMAIL_TEMPLATES = {
 <body>
     <div class="container">
         <div class="header">
-            <h1>🚨 最終リマインダー</h1>
-            <p>投稿締切まで1日です！</p>
+            <h1>Final Reminder</h1>
+            <p>Only 1 day left!</p>
         </div>
         <div class="content">
-            <div class="countdown">🚨 残り 1日</div>
-            
-            <h2>投稿締切が明日に迫っています</h2>
-            <p>${data.name}様</p>
-            
+            <div class="countdown">1 Day Left!</div>
+
+            <h2>Your deadline is tomorrow</h2>
+            <p>Hi ${data.name},</p>
+
             <div class="urgent-box">
-                <h3>⚠️ 緊急：投稿締切について</h3>
-                <p><strong>キャンペーン:</strong> ${data.campaignTitle}</p>
-                <p><strong>投稿締切:</strong> ${data.deadline}</p>
-                <p><strong>残り時間:</strong> 約24時間</p>
-                <p><strong>報酬金額:</strong> ${data.rewardAmount}円</p>
+                <h3>Urgent: Deadline Approaching</h3>
+                <p><strong>Campaign:</strong> ${data.campaignTitle}</p>
+                <p><strong>Deadline:</strong> ${data.deadline}</p>
+                <p><strong>Time Remaining:</strong> ~24 hours</p>
+                <p><strong>Reward:</strong> $${data.rewardAmount}</p>
             </div>
-            
-            <p>まだ投稿がお済みでない場合は、<strong>本日中</strong>の投稿を強くお勧めいたします。<br>
-            締切を過ぎますと、報酬をお支払いできない場合がございます。</p>
-            
-            <h3>🚀 今すぐやるべきこと</h3>
+
+            <p>If you haven't posted yet, we <strong>strongly recommend</strong> submitting your content today.<br>
+            Late submissions may not qualify for payment.</p>
+
+            <h3>What You Need to Do Now</h3>
             <ol>
-                <li><strong>動画の最終確認</strong> - 品質とガイドライン準拠をチェック</li>
-                <li><strong>SNSに投稿</strong> - 指定ハッシュタグを忘れずに</li>
-                <li><strong>URLを報告</strong> - マイページから投稿URLを報告</li>
+                <li><strong>Finalize Your Video</strong> - Check quality and guidelines</li>
+                <li><strong>Post to Social Media</strong> - Don't forget the hashtags</li>
+                <li><strong>Submit Your URL</strong> - Report through your dashboard</li>
             </ol>
-            
+
             <div style="text-align: center;">
-                <a href="https://cnec.jp/mypage" class="button">🚨 今すぐ投稿を報告</a>
+                <a href="https://cnec-us.com/mypage" class="button">Submit Now</a>
             </div>
-            
-            <h3>📞 緊急サポート</h3>
-            <p>技術的な問題や緊急の質問がございましたら、以下までご連絡ください：</p>
+
+            <h3>Need Help?</h3>
+            <p>If you're experiencing technical issues or have urgent questions:</p>
             <ul>
-                <li>📧 メール: support@cnec.jp</li>
-                <li>⏰ 対応時間: 平日 9:00-18:00</li>
+                <li>Email: support@cnec-us.com</li>
+                <li>Hours: Mon-Fri 9:00 AM - 6:00 PM EST</li>
             </ul>
-            
-            <p><strong>重要:</strong> 締切を過ぎた投稿は報酬対象外となる場合がございます。<br>
-            お早めの投稿をお願いいたします。</p>
+
+            <p><strong>Important:</strong> Late submissions may not be eligible for payment.<br>
+            Please submit your content on time.</p>
         </div>
         <div class="footer">
-            <p>© 2025 CNEC Japan. All rights reserved.</p>
+            <p>&copy; 2025 CNEC US. All rights reserved.</p>
         </div>
     </div>
 </body>
@@ -441,80 +441,78 @@ const EMAIL_TEMPLATES = {
     `
   },
 
-  // 7. 영상 마감일 당일 알림
+  // 7. Deadline Day
   DEADLINE_TODAY: {
-    subject: '【CNEC Japan】🔥 本日が投稿締切日です！',
+    subject: '[CNEC US] TODAY is your submission deadline!',
     template: (data) => `
 <!DOCTYPE html>
 <html>
 <head>
     <meta charset="UTF-8">
-    <title>CNEC Japan - 投稿締切日</title>
+    <title>CNEC US - Deadline Today</title>
     <style>
-        body { font-family: 'Hiragino Sans', 'Yu Gothic', sans-serif; line-height: 1.6; color: #333; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; }
         .container { max-width: 600px; margin: 0 auto; padding: 20px; }
         .header { background: linear-gradient(135deg, #dc3545 0%, #6f42c1 100%); color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0; }
         .content { background: white; padding: 30px; border: 1px solid #e0e0e0; }
         .footer { background: #f8f9fa; padding: 20px; text-align: center; border-radius: 0 0 10px 10px; }
-        .button { display: inline-block; background: #dc3545; color: white; padding: 15px 40px; text-decoration: none; border-radius: 5px; margin: 10px 5px; font-weight: bold; animation: pulse 2s infinite; }
+        .button { display: inline-block; background: #dc3545; color: white; padding: 15px 40px; text-decoration: none; border-radius: 5px; margin: 10px 5px; font-weight: bold; }
         .critical-box { background: #f8d7da; border: 2px solid #dc3545; padding: 20px; border-radius: 8px; margin: 20px 0; }
-        .countdown { font-size: 3em; font-weight: bold; color: #dc3545; text-align: center; margin: 20px 0; animation: blink 1s infinite; }
-        @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.05); } 100% { transform: scale(1); } }
-        @keyframes blink { 0%, 50% { opacity: 1; } 51%, 100% { opacity: 0.5; } }
+        .countdown { font-size: 3em; font-weight: bold; color: #dc3545; text-align: center; margin: 20px 0; }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="header">
-            <h1>🔥 投稿締切日</h1>
-            <p>本日中に投稿してください！</p>
+            <h1>DEADLINE DAY</h1>
+            <p>Submit your content today!</p>
         </div>
         <div class="content">
-            <div class="countdown">🔥 本日締切</div>
-            
+            <div class="countdown">DUE TODAY</div>
+
             <div class="critical-box">
-                <h2>⚠️ 重要：本日が投稿締切日です</h2>
-                <p><strong>キャンペーン:</strong> ${data.campaignTitle}</p>
-                <p><strong>投稿締切:</strong> ${data.deadline} 23:59まで</p>
-                <p><strong>報酬金額:</strong> ${data.rewardAmount}円</p>
+                <h2>Important: Today is your deadline</h2>
+                <p><strong>Campaign:</strong> ${data.campaignTitle}</p>
+                <p><strong>Deadline:</strong> ${data.deadline} by 11:59 PM</p>
+                <p><strong>Reward:</strong> $${data.rewardAmount}</p>
             </div>
-            
-            <p>${data.name}様</p>
-            
-            <p><strong>本日が${data.campaignTitle}の投稿締切日です。</strong><br>
-            23:59までに投稿を完了し、マイページから投稿URLを報告してください。</p>
-            
-            <h3>🚨 今すぐ必要な作業</h3>
+
+            <p>Hi ${data.name},</p>
+
+            <p><strong>Today is the deadline for ${data.campaignTitle}.</strong><br>
+            Please complete your post and submit the URL through your dashboard by 11:59 PM.</p>
+
+            <h3>Action Required Now</h3>
             <ol>
-                <li><strong>SNSに投稿</strong> - 指定ハッシュタグを使用</li>
-                <li><strong>投稿URLをコピー</strong></li>
-                <li><strong>マイページで報告</strong> - 23:59まで</li>
+                <li><strong>Post to Social Media</strong> - Use required hashtags</li>
+                <li><strong>Copy Your Post URL</strong></li>
+                <li><strong>Submit Through Dashboard</strong> - Before 11:59 PM</li>
             </ol>
-            
+
             <div style="text-align: center;">
-                <a href="https://cnec.jp/mypage" class="button">🚨 緊急：投稿を報告</a>
+                <a href="https://cnec-us.com/mypage" class="button">SUBMIT NOW</a>
             </div>
-            
-            <h3>📋 最終チェックリスト</h3>
+
+            <h3>Final Checklist</h3>
             <ul>
-                <li>□ 指定ハッシュタグを使用</li>
-                <li>□ ガイドラインに準拠</li>
-                <li>□ 商品が映っている</li>
-                <li>□ 投稿文が適切</li>
-                <li>□ URLを正確にコピー</li>
+                <li>Required hashtags included</li>
+                <li>Follows content guidelines</li>
+                <li>Product is visible</li>
+                <li>Caption is complete</li>
+                <li>URL copied correctly</li>
             </ul>
-            
-            <h3>⚠️ 重要な注意事項</h3>
+
+            <h3>Important Notice</h3>
             <p style="color: #dc3545; font-weight: bold;">
-            締切時刻（23:59）を過ぎた投稿は報酬対象外となります。<br>
-            必ず時間内に投稿とURL報告を完了してください。
+            Submissions after 11:59 PM may not qualify for payment.<br>
+            Please submit your content and URL before the deadline.
             </p>
-            
-            <p>最後まで頑張ってください！<br>
-            素晴らしいコンテンツをお待ちしております。</p>
+
+            <p>You've got this!<br>
+            We can't wait to see your content.</p>
         </div>
         <div class="footer">
-            <p>© 2025 CNEC Japan. All rights reserved.</p>
+            <p>&copy; 2025 CNEC US. All rights reserved.</p>
         </div>
     </div>
 </body>
@@ -522,17 +520,17 @@ const EMAIL_TEMPLATES = {
     `
   },
 
-  // 8. 포인트 신청 완료
+  // 8. Point/Withdrawal Request Submitted
   POINT_REQUEST_SUBMITTED: {
-    subject: '【CNEC Japan】💰 ポイント申請を受け付けました',
+    subject: '[CNEC US] Your withdrawal request has been received',
     template: (data) => `
 <!DOCTYPE html>
 <html>
 <head>
     <meta charset="UTF-8">
-    <title>CNEC Japan - ポイント申請完了</title>
+    <title>CNEC US - Withdrawal Request Received</title>
     <style>
-        body { font-family: 'Hiragino Sans', 'Yu Gothic', sans-serif; line-height: 1.6; color: #333; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; }
         .container { max-width: 600px; margin: 0 auto; padding: 20px; }
         .header { background: linear-gradient(135deg, #28a745 0%, #20c997 100%); color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0; }
         .content { background: white; padding: 30px; border: 1px solid #e0e0e0; }
@@ -544,62 +542,62 @@ const EMAIL_TEMPLATES = {
 <body>
     <div class="container">
         <div class="header">
-            <h1>💰 ポイント申請完了</h1>
-            <p>申請を受け付けました</p>
+            <h1>Withdrawal Request Received</h1>
+            <p>We're processing your request</p>
         </div>
         <div class="content">
-            <h2>ポイント申請を受け付けました</h2>
-            <p>${data.name}様</p>
-            
-            <p>以下の内容でポイント申請を受け付けました。<br>
-            審査完了後、ご指定の銀行口座に送金いたします。</p>
-            
+            <h2>Your withdrawal request has been submitted</h2>
+            <p>Hi ${data.name},</p>
+
+            <p>We've received your withdrawal request.<br>
+            After review, we'll transfer the funds to your bank account.</p>
+
             <div class="point-box">
-                <h3>💰 申請内容</h3>
-                <p><strong>申請ポイント:</strong> ${data.pointAmount}ポイント</p>
-                <p><strong>申請金額:</strong> ${data.amount}円</p>
-                <p><strong>申請日時:</strong> ${new Date().toLocaleDateString('ja-JP')}</p>
-                <p><strong>申請理由:</strong> ${data.reason}</p>
+                <h3>Request Details</h3>
+                <p><strong>Points:</strong> ${data.pointAmount} points</p>
+                <p><strong>Amount:</strong> $${data.amount}</p>
+                <p><strong>Request Date:</strong> ${new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</p>
+                <p><strong>Reason:</strong> ${data.reason}</p>
             </div>
-            
-            <h3>🏦 送金先情報</h3>
+
+            <h3>Bank Account</h3>
             <ul>
-                <li><strong>銀行名:</strong> ${data.bankName}</li>
-                <li><strong>支店名:</strong> ${data.branchName}</li>
-                <li><strong>口座番号:</strong> ${data.accountNumber}</li>
-                <li><strong>口座名義:</strong> ${data.accountHolder}</li>
+                <li><strong>Bank:</strong> ${data.bankName}</li>
+                <li><strong>Routing Number:</strong> ${data.branchName}</li>
+                <li><strong>Account Number:</strong> ****${data.accountNumber.slice(-4)}</li>
+                <li><strong>Account Holder:</strong> ${data.accountHolder}</li>
             </ul>
-            
+
             <div class="process-box">
-                <h3>📋 処理の流れ</h3>
+                <h3>Processing Timeline</h3>
                 <ol>
-                    <li><strong>申請受付</strong> ✅ 完了</li>
-                    <li><strong>内容審査</strong> ⏳ 1-2営業日</li>
-                    <li><strong>送金処理</strong> ⏳ 2-3営業日</li>
-                    <li><strong>入金完了</strong> ⏳ 3-5営業日</li>
+                    <li><strong>Request Received</strong> - Complete</li>
+                    <li><strong>Review</strong> - 1-2 business days</li>
+                    <li><strong>Transfer Processing</strong> - 2-3 business days</li>
+                    <li><strong>Deposit Complete</strong> - 3-5 business days total</li>
                 </ol>
             </div>
-            
-            <h3>📅 予定スケジュール</h3>
+
+            <h3>Expected Timeline</h3>
             <ul>
-                <li><strong>審査完了予定:</strong> ${data.reviewDate}</li>
-                <li><strong>送金予定日:</strong> ${data.transferDate}</li>
-                <li><strong>入金予定日:</strong> ${data.depositDate}</li>
+                <li><strong>Review Complete:</strong> ${data.reviewDate}</li>
+                <li><strong>Transfer Date:</strong> ${data.transferDate}</li>
+                <li><strong>Expected Deposit:</strong> ${data.depositDate}</li>
             </ul>
-            
-            <h3>📧 通知について</h3>
-            <p>以下のタイミングでメールをお送りします：</p>
+
+            <h3>Notifications</h3>
+            <p>We'll send you email updates when:</p>
             <ul>
-                <li>審査完了時</li>
-                <li>送金処理完了時</li>
-                <li>入金確認時</li>
+                <li>Your request is reviewed</li>
+                <li>Transfer is processed</li>
+                <li>Deposit is confirmed</li>
             </ul>
-            
-            <p>ご不明な点がございましたら、お気軽にお問い合わせください。<br>
-            お疲れ様でした！</p>
+
+            <p>Questions? Feel free to reach out.<br>
+            Thank you for being a CNEC creator!</p>
         </div>
         <div class="footer">
-            <p>© 2025 CNEC Japan. All rights reserved.</p>
+            <p>&copy; 2025 CNEC US. All rights reserved.</p>
         </div>
     </div>
 </body>
@@ -607,17 +605,17 @@ const EMAIL_TEMPLATES = {
     `
   },
 
-  // 9. 포인트 입금 완료
+  // 9. Point Transfer/Deposit Complete
   POINT_TRANSFER_COMPLETED: {
-    subject: '【CNEC Japan】🎉 ポイント入金が完了しました！',
+    subject: '[CNEC US] Your payment has been deposited!',
     template: (data) => `
 <!DOCTYPE html>
 <html>
 <head>
     <meta charset="UTF-8">
-    <title>CNEC Japan - 入金完了</title>
+    <title>CNEC US - Payment Complete</title>
     <style>
-        body { font-family: 'Hiragino Sans', 'Yu Gothic', sans-serif; line-height: 1.6; color: #333; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; }
         .container { max-width: 600px; margin: 0 auto; padding: 20px; }
         .header { background: linear-gradient(135deg, #ffd700 0%, #ffb347 100%); color: #333; padding: 30px; text-align: center; border-radius: 10px 10px 0 0; }
         .content { background: white; padding: 30px; border: 1px solid #e0e0e0; }
@@ -630,64 +628,63 @@ const EMAIL_TEMPLATES = {
 <body>
     <div class="container">
         <div class="header">
-            <div class="celebration">🎉✨🎊</div>
-            <h1>入金完了おめでとうございます！</h1>
-            <p>ポイントの現金化が完了しました</p>
+            <div class="celebration">Congratulations!</div>
+            <h1>Payment Deposited!</h1>
+            <p>Your earnings have been transferred</p>
         </div>
         <div class="content">
             <div class="success-box">
-                <h2>💰 入金完了のお知らせ</h2>
-                <p><strong>${data.name}様</strong></p>
-                <p>ポイント申請いただいた金額の入金が完了いたしました！</p>
+                <h2>Payment Complete!</h2>
+                <p><strong>Hi ${data.name},</strong></p>
+                <p>Great news! Your withdrawal has been processed and deposited!</p>
             </div>
-            
+
             <div class="transfer-details">
-                <h3>💳 入金詳細</h3>
-                <p><strong>入金金額:</strong> ${data.amount}円</p>
-                <p><strong>入金日時:</strong> ${data.transferDate}</p>
-                <p><strong>取引ID:</strong> ${data.transactionId}</p>
-                <p><strong>入金先:</strong> ${data.bankName} ${data.branchName}</p>
-                <p><strong>口座番号:</strong> ${data.accountNumber}</p>
+                <h3>Transfer Details</h3>
+                <p><strong>Amount:</strong> $${data.amount}</p>
+                <p><strong>Transfer Date:</strong> ${data.transferDate}</p>
+                <p><strong>Transaction ID:</strong> ${data.transactionId}</p>
+                <p><strong>Bank:</strong> ${data.bankName} ${data.branchName}</p>
+                <p><strong>Account:</strong> ****${data.accountNumber.slice(-4)}</p>
             </div>
-            
-            <h3>📊 キャンペーン実績</h3>
+
+            <h3>Campaign Summary</h3>
             <ul>
-                <li><strong>参加キャンペーン:</strong> ${data.campaignTitle}</li>
-                <li><strong>獲得ポイント:</strong> ${data.pointAmount}ポイント</li>
-                <li><strong>投稿プラットフォーム:</strong> ${data.platform}</li>
-                <li><strong>投稿日:</strong> ${data.postDate}</li>
+                <li><strong>Campaign:</strong> ${data.campaignTitle}</li>
+                <li><strong>Points Earned:</strong> ${data.pointAmount} points</li>
+                <li><strong>Platform:</strong> ${data.platform}</li>
+                <li><strong>Post Date:</strong> ${data.postDate}</li>
             </ul>
-            
-            <h3>🎯 次のステップ</h3>
-            <p>今回のキャンペーンは完了です。引き続きCNEC Japanで新しいキャンペーンにご参加ください！</p>
-            
+
+            <h3>What's Next?</h3>
+            <p>This campaign is complete. Keep creating amazing content with CNEC US!</p>
+
             <ul>
-                <li>🔍 新しいキャンペーンをチェック</li>
-                <li>📈 フォロワー数を増やしてより多くの案件を獲得</li>
-                <li>🎬 コンテンツの質を向上させて報酬アップ</li>
-                <li>🤝 CNEC Japanのコミュニティに参加</li>
+                <li>Browse new campaigns</li>
+                <li>Grow your followers for more opportunities</li>
+                <li>Improve your content quality for higher rewards</li>
+                <li>Join the CNEC creator community</li>
             </ul>
-            
+
             <div style="text-align: center; margin: 30px 0;">
-                <a href="https://cnec.jp/" style="display: inline-block; background: #ffd700; color: #333; padding: 15px 30px; text-decoration: none; border-radius: 5px; font-weight: bold;">
-                    🚀 新しいキャンペーンを見る
+                <a href="https://cnec-us.com/" style="display: inline-block; background: #ffd700; color: #333; padding: 15px 30px; text-decoration: none; border-radius: 5px; font-weight: bold;">
+                    Browse New Campaigns
                 </a>
             </div>
-            
-            <h3>📞 お問い合わせ</h3>
-            <p>入金に関してご質問がございましたら：</p>
+
+            <h3>Questions?</h3>
+            <p>If you have any questions about this payment:</p>
             <ul>
-                <li>📧 メール: finance@cnec.jp</li>
-                <li>📱 LINE: @cnecjapan</li>
-                <li>⏰ 対応時間: 平日 9:00-18:00</li>
+                <li>Email: payments@cnec-us.com</li>
+                <li>Hours: Mon-Fri 9:00 AM - 6:00 PM EST</li>
             </ul>
-            
-            <p><strong>この度は、CNEC Japanのキャンペーンにご参加いただき、誠にありがとうございました。</strong><br>
-            今後ともよろしくお願いいたします！</p>
+
+            <p><strong>Thank you for being a CNEC US creator!</strong><br>
+            We look forward to working with you on more campaigns!</p>
         </div>
         <div class="footer">
-            <p>🎬 CNEC Japan - K-Beauty × ショート動画専門プラットフォーム</p>
-            <p>© 2025 CNEC Japan. All rights reserved.</p>
+            <p>CNEC US - K-Beauty x Short-Form Video Platform</p>
+            <p>&copy; 2025 CNEC US. All rights reserved.</p>
         </div>
     </div>
 </body>
@@ -696,7 +693,7 @@ const EMAIL_TEMPLATES = {
   }
 }
 
-// 이메일 발송 함수
+// Send Email Function
 export const sendEmail = async (templateType, recipientEmail, data) => {
   try {
     const template = EMAIL_TEMPLATES[templateType]
@@ -711,7 +708,7 @@ export const sendEmail = async (templateType, recipientEmail, data) => {
       created_at: new Date().toISOString()
     }
 
-    // Supabase에 이메일 로그 저장
+    // Log email to Supabase
     const { data: logData, error: logError } = await supabase
       .from('email_logs')
       .insert([{
@@ -727,15 +724,15 @@ export const sendEmail = async (templateType, recipientEmail, data) => {
       console.error('Email log error:', logError)
     }
 
-    // Gmail SMTP 직접 발송 - 시스템 설정에서 SMTP 정보 가져오기
+    // Send via Gmail SMTP - get settings from system config
     const emailSettings = JSON.parse(localStorage.getItem('cnec_email_settings') || '{}')
-    
+
     if (emailSettings.smtpHost && emailSettings.smtpUser && emailSettings.smtpPass) {
       try {
-        // Gmail 직접 발송 서비스 사용
+        // Use Gmail direct send service
         const gmailEmailService = await import('./gmailEmailService.js')
         const emailService = gmailEmailService.default
-        
+
         const result = await emailService.sendEmailDirect(
           recipientEmail,
           template.subject,
@@ -743,31 +740,31 @@ export const sendEmail = async (templateType, recipientEmail, data) => {
         )
 
         if (result.success) {
-          console.log('✅ Gmail 실제 이메일 발송 성공:', {
+          console.log('Email sent successfully:', {
             type: templateType,
             to: recipientEmail,
             subject: template.subject,
             messageId: result.messageId
           })
-          
-          // 성공 시 로그 업데이트
+
+          // Update log on success
           if (logData?.[0]?.id) {
             await supabase
               .from('email_logs')
-              .update({ 
-                status: 'sent', 
+              .update({
+                status: 'sent',
                 sent_at: new Date().toISOString(),
                 message_id: result.messageId
               })
               .eq('id', logData[0].id)
           }
         } else {
-          throw new Error(result.error || 'Gmail 발송 실패')
+          throw new Error(result.error || 'Gmail send failed')
         }
       } catch (gmailError) {
-        console.error('Gmail 발송 오류:', gmailError)
-        // Gmail 실패 시에도 로그는 남기고 콘솔 출력
-        console.log('📧 이메일 발송 (Gmail 실패, 콘솔 출력):', {
+        console.error('Gmail send error:', gmailError)
+        // Log to console if Gmail fails
+        console.log('Email (Gmail failed, console output):', {
           type: templateType,
           to: recipientEmail,
           subject: template.subject,
@@ -775,12 +772,12 @@ export const sendEmail = async (templateType, recipientEmail, data) => {
         })
       }
     } else {
-      // SMTP 설정이 없으면 콘솔 출력만
-      console.log('📧 이메일 발송 (SMTP 미설정, 콘솔 출력):', {
+      // Log to console if SMTP not configured
+      console.log('Email (SMTP not configured, console output):', {
         type: templateType,
         to: recipientEmail,
         subject: template.subject,
-        note: '시스템 설정에서 Gmail SMTP 정보를 입력하면 실제 발송됩니다.'
+        note: 'Configure Gmail SMTP in system settings to send actual emails.'
       })
     }
 
@@ -792,27 +789,27 @@ export const sendEmail = async (templateType, recipientEmail, data) => {
   }
 }
 
-// 스케줄된 이메일 발송 (마감일 알림용)
+// Schedule Reminder Emails (for deadline reminders)
 export const scheduleReminderEmails = async (campaignId, deadline) => {
   try {
     const deadlineDate = new Date(deadline)
     const now = new Date()
 
-    // 3일전 알림 스케줄
+    // 3-day reminder schedule
     const reminder3Days = new Date(deadlineDate)
     reminder3Days.setDate(reminder3Days.getDate() - 3)
 
-    // 1일전 알림 스케줄
+    // 1-day reminder schedule
     const reminder1Day = new Date(deadlineDate)
     reminder1Day.setDate(reminder1Day.getDate() - 1)
 
-    // 당일 알림 스케줄
+    // Same-day reminder schedule
     const reminderToday = new Date(deadlineDate)
-    reminderToday.setHours(9, 0, 0, 0) // 오전 9시
+    reminderToday.setHours(9, 0, 0, 0) // 9:00 AM
 
     const schedules = []
 
-    // 3일전 알림이 미래인 경우에만 스케줄
+    // Only schedule if date is in the future
     if (reminder3Days > now) {
       schedules.push({
         campaign_id: campaignId,
@@ -822,7 +819,6 @@ export const scheduleReminderEmails = async (campaignId, deadline) => {
       })
     }
 
-    // 1일전 알림이 미래인 경우에만 스케줄
     if (reminder1Day > now) {
       schedules.push({
         campaign_id: campaignId,
@@ -832,7 +828,6 @@ export const scheduleReminderEmails = async (campaignId, deadline) => {
       })
     }
 
-    // 당일 알림이 미래인 경우에만 스케줄
     if (reminderToday > now) {
       schedules.push({
         campaign_id: campaignId,
@@ -861,49 +856,61 @@ export const scheduleReminderEmails = async (campaignId, deadline) => {
   }
 }
 
-// 이메일 발송 트리거 함수들
+// Email Trigger Functions
 export const emailTriggers = {
-  // 회원가입 완료
+  // Signup complete
   onSignupComplete: async (user) => {
     await sendEmail('SIGNUP_COMPLETE', user.email, {
-      name: user.name || 'ユーザー',
+      name: user.name || 'Creator',
       email: user.email
     })
   },
 
-  // 캠페인 신청 완료
+  // Campaign application submitted
   onApplicationSubmitted: async (application, campaign, user) => {
     await sendEmail('APPLICATION_SUBMITTED', user.email, {
-      name: user.name || 'ユーザー',
+      name: user.name || 'Creator',
       campaignTitle: campaign.title,
       brandName: campaign.brand,
       rewardAmount: campaign.reward_amount
     })
   },
 
-  // 캠페인 승인
+  // Campaign application approved
   onApplicationApproved: async (application, campaign, user) => {
-    const deadline = new Date(campaign.deadline).toLocaleDateString('ja-JP')
+    const deadline = new Date(campaign.deadline).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    })
     const shippingDate = new Date()
     shippingDate.setDate(shippingDate.getDate() + 3)
 
     await sendEmail('APPLICATION_APPROVED', user.email, {
-      name: user.name || 'ユーザー',
+      name: user.name || 'Creator',
       campaignTitle: campaign.title,
       deadline: deadline,
-      shippingDate: shippingDate.toLocaleDateString('ja-JP'),
+      shippingDate: shippingDate.toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+      }),
       rewardAmount: campaign.reward_amount,
       googleDriveLink: campaign.google_drive_link,
       googleSlidesLink: campaign.google_slides_link
     })
 
-    // 마감일 알림 스케줄
+    // Schedule deadline reminders
     await scheduleReminderEmails(campaign.id, campaign.deadline)
   },
 
-  // 가이드 전달
+  // Guide delivered
   onGuideDelivered: async (campaign, user) => {
-    const deadline = new Date(campaign.deadline).toLocaleDateString('ja-JP')
+    const deadline = new Date(campaign.deadline).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    })
     const shippingDate = new Date()
     shippingDate.setDate(shippingDate.getDate() + 3)
 
@@ -914,18 +921,30 @@ export const emailTriggers = {
     reminder1Day.setDate(reminder1Day.getDate() - 1)
 
     await sendEmail('GUIDE_DELIVERED', user.email, {
-      name: user.name || 'ユーザー',
+      name: user.name || 'Creator',
       campaignTitle: campaign.title,
       deadline: deadline,
-      shippingDate: shippingDate.toLocaleDateString('ja-JP'),
-      reminder3Days: reminder3Days.toLocaleDateString('ja-JP'),
-      reminder1Day: reminder1Day.toLocaleDateString('ja-JP'),
+      shippingDate: shippingDate.toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+      }),
+      reminder3Days: reminder3Days.toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+      }),
+      reminder1Day: reminder1Day.toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+      }),
       googleDriveLink: campaign.google_drive_link,
       googleSlidesLink: campaign.google_slides_link
     })
   },
 
-  // 포인트 신청 완료
+  // Point/withdrawal request submitted
   onPointRequestSubmitted: async (pointRequest, user, bankInfo) => {
     const reviewDate = new Date()
     reviewDate.setDate(reviewDate.getDate() + 2)
@@ -937,34 +956,54 @@ export const emailTriggers = {
     depositDate.setDate(depositDate.getDate() + 7)
 
     await sendEmail('POINT_REQUEST_SUBMITTED', user.email, {
-      name: user.name || 'ユーザー',
+      name: user.name || 'Creator',
       pointAmount: pointRequest.amount,
-      amount: pointRequest.amount, // 1포인트 = 1엔 가정
+      amount: pointRequest.amount,
       reason: pointRequest.reason,
       bankName: bankInfo.bank_name,
-      branchName: bankInfo.branch_name,
+      branchName: bankInfo.routing_number || bankInfo.branch_name,
       accountNumber: bankInfo.account_number,
       accountHolder: bankInfo.account_holder,
-      reviewDate: reviewDate.toLocaleDateString('ja-JP'),
-      transferDate: transferDate.toLocaleDateString('ja-JP'),
-      depositDate: depositDate.toLocaleDateString('ja-JP')
+      reviewDate: reviewDate.toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+      }),
+      transferDate: transferDate.toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+      }),
+      depositDate: depositDate.toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+      })
     })
   },
 
-  // 포인트 입금 완료
+  // Point transfer/deposit completed
   onPointTransferCompleted: async (transfer, user, campaign) => {
     await sendEmail('POINT_TRANSFER_COMPLETED', user.email, {
-      name: user.name || 'ユーザー',
+      name: user.name || 'Creator',
       amount: transfer.amount,
-      transferDate: new Date(transfer.completed_at).toLocaleDateString('ja-JP'),
+      transferDate: new Date(transfer.completed_at).toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+      }),
       transactionId: transfer.transaction_id,
       bankName: transfer.bank_name,
-      branchName: transfer.branch_name,
+      branchName: transfer.routing_number || transfer.branch_name,
       accountNumber: transfer.account_number,
       campaignTitle: campaign.title,
       pointAmount: transfer.point_amount,
       platform: transfer.platform || 'Instagram',
-      postDate: new Date(transfer.post_date).toLocaleDateString('ja-JP')
+      postDate: new Date(transfer.post_date).toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+      })
     })
   }
 }
