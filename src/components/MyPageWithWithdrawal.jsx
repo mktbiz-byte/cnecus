@@ -872,7 +872,7 @@ const MyPageWithWithdrawal = () => {
       setProcessing(true)
       setError('')
       
-      const { error } = await database.supabase
+      const { error } = await supabase
         .from('withdrawal_requests')
         .insert({
           user_id: user.id,

@@ -1029,7 +1029,13 @@ export const database = {
         return data && data.length > 0 ? data[0] : null
       })
     }
-  }
+  },
+
+  // Direct access to supabase client for custom queries
+  supabase: supabase,
+
+  // Safe query wrapper for external use
+  safeQuery: safeQuery
 }
 
 // Storage helper functions for image uploads
