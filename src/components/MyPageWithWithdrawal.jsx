@@ -562,28 +562,18 @@ const MyPageWithWithdrawal = () => {
   }
 
       // 업데이트할 데이터 준비 (실제 테이블 구조에 맞게, 빈 값도 허용)
-      // 안전한 프로필 업데이트 데이터 생성 (존재하는 컬럼만 포함)
+      // user_profiles 테이블에 실제로 존재하는 컬럼만 저장
+      // 존재하는 컬럼: name, email, bio, profile_image_url, updated_at, created_at, user_id
+      // 존재하지 않는 컬럼: phone, region, skin_type, age, instagram_url, tiktok_url 등
       const updateData = {}
-      
-      // 기본 정보 필드들 (안전하게 추가)
+
+      // 실제 존재하는 필드들만 저장
       if (editForm.name !== undefined) updateData.name = editForm.name?.trim() || null
-      if (editForm.phone !== undefined) updateData.phone = editForm.phone?.trim() || null
-      // address 필드는 데이터베이스 스키마 적용 후 활성화
-      // if (editForm.address !== undefined) updateData.address = editForm.address?.trim() || null
       if (editForm.bio !== undefined) updateData.bio = editForm.bio?.trim() || null
-      if (editForm.region !== undefined) updateData.region = editForm.region?.trim() || null
-      if (editForm.skin_type !== undefined) updateData.skin_type = editForm.skin_type?.trim() || null
-      
-      // 나이 필드 (숫자 검증)
-      if (editForm.age !== undefined) {
-        try {
-          updateData.age = validateNumber(editForm.age, 'Age')
-        } catch (err) {
-          console.warn('나이 필드 검증 실패:', err.message)
-          updateData.age = null
-        }
-      }
-      
+
+      // phone, region, skin_type, age 필드는 user_profiles 테이블에 없음
+      // 이 데이터는 캠페인 지원 시 applications 테이블에 저장됨
+
       // SNS URL fields are NOT in user_profiles table - they are stored in applications table
       // Do NOT save SNS data to user_profiles
 
