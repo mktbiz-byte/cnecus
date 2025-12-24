@@ -5,15 +5,14 @@ import { database } from '../lib/supabase'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog'
 import {
-  Loader2, ArrowLeft, DollarSign, Users, Calendar,
-  CheckCircle, AlertCircle, Instagram, Youtube, Hash,
-  MapPin, Phone, User, Shield
+  Loader2, ArrowLeft, Users, Calendar,
+  CheckCircle, AlertCircle, Instagram, Youtube,
+  User, Shield, Sparkles
 } from 'lucide-react'
 
 const CampaignApplicationUpdated = () => {
@@ -33,67 +32,28 @@ const CampaignApplicationUpdated = () => {
   const [success, setSuccess] = useState('')
   const [showProfileModal, setShowProfileModal] = useState(false)
 
-  // Simplified form data - auto-filled from profile
+  // Minimal form - NO shipping address (collected after selection)
   const [formData, setFormData] = useState({
-    // Campaign questions
+    age_range: '',
+    skin_type: '',
     answer_1: '',
     answer_2: '',
     answer_3: '',
     answer_4: '',
     additional_info: '',
-    // Portrait rights consent
-    portrait_rights_consent: false
+    content_agreement: false
   })
-
-  // Texts
-  const t = {
-    title: 'Apply to Campaign',
-    backToCampaigns: 'Back to Campaigns',
-    reward: 'Reward',
-    spots: 'Spots',
-    deadline: 'Deadline',
-    period: 'Campaign Period',
-    requirements: 'Requirements',
-    platforms: 'Target Platforms',
-    yourInfo: 'Your Information',
-    fromProfile: 'From your profile',
-    editProfile: 'Edit Profile',
-    questions: 'Campaign Questions',
-    submit: 'Submit Application',
-    submitting: 'Submitting...',
-    success: 'Application submitted successfully!',
-    redirecting: 'Redirecting to home...',
-    loginRequired: 'Please sign in to apply',
-    signIn: 'Sign In',
-    campaignNotFound: 'Campaign not found',
-    alreadyApplied: 'You have already applied to this campaign',
-    updateApplication: 'Update Application',
-    // Profile modal
-    profileRequired: 'Complete Your Profile First',
-    profileRequiredDesc: 'To apply for campaigns, please complete your profile with your SNS accounts and shipping information.',
-    completeProfile: 'Complete Profile',
-    // Portrait rights
-    portraitRightsTitle: 'Content Usage Agreement',
-    portraitRightsText: 'I agree that my content created for this campaign may be used by the brand and CNEC for marketing purposes for up to 1 year.',
-    portraitRightsRequired: 'You must agree to continue',
-    // Validation
-    answerRequired: 'Please answer all required questions',
-    consentRequired: 'Please agree to the content usage terms'
-  }
 
   useEffect(() => {
     if (!user) {
-      setError(t.loginRequired)
       setLoading(false)
       return
     }
-
     if (!campaignId) {
-      setError(t.campaignNotFound)
+      setError('Campaign not found')
       setLoading(false)
       return
     }
-
     loadData()
   }, [user, campaignId])
 
@@ -102,25 +62,26 @@ const CampaignApplicationUpdated = () => {
       setLoading(true)
       setError('')
 
-      // Load campaign
       const campaignData = await database.campaigns.getById(campaignId)
       if (!campaignData) {
-        throw new Error(t.campaignNotFound)
+        throw new Error('Campaign not found')
       }
       setCampaign(campaignData)
 
-      // Load user profile
       const profileData = await database.userProfiles.get(user.id)
       setUserProfile(profileData)
 
-      // Check if profile is complete (need at least Instagram and shipping address)
-      const isProfileComplete = profileData &&
-        profileData.instagram_url &&
-        profileData.address &&
-        profileData.phone_number
-
-      if (!isProfileComplete) {
+      // Check if profile has Instagram (required)
+      if (!profileData?.instagram_url) {
         setShowProfileModal(true)
+      }
+
+      // Pre-fill from profile
+      if (profileData) {
+        setFormData(prev => ({
+          ...prev,
+          skin_type: profileData.skin_type || ''
+        }))
       }
 
       // Check existing application
@@ -130,12 +91,14 @@ const CampaignApplicationUpdated = () => {
       if (existingApp) {
         setFormData(prev => ({
           ...prev,
+          age_range: existingApp.age_range || '',
+          skin_type: existingApp.skin_type || profileData?.skin_type || '',
           answer_1: existingApp.answer_1 || '',
           answer_2: existingApp.answer_2 || '',
           answer_3: existingApp.answer_3 || '',
           answer_4: existingApp.answer_4 || '',
           additional_info: existingApp.additional_info || '',
-          portrait_rights_consent: existingApp.portrait_rights_consent || false
+          content_agreement: existingApp.portrait_rights_consent || false
         }))
       }
 
@@ -147,37 +110,22 @@ const CampaignApplicationUpdated = () => {
     }
   }
 
-  const validateForm = () => {
-    const errors = []
-
-    // Check required questions
-    if (campaign?.question1 && !formData.answer_1?.trim()) {
-      errors.push(t.answerRequired)
-    }
-    if (campaign?.question2 && !formData.answer_2?.trim()) {
-      errors.push(t.answerRequired)
-    }
-    if (campaign?.question3 && !formData.answer_3?.trim()) {
-      errors.push(t.answerRequired)
-    }
-    if (campaign?.question4 && !formData.answer_4?.trim()) {
-      errors.push(t.answerRequired)
-    }
-
-    // Check portrait rights consent
-    if (!formData.portrait_rights_consent) {
-      errors.push(t.consentRequired)
-    }
-
-    return errors
-  }
-
   const handleSubmit = async (e) => {
     e.preventDefault()
 
-    const validationErrors = validateForm()
-    if (validationErrors.length > 0) {
-      setError(validationErrors[0])
+    // Validation
+    if (!formData.age_range) {
+      setError('Please select your age range')
+      return
+    }
+    if (!formData.content_agreement) {
+      setError('Please agree to the content terms')
+      return
+    }
+
+    // Check required questions
+    if (campaign?.question1 && !formData.answer_1?.trim()) {
+      setError('Please answer all required questions')
       return
     }
 
@@ -185,16 +133,13 @@ const CampaignApplicationUpdated = () => {
       setSubmitting(true)
       setError('')
 
-      // Build submission data from profile + form
+      // Minimal data - NO address/phone (collected after approval)
       const submissionData = {
         user_id: user.id,
         campaign_id: campaignId,
         applicant_name: userProfile?.name || '',
-        age: userProfile?.age || null,
-        skin_type: userProfile?.skin_type || null,
-        postal_code: userProfile?.postal_code || '',
-        address: userProfile?.address || '',
-        phone_number: userProfile?.phone_number || '',
+        age_range: formData.age_range,
+        skin_type: formData.skin_type || null,
         instagram_url: userProfile?.instagram_url || '',
         youtube_url: userProfile?.youtube_url || null,
         tiktok_url: userProfile?.tiktok_url || null,
@@ -203,7 +148,7 @@ const CampaignApplicationUpdated = () => {
         answer_3: formData.answer_3 || null,
         answer_4: formData.answer_4 || null,
         additional_info: formData.additional_info || null,
-        portrait_rights_consent: formData.portrait_rights_consent,
+        portrait_rights_consent: formData.content_agreement,
         status: 'pending',
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
@@ -215,15 +160,12 @@ const CampaignApplicationUpdated = () => {
         await database.applications.create(submissionData)
       }
 
-      setSuccess(t.success)
-
-      setTimeout(() => {
-        navigate('/')
-      }, 2000)
+      setSuccess(true)
+      setTimeout(() => navigate('/'), 2000)
 
     } catch (error) {
       console.error('Submit error:', error)
-      setError('Failed to submit application. Please try again.')
+      setError('Failed to submit. Please try again.')
     } finally {
       setSubmitting(false)
     }
@@ -232,18 +174,13 @@ const CampaignApplicationUpdated = () => {
   const formatDate = (dateString) => {
     if (!dateString) return ''
     return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
       month: 'short',
       day: 'numeric'
     })
   }
 
   const formatCurrency = (amount) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-      minimumFractionDigits: 0
-    }).format(amount || 0)
+    return `$${(amount || 0).toLocaleString()}`
   }
 
   const getActivePlatforms = (targetPlatforms) => {
@@ -255,30 +192,26 @@ const CampaignApplicationUpdated = () => {
     return platforms.length > 0 ? platforms : ['Instagram']
   }
 
-  // Loading state
+  // Loading
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-purple-50 to-blue-50 flex items-center justify-center">
-        <div className="text-center">
-          <Loader2 className="h-8 w-8 animate-spin mx-auto mb-3 text-purple-600" />
-          <p className="text-gray-600">Loading campaign...</p>
-        </div>
+        <Loader2 className="h-8 w-8 animate-spin text-purple-600" />
       </div>
     )
   }
 
-  // Login required
+  // Not logged in
   if (!user) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-purple-50 to-blue-50 flex items-center justify-center p-4">
-        <Card className="max-w-md w-full">
-          <CardContent className="pt-6 text-center">
-            <AlertCircle className="h-12 w-12 text-orange-500 mx-auto mb-4" />
-            <h2 className="text-xl font-semibold mb-2">{t.loginRequired}</h2>
+        <Card className="max-w-sm w-full text-center">
+          <CardContent className="pt-8 pb-6">
+            <User className="h-12 w-12 text-purple-300 mx-auto mb-4" />
+            <h2 className="text-lg font-semibold mb-2">Sign in to apply</h2>
+            <p className="text-sm text-gray-500 mb-4">Create an account to start collaborating with K-Beauty brands</p>
             <Link to="/login">
-              <Button className="mt-4 bg-purple-600 hover:bg-purple-700">
-                {t.signIn}
-              </Button>
+              <Button className="w-full bg-purple-600 hover:bg-purple-700">Sign In</Button>
             </Link>
           </CardContent>
         </Card>
@@ -286,32 +219,32 @@ const CampaignApplicationUpdated = () => {
     )
   }
 
-  // Error state
+  // Error
   if (error && !campaign) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-purple-50 to-blue-50 flex items-center justify-center p-4">
-        <Card className="max-w-md w-full">
-          <CardContent className="pt-6 text-center">
-            <AlertCircle className="h-12 w-12 text-red-500 mx-auto mb-4" />
-            <h2 className="text-xl font-semibold text-red-600 mb-2">{error}</h2>
-            <Button onClick={() => navigate('/')} variant="outline" className="mt-4">
-              {t.backToCampaigns}
-            </Button>
+        <Card className="max-w-sm w-full text-center">
+          <CardContent className="pt-8 pb-6">
+            <AlertCircle className="h-12 w-12 text-red-400 mx-auto mb-4" />
+            <h2 className="text-lg font-semibold text-red-600 mb-4">{error}</h2>
+            <Button onClick={() => navigate('/')} variant="outline">Go Back</Button>
           </CardContent>
         </Card>
       </div>
     )
   }
 
-  // Success state
+  // Success
   if (success) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-purple-50 to-blue-50 flex items-center justify-center p-4">
-        <Card className="max-w-md w-full">
-          <CardContent className="pt-6 text-center">
-            <CheckCircle className="h-12 w-12 text-green-500 mx-auto mb-4" />
-            <h2 className="text-xl font-semibold text-green-600 mb-2">{success}</h2>
-            <p className="text-gray-500">{t.redirecting}</p>
+        <Card className="max-w-sm w-full text-center">
+          <CardContent className="pt-8 pb-6">
+            <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <CheckCircle className="h-8 w-8 text-green-600" />
+            </div>
+            <h2 className="text-lg font-semibold text-green-700 mb-2">Application Submitted!</h2>
+            <p className="text-sm text-gray-500">We'll notify you once the brand reviews your application.</p>
           </CardContent>
         </Card>
       </div>
@@ -319,226 +252,224 @@ const CampaignApplicationUpdated = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 to-blue-50">
-      {/* Profile Completion Modal */}
+    <div className="min-h-screen bg-gradient-to-br from-purple-50 to-blue-50 pb-8">
+      {/* Profile Modal */}
       <Dialog open={showProfileModal} onOpenChange={setShowProfileModal}>
-        <DialogContent className="max-w-md">
+        <DialogContent className="max-w-sm">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
-              <User className="h-5 w-5 text-purple-600" />
-              {t.profileRequired}
+              <Instagram className="h-5 w-5 text-pink-500" />
+              Connect Instagram First
             </DialogTitle>
             <DialogDescription>
-              {t.profileRequiredDesc}
+              Add your Instagram URL to your profile to apply for campaigns.
             </DialogDescription>
           </DialogHeader>
-          <div className="space-y-4 mt-4">
-            <div className="bg-purple-50 p-4 rounded-lg">
-              <h4 className="font-medium mb-2">Required information:</h4>
-              <ul className="text-sm text-gray-600 space-y-1">
-                <li className="flex items-center gap-2">
-                  <Instagram className="h-4 w-4" /> Instagram URL
-                </li>
-                <li className="flex items-center gap-2">
-                  <MapPin className="h-4 w-4" /> Shipping Address
-                </li>
-                <li className="flex items-center gap-2">
-                  <Phone className="h-4 w-4" /> Phone Number
-                </li>
-              </ul>
-            </div>
-            <Link to="/profile-settings">
-              <Button className="w-full bg-purple-600 hover:bg-purple-700">
-                {t.completeProfile}
-              </Button>
-            </Link>
-          </div>
+          <Link to="/profile-settings">
+            <Button className="w-full bg-purple-600 hover:bg-purple-700 mt-2">
+              Go to Profile Settings
+            </Button>
+          </Link>
         </DialogContent>
       </Dialog>
 
-      <div className="max-w-2xl mx-auto px-4 py-6">
-        {/* Back Button */}
+      <div className="max-w-lg mx-auto px-4 pt-6">
+        {/* Header */}
         <button
           onClick={() => navigate('/')}
-          className="inline-flex items-center text-purple-600 hover:text-purple-800 mb-4"
+          className="inline-flex items-center text-purple-600 hover:text-purple-800 mb-4 text-sm"
         >
-          <ArrowLeft className="w-4 h-4 mr-2" />
-          {t.backToCampaigns}
+          <ArrowLeft className="w-4 h-4 mr-1" />
+          Back
         </button>
 
-        <h1 className="text-2xl font-bold text-gray-800 mb-6">{t.title}</h1>
-
-        {/* Campaign Card - Compact */}
+        {/* Campaign Card - Clean & Compact */}
         {campaign && (
-          <Card className="mb-6 overflow-hidden">
-            <div className="flex">
-              {/* Campaign Image */}
-              <div className="w-32 h-32 flex-shrink-0">
-                {campaign.image_url ? (
-                  <img
-                    src={campaign.image_url}
-                    alt={campaign.title}
-                    className="w-full h-full object-cover"
-                  />
-                ) : (
-                  <div className="w-full h-full bg-gradient-to-br from-purple-100 to-pink-100 flex items-center justify-center">
-                    <span className="text-3xl">✨</span>
-                  </div>
-                )}
+          <Card className="mb-6 overflow-hidden shadow-lg">
+            {/* Image */}
+            <div className="relative h-40">
+              {campaign.image_url ? (
+                <img
+                  src={campaign.image_url}
+                  alt={campaign.title}
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <div className="w-full h-full bg-gradient-to-br from-purple-400 to-pink-400 flex items-center justify-center">
+                  <Sparkles className="h-12 w-12 text-white/50" />
+                </div>
+              )}
+              {/* Reward overlay */}
+              <div className="absolute bottom-3 left-3">
+                <Badge className="bg-white text-purple-700 font-bold shadow-md">
+                  {formatCurrency(campaign.reward_amount)}
+                </Badge>
               </div>
+            </div>
 
-              {/* Campaign Info */}
-              <CardContent className="flex-1 py-4">
-                <div className="flex items-center gap-2 mb-1">
-                  <Badge className="bg-purple-100 text-purple-700 text-xs">
-                    {campaign.brand}
-                  </Badge>
-                  <Badge className="bg-green-100 text-green-700 text-xs">
-                    {formatCurrency(campaign.reward_amount)}
-                  </Badge>
-                </div>
-                <h3 className="font-semibold text-gray-800 mb-2 line-clamp-2">
-                  {campaign.title}
-                </h3>
-                <div className="flex flex-wrap gap-3 text-xs text-gray-500">
-                  <span className="flex items-center gap-1">
-                    <Users className="h-3 w-3" />
-                    {campaign.max_participants} spots
-                  </span>
-                  <span className="flex items-center gap-1">
-                    <Calendar className="h-3 w-3" />
-                    Due {formatDate(campaign.application_deadline || campaign.deadline)}
-                  </span>
-                </div>
-                <div className="flex gap-1 mt-2">
+            <CardContent className="pt-4 pb-5">
+              <div className="flex items-center gap-2 mb-2">
+                <span className="text-sm text-purple-600 font-medium">{campaign.brand}</span>
+                <span className="text-gray-300">•</span>
+                <span className="text-xs text-gray-500">
+                  {campaign.max_participants} spots
+                </span>
+              </div>
+              <h2 className="font-semibold text-gray-800 text-lg leading-snug mb-3">
+                {campaign.title}
+              </h2>
+
+              {/* Platforms & Deadline */}
+              <div className="flex items-center justify-between text-sm">
+                <div className="flex gap-1">
                   {getActivePlatforms(campaign.target_platforms).map(p => (
-                    <Badge key={p} variant="outline" className="text-xs px-1.5 py-0">
+                    <Badge key={p} variant="outline" className="text-xs">
                       {p}
                     </Badge>
                   ))}
                 </div>
-              </CardContent>
-            </div>
+                <span className="text-gray-500 flex items-center gap-1">
+                  <Calendar className="h-3.5 w-3.5" />
+                  Due {formatDate(campaign.application_deadline || campaign.deadline)}
+                </span>
+              </div>
+            </CardContent>
           </Card>
         )}
 
-        {/* Already Applied Notice */}
+        {/* Already Applied */}
         {existingApplication && (
-          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6 flex items-start gap-3">
-            <CheckCircle className="h-5 w-5 text-blue-600 flex-shrink-0 mt-0.5" />
-            <div>
-              <p className="text-blue-800 font-medium">{t.alreadyApplied}</p>
-              <p className="text-blue-600 text-sm">You can update your application below.</p>
-            </div>
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-5 flex items-center gap-2">
+            <CheckCircle className="h-4 w-4 text-blue-600 flex-shrink-0" />
+            <span className="text-sm text-blue-700">You've already applied. Update below if needed.</span>
           </div>
         )}
 
-        {/* Your Profile Info - Read Only */}
-        <Card className="mb-6">
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="font-semibold text-gray-800 flex items-center gap-2">
-                <User className="h-4 w-4" />
-                {t.yourInfo}
-              </h3>
-              <Link to="/profile-settings">
-                <Button variant="outline" size="sm" className="text-xs">
-                  {t.editProfile}
-                </Button>
-              </Link>
-            </div>
+        {/* Application Form - Minimal */}
+        <form onSubmit={handleSubmit} className="space-y-5">
 
-            <div className="grid grid-cols-2 gap-4 text-sm">
-              <div>
-                <span className="text-gray-500">Name</span>
-                <p className="font-medium">{userProfile?.name || '-'}</p>
-              </div>
-              <div>
-                <span className="text-gray-500">Email</span>
-                <p className="font-medium">{userProfile?.email || user?.email || '-'}</p>
-              </div>
-              <div className="flex items-center gap-2">
-                <Instagram className="h-4 w-4 text-pink-500" />
-                <span className="truncate">{userProfile?.instagram_url ? 'Connected' : 'Not set'}</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <MapPin className="h-4 w-4 text-gray-500" />
-                <span className="truncate">{userProfile?.address ? 'Set' : 'Not set'}</span>
-              </div>
-            </div>
+          {/* Quick Info */}
+          <Card>
+            <CardContent className="pt-5 pb-4">
+              <h3 className="font-medium text-gray-800 mb-4">About You</h3>
 
-            <p className="text-xs text-gray-400 mt-3 flex items-center gap-1">
-              <Shield className="h-3 w-3" />
-              {t.fromProfile}
-            </p>
-          </CardContent>
-        </Card>
+              <div className="grid grid-cols-2 gap-4">
+                {/* Age Range - Dropdown */}
+                <div>
+                  <Label className="text-sm text-gray-600">Age Range *</Label>
+                  <Select
+                    value={formData.age_range}
+                    onValueChange={(value) => setFormData(prev => ({ ...prev, age_range: value }))}
+                  >
+                    <SelectTrigger className="mt-1">
+                      <SelectValue placeholder="Select" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="18-24">18-24</SelectItem>
+                      <SelectItem value="25-34">25-34</SelectItem>
+                      <SelectItem value="35-44">35-44</SelectItem>
+                      <SelectItem value="45+">45+</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
 
-        {/* Application Form */}
-        <form onSubmit={handleSubmit}>
+                {/* Skin Type */}
+                <div>
+                  <Label className="text-sm text-gray-600">Skin Type</Label>
+                  <Select
+                    value={formData.skin_type}
+                    onValueChange={(value) => setFormData(prev => ({ ...prev, skin_type: value }))}
+                  >
+                    <SelectTrigger className="mt-1">
+                      <SelectValue placeholder="Select" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="dry">Dry</SelectItem>
+                      <SelectItem value="oily">Oily</SelectItem>
+                      <SelectItem value="combination">Combination</SelectItem>
+                      <SelectItem value="sensitive">Sensitive</SelectItem>
+                      <SelectItem value="normal">Normal</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              {/* Instagram Connected */}
+              <div className="mt-4 flex items-center justify-between py-2 px-3 bg-gray-50 rounded-lg">
+                <div className="flex items-center gap-2">
+                  <Instagram className="h-4 w-4 text-pink-500" />
+                  <span className="text-sm text-gray-700">Instagram</span>
+                </div>
+                {userProfile?.instagram_url ? (
+                  <Badge className="bg-green-100 text-green-700 text-xs">Connected</Badge>
+                ) : (
+                  <Link to="/profile-settings" className="text-xs text-purple-600 hover:underline">
+                    Connect
+                  </Link>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+
           {/* Campaign Questions */}
           {(campaign?.question1 || campaign?.question2 || campaign?.question3 || campaign?.question4) && (
-            <Card className="mb-6">
-              <CardContent className="pt-6">
-                <h3 className="font-semibold text-gray-800 mb-4">{t.questions}</h3>
+            <Card>
+              <CardContent className="pt-5 pb-4">
+                <h3 className="font-medium text-gray-800 mb-4">Campaign Questions</h3>
                 <div className="space-y-4">
                   {campaign?.question1 && (
                     <div>
-                      <Label className="text-sm">
+                      <Label className="text-sm text-gray-700">
                         {campaign.question1} <span className="text-red-500">*</span>
                       </Label>
                       <Textarea
                         value={formData.answer_1}
                         onChange={(e) => setFormData(prev => ({ ...prev, answer_1: e.target.value }))}
-                        rows={3}
-                        className="mt-1"
+                        rows={2}
+                        className="mt-1.5"
                         placeholder="Your answer..."
-                        required
                       />
                     </div>
                   )}
                   {campaign?.question2 && (
                     <div>
-                      <Label className="text-sm">
+                      <Label className="text-sm text-gray-700">
                         {campaign.question2} <span className="text-red-500">*</span>
                       </Label>
                       <Textarea
                         value={formData.answer_2}
                         onChange={(e) => setFormData(prev => ({ ...prev, answer_2: e.target.value }))}
-                        rows={3}
-                        className="mt-1"
+                        rows={2}
+                        className="mt-1.5"
                         placeholder="Your answer..."
-                        required
                       />
                     </div>
                   )}
                   {campaign?.question3 && (
                     <div>
-                      <Label className="text-sm">
+                      <Label className="text-sm text-gray-700">
                         {campaign.question3} <span className="text-red-500">*</span>
                       </Label>
                       <Textarea
                         value={formData.answer_3}
                         onChange={(e) => setFormData(prev => ({ ...prev, answer_3: e.target.value }))}
-                        rows={3}
-                        className="mt-1"
+                        rows={2}
+                        className="mt-1.5"
                         placeholder="Your answer..."
-                        required
                       />
                     </div>
                   )}
                   {campaign?.question4 && (
                     <div>
-                      <Label className="text-sm">
+                      <Label className="text-sm text-gray-700">
                         {campaign.question4} <span className="text-red-500">*</span>
                       </Label>
                       <Textarea
                         value={formData.answer_4}
                         onChange={(e) => setFormData(prev => ({ ...prev, answer_4: e.target.value }))}
-                        rows={3}
-                        className="mt-1"
+                        rows={2}
+                        className="mt-1.5"
                         placeholder="Your answer..."
-                        required
                       />
                     </div>
                   )}
@@ -547,70 +478,64 @@ const CampaignApplicationUpdated = () => {
             </Card>
           )}
 
-          {/* Additional Info */}
-          <Card className="mb-6">
-            <CardContent className="pt-6">
-              <Label className="text-sm">Additional Information (Optional)</Label>
+          {/* Optional Note */}
+          <Card>
+            <CardContent className="pt-5 pb-4">
+              <Label className="text-sm text-gray-600">Anything else? (Optional)</Label>
               <Textarea
                 value={formData.additional_info}
                 onChange={(e) => setFormData(prev => ({ ...prev, additional_info: e.target.value }))}
-                rows={3}
-                className="mt-1"
-                placeholder="Anything else you'd like to share with the brand..."
+                rows={2}
+                className="mt-1.5"
+                placeholder="Tell the brand why you'd be great for this campaign..."
               />
             </CardContent>
           </Card>
 
-          {/* Content Usage Agreement */}
-          <Card className="mb-6 border-2 border-purple-200 bg-purple-50/50">
-            <CardContent className="pt-6">
-              <h3 className="font-semibold text-gray-800 mb-3 flex items-center gap-2">
-                <Shield className="h-4 w-4 text-purple-600" />
-                {t.portraitRightsTitle}
-              </h3>
-              <p className="text-sm text-gray-600 mb-4 leading-relaxed">
-                {t.portraitRightsText}
-              </p>
-              <label className="flex items-start gap-3 cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={formData.portrait_rights_consent}
-                  onChange={(e) => setFormData(prev => ({
-                    ...prev,
-                    portrait_rights_consent: e.target.checked
-                  }))}
-                  className="mt-1 h-4 w-4 text-purple-600 rounded border-gray-300 focus:ring-purple-500"
-                />
-                <span className="text-sm">
-                  I agree to the content usage terms <span className="text-red-500">*</span>
-                </span>
-              </label>
-            </CardContent>
-          </Card>
+          {/* Agreement - Simple */}
+          <div className="bg-white rounded-xl p-4 border">
+            <label className="flex items-start gap-3 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={formData.content_agreement}
+                onChange={(e) => setFormData(prev => ({
+                  ...prev,
+                  content_agreement: e.target.checked
+                }))}
+                className="mt-0.5 h-4 w-4 text-purple-600 rounded border-gray-300"
+              />
+              <span className="text-sm text-gray-600 leading-relaxed">
+                I agree that content I create may be used by the brand for up to 1 year. <span className="text-red-500">*</span>
+              </span>
+            </label>
+          </div>
 
-          {/* Error Display */}
+          {/* Trust Note */}
+          <div className="flex items-start gap-2 text-xs text-gray-400 px-1">
+            <Shield className="h-3.5 w-3.5 flex-shrink-0 mt-0.5" />
+            <span>Shipping address will only be requested if you're selected for this campaign.</span>
+          </div>
+
+          {/* Error */}
           {error && (
-            <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6 flex items-start gap-3">
-              <AlertCircle className="h-5 w-5 text-red-500 flex-shrink-0" />
-              <p className="text-red-700 text-sm">{error}</p>
+            <div className="bg-red-50 border border-red-200 rounded-lg p-3 flex items-center gap-2">
+              <AlertCircle className="h-4 w-4 text-red-500 flex-shrink-0" />
+              <span className="text-sm text-red-700">{error}</span>
             </div>
           )}
 
-          {/* Submit Button */}
+          {/* Submit */}
           <Button
             type="submit"
             disabled={submitting || showProfileModal}
-            className="w-full bg-purple-600 hover:bg-purple-700 py-6 text-lg"
+            className="w-full bg-purple-600 hover:bg-purple-700 py-6 text-base font-medium"
           >
             {submitting ? (
-              <>
-                <Loader2 className="h-5 w-5 animate-spin mr-2" />
-                {t.submitting}
-              </>
+              <Loader2 className="h-5 w-5 animate-spin" />
             ) : existingApplication ? (
-              t.updateApplication
+              'Update Application'
             ) : (
-              t.submit
+              'Submit Application'
             )}
           </Button>
         </form>
