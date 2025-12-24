@@ -584,40 +584,9 @@ const MyPageWithWithdrawal = () => {
         }
       }
       
-      // SNS URL 필드들 (빈 값 허용)
-      if (editForm.instagram_url !== undefined) updateData.instagram_url = editForm.instagram_url?.trim() || null
-      if (editForm.tiktok_url !== undefined) updateData.tiktok_url = editForm.tiktok_url?.trim() || null
-      if (editForm.youtube_url !== undefined) updateData.youtube_url = editForm.youtube_url?.trim() || null
-      if (editForm.other_sns_url !== undefined) updateData.other_sns_url = editForm.other_sns_url?.trim() || null
-      
-      // SNS 팔로워 수 필드들 (숫자 검증, 빈 값 허용)
-      if (editForm.instagram_followers !== undefined) {
-        try {
-          updateData.instagram_followers = validateNumber(editForm.instagram_followers, 'Instagram ' + 'フォロワー数')
-        } catch (err) {
-          console.warn('Instagram 팔로워 수 검증 실패:', err.message)
-          updateData.instagram_followers = null
-        }
-      }
-      
-      if (editForm.tiktok_followers !== undefined) {
-        try {
-          updateData.tiktok_followers = validateNumber(editForm.tiktok_followers, 'TikTok ' + 'フォロワー数')
-        } catch (err) {
-          console.warn('TikTok 팔로워 수 검증 실패:', err.message)
-          updateData.tiktok_followers = null
-        }
-      }
-      
-      if (editForm.youtube_subscribers !== undefined) {
-        try {
-          updateData.youtube_subscribers = validateNumber(editForm.youtube_subscribers, 'YouTube ' + '登録者数')
-        } catch (err) {
-          console.warn('YouTube 구독자 수 검증 실패:', err.message)
-          updateData.youtube_subscribers = null
-        }
-      }
-      
+      // SNS URL fields are NOT in user_profiles table - they are stored in applications table
+      // Do NOT save SNS data to user_profiles
+
       // 업데이트 시간 추가
       updateData.updated_at = new Date().toISOString()
 
