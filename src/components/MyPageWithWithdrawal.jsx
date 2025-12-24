@@ -390,12 +390,23 @@ const MyPageWithWithdrawal = () => {
   const loadUserData = async () => {
     try {
       setLoading(true)
-      
-      // 프로필 정보 로드
-      const profileData = await database.userProfiles.get(user.id)
+
+      // 🚀 모든 데이터를 병렬로 로딩 (속도 대폭 향상)
+      const [profileData, applicationsData, pointTransactionsResult] = await Promise.all([
+        // 1. 프로필 정보
+        database.userProfiles.get(user.id),
+        // 2. 신청 내역
+        database.applications.getByUser(user.id),
+        // 3. 포인트 거래 내역 (출금 + 전체)
+        supabase
+          .from('point_transactions')
+          .select('*')
+          .eq('user_id', user.id)
+          .order('created_at', { ascending: false })
+      ])
+
+      // 프로필 설정
       setProfile(profileData)
-      
-      // 편집 폼 초기화 (실제 테이블 구조에 맞게)
       if (profileData) {
         setEditForm({
           name: profileData.name || '',
@@ -414,106 +425,66 @@ const MyPageWithWithdrawal = () => {
           youtube_subscribers: profileData.youtube_subscribers || ''
         })
       }
-      
-      // 신청 내역 로드
-      const applicationsData = await database.applications.getByUser(user.id)
+
+      // 신청 내역 설정
       setApplications(applicationsData || [])
-      
-      // 출금 내역 로딩 (point_transactions 테이블에서 직접 가져오기)
-      try {
-        console.log('출금 내역 로딩 시작 - 사용자 ID:', user.id)
-        
-        const { data: pointWithdrawals, error: pointError } = await supabase
-          .from('point_transactions')
-          .select('*')
-          .eq('user_id', user.id)
-          .lt('amount', 0) // 음수 금액 (출금)
-          .order('created_at', { ascending: false })
-        
-        if (pointError) {
-          console.warn('point_transactions에서 출금 데이터 로드 실패:', pointError)
-          setWithdrawals([])
-        } else {
-          // point_transactions 데이터를 withdrawal_requests 형식으로 변환
-          const formattedWithdrawals = (pointWithdrawals || []).map(item => {
-            // description에서 상태 추출
-            let status = 'pending'
-            if (item.description?.includes('[상태:승인됨]') || item.description?.includes('[状態:承認済み]')) {
-              status = 'approved'
-            } else if (item.description?.includes('[상태:완료됨]') || item.description?.includes('[状態:完了]')) {
-              status = 'completed'
-            } else if (item.description?.includes('[상태:거부됨]') || item.description?.includes('[状態:拒否済み]')) {
-              status = 'rejected'
-            }
-            
-            return {
-              id: item.id,
-              user_id: item.user_id,
-              amount: Math.abs(item.amount),
-              status: status,
-              paypal_email: extractPayPalFromDescription(item.description),
-              paypal_name: extractPayPalFromDescription(item.description),
-              reason: item.description,
-              created_at: item.created_at,
-              updated_at: item.updated_at
-            }
-          })
-          
-          // 중복 제거: 같은 사용자, 같은 금액, 같은 날짜의 출금 신청을 하나로 합침
-          const uniqueWithdrawals = []
-          const seen = new Set()
-          
-          for (const withdrawal of formattedWithdrawals) {
-            const key = `${withdrawal.user_id}-${withdrawal.amount}-${withdrawal.created_at.split('T')[0]}`
-            if (!seen.has(key)) {
-              seen.add(key)
-              uniqueWithdrawals.push(withdrawal)
-            }
+
+      // 포인트 거래 내역 처리
+      const { data: pointData, error: pointError } = pointTransactionsResult
+
+      if (!pointError && pointData) {
+        // 출금 내역 필터링 (음수 금액)
+        const withdrawalData = pointData.filter(item => item.amount < 0)
+        const formattedWithdrawals = withdrawalData.map(item => {
+          let status = 'pending'
+          if (item.description?.includes('[상태:승인됨]') || item.description?.includes('[状態:承認済み]')) {
+            status = 'approved'
+          } else if (item.description?.includes('[상태:완료됨]') || item.description?.includes('[状態:完了]')) {
+            status = 'completed'
+          } else if (item.description?.includes('[상태:거부됨]') || item.description?.includes('[状態:拒否済み]')) {
+            status = 'rejected'
           }
-          
-          setWithdrawals(uniqueWithdrawals)
-          console.log('출금 내역 로딩 성공:', uniqueWithdrawals.length, '(중복 제거 후)')
+          return {
+            id: item.id,
+            user_id: item.user_id,
+            amount: Math.abs(item.amount),
+            status: status,
+            paypal_email: extractPayPalFromDescription(item.description),
+            paypal_name: extractPayPalFromDescription(item.description),
+            reason: item.description,
+            created_at: item.created_at,
+            updated_at: item.updated_at
+          }
+        })
+
+        // 중복 제거
+        const uniqueWithdrawals = []
+        const seenWithdrawals = new Set()
+        for (const withdrawal of formattedWithdrawals) {
+          const key = `${withdrawal.user_id}-${withdrawal.amount}-${withdrawal.created_at.split('T')[0]}`
+          if (!seenWithdrawals.has(key)) {
+            seenWithdrawals.add(key)
+            uniqueWithdrawals.push(withdrawal)
+          }
         }
-      } catch (withdrawErr) {
-        console.warn('출금 내역 로딩 실패:', withdrawErr)
+        setWithdrawals(uniqueWithdrawals)
+
+        // 포인트 거래 내역 중복 제거
+        const uniquePointTransactions = []
+        const seenPoints = new Set()
+        for (const transaction of pointData) {
+          const key = `${transaction.user_id}-${transaction.amount}-${transaction.created_at.split('T')[0]}-${transaction.description || ''}`
+          if (!seenPoints.has(key)) {
+            seenPoints.add(key)
+            uniquePointTransactions.push(transaction)
+          }
+        }
+        setPointTransactions(uniquePointTransactions)
+      } else {
         setWithdrawals([])
-      }
-      
-      // 포인트 거래 내역 로딩 (모든 포인트 거래 표시)
-      try {
-        const { data: pointData, error: pointError } = await supabase
-          .from('point_transactions')
-          .select('*')
-          .eq('user_id', user.id)
-          .order('created_at', { ascending: false })
-        
-        if (pointError) {
-          console.warn('포인트 거래 내역 로딩 오류:', pointError)
-          setPointTransactions([])
-        } else {
-          // 포인트 내역에서도 중복 제거: 같은 사용자, 같은 금액, 같은 날짜의 거래를 하나로 합침
-          const uniquePointTransactions = []
-          const seen = new Set()
-          
-          for (const transaction of (pointData || [])) {
-            const key = `${transaction.user_id}-${transaction.amount}-${transaction.created_at.split('T')[0]}-${transaction.description || ''}`
-            if (!seen.has(key)) {
-              seen.add(key)
-              uniquePointTransactions.push(transaction)
-            }
-          }
-          
-          setPointTransactions(uniquePointTransactions)
-          console.log('포인트 거래 내역 로딩 성공:', uniquePointTransactions.length, '(중복 제거 후)')
-        }
-      } catch (pointErr) {
-        console.warn('포인트 거래 내역 로딩 실패:', pointErr)
         setPointTransactions([])
       }
-      
-      // 프로필의 points 컬럼을 그대로 사용 (이미 profileData에 포함됨)
-      // 별도의 포인트 계산 없이 데이터베이스의 points 값을 신뢰
-      
+
     } catch (error) {
       console.error('사용자 데이터 로드 오류:', error)
       // 프로필 데이터가 없어도 페이지는 표시되도록 함
