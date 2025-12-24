@@ -550,14 +550,11 @@ const MyPageWithWithdrawal = () => {
       // editForm 업데이트
       setEditForm(prev => ({ ...prev, profile_image_url: publicUrl }))
 
-      // DB에도 바로 저장 (cnecbiz 연동을 위해 여러 필드에 저장)
+      // DB에 저장 (profile_image_url 컬럼만 존재)
       const { error: updateError } = await supabase
         .from('user_profiles')
         .update({
-          profile_image: publicUrl,        // cnecbiz 1순위
-          profile_photo_url: publicUrl,    // cnecbiz 2순위
-          profile_image_url: publicUrl,    // cnecbiz 3순위
-          avatar_url: publicUrl,           // cnecbiz 4순위
+          profile_image_url: publicUrl,
           updated_at: new Date().toISOString()
         })
         .eq('user_id', user.id)
@@ -565,7 +562,7 @@ const MyPageWithWithdrawal = () => {
       if (updateError) {
         console.error('DB update error:', updateError)
       } else {
-        setProfile(prev => ({ ...prev, profile_image_url: publicUrl, profile_image: publicUrl }))
+        setProfile(prev => ({ ...prev, profile_image_url: publicUrl }))
         setSuccess('Profile photo uploaded!')
         setTimeout(() => setSuccess(''), 3000)
       }
@@ -613,13 +610,9 @@ const MyPageWithWithdrawal = () => {
       if (editForm.region !== undefined) updateData.region = editForm.region?.trim() || null
       if (editForm.skin_type !== undefined) updateData.skin_type = editForm.skin_type?.trim() || null
       if (editForm.age !== undefined) updateData.age = editForm.age ? parseInt(editForm.age) : null
-      // cnecbiz 연동을 위해 모든 프로필 이미지 필드에 저장
+      // 프로필 이미지 URL (profile_image_url 컬럼만 존재)
       if (editForm.profile_image_url !== undefined) {
-        const imageUrl = editForm.profile_image_url || null
-        updateData.profile_image = imageUrl        // cnecbiz 1순위
-        updateData.profile_photo_url = imageUrl   // cnecbiz 2순위
-        updateData.profile_image_url = imageUrl   // cnecbiz 3순위
-        updateData.avatar_url = imageUrl          // cnecbiz 4순위
+        updateData.profile_image_url = editForm.profile_image_url || null
       }
 
       // SNS URL 필드들
