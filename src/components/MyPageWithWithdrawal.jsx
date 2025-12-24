@@ -561,21 +561,33 @@ const MyPageWithWithdrawal = () => {
     return numValue
   }
 
-      // 업데이트할 데이터 준비 (실제 테이블 구조에 맞게, 빈 값도 허용)
-      // user_profiles 테이블에 실제로 존재하는 컬럼만 저장
-      // 존재하는 컬럼: name, email, bio, profile_image_url, updated_at, created_at, user_id
-      // 존재하지 않는 컬럼: phone, region, skin_type, age, instagram_url, tiktok_url 등
+      // 업데이트할 데이터 준비 - 스키마 업데이트 완료로 모든 필드 저장 가능
       const updateData = {}
 
-      // 실제 존재하는 필드들만 저장
+      // 기본 정보 필드들
       if (editForm.name !== undefined) updateData.name = editForm.name?.trim() || null
       if (editForm.bio !== undefined) updateData.bio = editForm.bio?.trim() || null
+      if (editForm.phone !== undefined) updateData.phone = editForm.phone?.trim() || null
+      if (editForm.region !== undefined) updateData.region = editForm.region?.trim() || null
+      if (editForm.skin_type !== undefined) updateData.skin_type = editForm.skin_type?.trim() || null
+      if (editForm.age !== undefined) updateData.age = editForm.age ? parseInt(editForm.age) : null
 
-      // phone, region, skin_type, age 필드는 user_profiles 테이블에 없음
-      // 이 데이터는 캠페인 지원 시 applications 테이블에 저장됨
+      // SNS URL 필드들
+      if (editForm.instagram_url !== undefined) updateData.instagram_url = editForm.instagram_url?.trim() || null
+      if (editForm.tiktok_url !== undefined) updateData.tiktok_url = editForm.tiktok_url?.trim() || null
+      if (editForm.youtube_url !== undefined) updateData.youtube_url = editForm.youtube_url?.trim() || null
+      if (editForm.other_sns_url !== undefined) updateData.other_sns_url = editForm.other_sns_url?.trim() || null
 
-      // SNS URL fields are NOT in user_profiles table - they are stored in applications table
-      // Do NOT save SNS data to user_profiles
+      // SNS 팔로워 수 필드들
+      if (editForm.instagram_followers !== undefined) {
+        updateData.instagram_followers = editForm.instagram_followers ? parseInt(editForm.instagram_followers) : null
+      }
+      if (editForm.tiktok_followers !== undefined) {
+        updateData.tiktok_followers = editForm.tiktok_followers ? parseInt(editForm.tiktok_followers) : null
+      }
+      if (editForm.youtube_subscribers !== undefined) {
+        updateData.youtube_subscribers = editForm.youtube_subscribers ? parseInt(editForm.youtube_subscribers) : null
+      }
 
       // 업데이트 시간 추가
       updateData.updated_at = new Date().toISOString()
