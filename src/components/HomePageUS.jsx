@@ -67,14 +67,23 @@ const HomePageUS = () => {
 
   const loadStats = async () => {
     try {
-      const statsData = await database.stats.getOverall()
-      setStats(statsData || {
-        totalCampaigns: 0,
-        totalUsers: 0,
-        totalApplications: 0,
-        totalRewards: 0
+      // Calculate stats from existing data
+      const [campaignsData, applicationsData, usersData] = await Promise.all([
+        database.campaigns.getAll(),
+        database.applications.getAll(),
+        database.userProfiles.getAll()
+      ])
+
+      const usCampaigns = campaignsData?.filter(c => c.platform_region === 'us') || []
+      const usUsers = usersData?.filter(u => u.platform_region === 'us') || []
+      const totalRewards = usCampaigns.reduce((sum, c) => sum + (c.reward_amount || 0), 0)
+
+      setStats({
+        totalCampaigns: usCampaigns.length,
+        totalUsers: usUsers.length,
+        totalApplications: applicationsData?.length || 0,
+        totalRewards: totalRewards
       })
-      return statsData
     } catch (error) {
       console.error('Load stats error:', error)
       setStats({
@@ -83,7 +92,6 @@ const HomePageUS = () => {
         totalApplications: 0,
         totalRewards: 0
       })
-      return {}
     }
   }
 
