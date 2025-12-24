@@ -5,14 +5,15 @@ import { database } from '../lib/supabase'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
+import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog'
 import {
   Loader2, ArrowLeft, Users, Calendar,
-  CheckCircle, AlertCircle, Instagram, Youtube,
-  User, Shield, Sparkles
+  CheckCircle, AlertCircle, User, Shield, Sparkles,
+  Instagram, Youtube, Hash
 } from 'lucide-react'
 
 const CampaignApplicationUpdated = () => {
@@ -32,10 +33,18 @@ const CampaignApplicationUpdated = () => {
   const [success, setSuccess] = useState('')
   const [showProfileModal, setShowProfileModal] = useState(false)
 
-  // Minimal form - NO shipping address (collected after selection)
+  // Full form with SNS info (stored in applications table)
   const [formData, setFormData] = useState({
     age_range: '',
     skin_type: '',
+    // SNS URLs and follower counts
+    instagram_url: '',
+    instagram_followers: '',
+    youtube_url: '',
+    youtube_subscribers: '',
+    tiktok_url: '',
+    tiktok_followers: '',
+    // Campaign questions
     answer_1: '',
     answer_2: '',
     answer_3: '',
@@ -71,19 +80,6 @@ const CampaignApplicationUpdated = () => {
       const profileData = await database.userProfiles.get(user.id)
       setUserProfile(profileData)
 
-      // Check if profile has Instagram (required)
-      if (!profileData?.instagram_url) {
-        setShowProfileModal(true)
-      }
-
-      // Pre-fill from profile
-      if (profileData) {
-        setFormData(prev => ({
-          ...prev,
-          skin_type: profileData.skin_type || ''
-        }))
-      }
-
       // Check existing application
       const existingApp = await database.applications.getByUserAndCampaign(user.id, campaignId)
       setExistingApplication(existingApp)
@@ -92,7 +88,13 @@ const CampaignApplicationUpdated = () => {
         setFormData(prev => ({
           ...prev,
           age_range: existingApp.age_range || '',
-          skin_type: existingApp.skin_type || profileData?.skin_type || '',
+          skin_type: existingApp.skin_type || '',
+          instagram_url: existingApp.instagram_url || '',
+          instagram_followers: existingApp.instagram_followers || '',
+          youtube_url: existingApp.youtube_url || '',
+          youtube_subscribers: existingApp.youtube_subscribers || '',
+          tiktok_url: existingApp.tiktok_url || '',
+          tiktok_followers: existingApp.tiktok_followers || '',
           answer_1: existingApp.answer_1 || '',
           answer_2: existingApp.answer_2 || '',
           answer_3: existingApp.answer_3 || '',
@@ -100,6 +102,11 @@ const CampaignApplicationUpdated = () => {
           additional_info: existingApp.additional_info || '',
           content_agreement: existingApp.portrait_rights_consent || false
         }))
+      }
+
+      // Check if profile is complete (has name)
+      if (!profileData?.name) {
+        setShowProfileModal(true)
       }
 
     } catch (error) {
@@ -110,22 +117,36 @@ const CampaignApplicationUpdated = () => {
     }
   }
 
-  const handleSubmit = async (e) => {
-    e.preventDefault()
-
-    // Validation
-    if (!formData.age_range) {
-      setError('Please select your age range')
-      return
+  const validateForm = () => {
+    // Must have at least one SNS account
+    if (!formData.instagram_url && !formData.youtube_url && !formData.tiktok_url) {
+      return 'Please add at least one SNS account'
     }
+
+    // Age range required
+    if (!formData.age_range) {
+      return 'Please select your age range'
+    }
+
+    // Content agreement required
     if (!formData.content_agreement) {
-      setError('Please agree to the content terms')
-      return
+      return 'Please agree to the content terms'
     }
 
     // Check required questions
     if (campaign?.question1 && !formData.answer_1?.trim()) {
-      setError('Please answer all required questions')
+      return 'Please answer all required questions'
+    }
+
+    return null
+  }
+
+  const handleSubmit = async (e) => {
+    e.preventDefault()
+
+    const validationError = validateForm()
+    if (validationError) {
+      setError(validationError)
       return
     }
 
@@ -133,16 +154,21 @@ const CampaignApplicationUpdated = () => {
       setSubmitting(true)
       setError('')
 
-      // Minimal data - NO address/phone (collected after approval)
+      // Full submission data with SNS info
       const submissionData = {
         user_id: user.id,
         campaign_id: campaignId,
         applicant_name: userProfile?.name || '',
         age_range: formData.age_range,
         skin_type: formData.skin_type || null,
-        instagram_url: userProfile?.instagram_url || '',
-        youtube_url: userProfile?.youtube_url || null,
-        tiktok_url: userProfile?.tiktok_url || null,
+        // SNS data
+        instagram_url: formData.instagram_url || null,
+        instagram_followers: formData.instagram_followers ? parseInt(formData.instagram_followers) : null,
+        youtube_url: formData.youtube_url || null,
+        youtube_subscribers: formData.youtube_subscribers ? parseInt(formData.youtube_subscribers) : null,
+        tiktok_url: formData.tiktok_url || null,
+        tiktok_followers: formData.tiktok_followers ? parseInt(formData.tiktok_followers) : null,
+        // Answers
         answer_1: formData.answer_1 || null,
         answer_2: formData.answer_2 || null,
         answer_3: formData.answer_3 || null,
@@ -253,23 +279,32 @@ const CampaignApplicationUpdated = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 to-blue-50 pb-8">
-      {/* Profile Modal */}
+      {/* Profile Completion Modal */}
       <Dialog open={showProfileModal} onOpenChange={setShowProfileModal}>
         <DialogContent className="max-w-sm">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
-              <Instagram className="h-5 w-5 text-pink-500" />
-              Connect Instagram First
+              <User className="h-5 w-5 text-purple-600" />
+              Complete Your Profile
             </DialogTitle>
             <DialogDescription>
-              Add your Instagram URL to your profile to apply for campaigns.
+              Please set up your profile before applying to campaigns. This helps brands get to know you better.
             </DialogDescription>
           </DialogHeader>
-          <Link to="/profile-settings">
-            <Button className="w-full bg-purple-600 hover:bg-purple-700 mt-2">
-              Go to Profile Settings
+          <div className="flex flex-col gap-3 mt-4">
+            <Link to="/profile">
+              <Button className="w-full bg-purple-600 hover:bg-purple-700">
+                Go to Profile Settings
+              </Button>
+            </Link>
+            <Button
+              variant="outline"
+              onClick={() => setShowProfileModal(false)}
+              className="w-full"
+            >
+              I'll do it later
             </Button>
-          </Link>
+          </div>
         </DialogContent>
       </Dialog>
 
@@ -283,10 +318,9 @@ const CampaignApplicationUpdated = () => {
           Back
         </button>
 
-        {/* Campaign Card - Clean & Compact */}
+        {/* Campaign Card */}
         {campaign && (
           <Card className="mb-6 overflow-hidden shadow-lg">
-            {/* Image */}
             <div className="relative h-40">
               {campaign.image_url ? (
                 <img
@@ -299,7 +333,6 @@ const CampaignApplicationUpdated = () => {
                   <Sparkles className="h-12 w-12 text-white/50" />
                 </div>
               )}
-              {/* Reward overlay */}
               <div className="absolute bottom-3 left-3">
                 <Badge className="bg-white text-purple-700 font-bold shadow-md">
                   {formatCurrency(campaign.reward_amount)}
@@ -311,21 +344,15 @@ const CampaignApplicationUpdated = () => {
               <div className="flex items-center gap-2 mb-2">
                 <span className="text-sm text-purple-600 font-medium">{campaign.brand}</span>
                 <span className="text-gray-300">•</span>
-                <span className="text-xs text-gray-500">
-                  {campaign.max_participants} spots
-                </span>
+                <span className="text-xs text-gray-500">{campaign.max_participants} spots</span>
               </div>
               <h2 className="font-semibold text-gray-800 text-lg leading-snug mb-3">
                 {campaign.title}
               </h2>
-
-              {/* Platforms & Deadline */}
               <div className="flex items-center justify-between text-sm">
                 <div className="flex gap-1">
                   {getActivePlatforms(campaign.target_platforms).map(p => (
-                    <Badge key={p} variant="outline" className="text-xs">
-                      {p}
-                    </Badge>
+                    <Badge key={p} variant="outline" className="text-xs">{p}</Badge>
                   ))}
                 </div>
                 <span className="text-gray-500 flex items-center gap-1">
@@ -345,16 +372,14 @@ const CampaignApplicationUpdated = () => {
           </div>
         )}
 
-        {/* Application Form - Minimal */}
+        {/* Application Form */}
         <form onSubmit={handleSubmit} className="space-y-5">
 
-          {/* Quick Info */}
+          {/* Basic Info */}
           <Card>
             <CardContent className="pt-5 pb-4">
               <h3 className="font-medium text-gray-800 mb-4">About You</h3>
-
               <div className="grid grid-cols-2 gap-4">
-                {/* Age Range - Dropdown */}
                 <div>
                   <Label className="text-sm text-gray-600">Age Range *</Label>
                   <Select
@@ -372,8 +397,6 @@ const CampaignApplicationUpdated = () => {
                     </SelectContent>
                   </Select>
                 </div>
-
-                {/* Skin Type */}
                 <div>
                   <Label className="text-sm text-gray-600">Skin Type</Label>
                   <Select
@@ -393,20 +416,76 @@ const CampaignApplicationUpdated = () => {
                   </Select>
                 </div>
               </div>
+            </CardContent>
+          </Card>
 
-              {/* Instagram Connected */}
-              <div className="mt-4 flex items-center justify-between py-2 px-3 bg-gray-50 rounded-lg">
-                <div className="flex items-center gap-2">
-                  <Instagram className="h-4 w-4 text-pink-500" />
-                  <span className="text-sm text-gray-700">Instagram</span>
+          {/* SNS Information - REQUIRED */}
+          <Card className="border-2 border-purple-200">
+            <CardContent className="pt-5 pb-4">
+              <h3 className="font-medium text-gray-800 mb-1">SNS Information *</h3>
+              <p className="text-xs text-gray-500 mb-4">Add at least one SNS account</p>
+
+              {/* Instagram */}
+              <div className="space-y-3 mb-4">
+                <div className="flex items-center gap-2 text-pink-500">
+                  <Instagram className="h-4 w-4" />
+                  <span className="text-sm font-medium">Instagram</span>
                 </div>
-                {userProfile?.instagram_url ? (
-                  <Badge className="bg-green-100 text-green-700 text-xs">Connected</Badge>
-                ) : (
-                  <Link to="/profile-settings" className="text-xs text-purple-600 hover:underline">
-                    Connect
-                  </Link>
-                )}
+                <div className="grid grid-cols-2 gap-3">
+                  <Input
+                    placeholder="@username or URL"
+                    value={formData.instagram_url}
+                    onChange={(e) => setFormData(prev => ({ ...prev, instagram_url: e.target.value }))}
+                  />
+                  <Input
+                    type="number"
+                    placeholder="Followers"
+                    value={formData.instagram_followers}
+                    onChange={(e) => setFormData(prev => ({ ...prev, instagram_followers: e.target.value }))}
+                  />
+                </div>
+              </div>
+
+              {/* YouTube */}
+              <div className="space-y-3 mb-4">
+                <div className="flex items-center gap-2 text-red-500">
+                  <Youtube className="h-4 w-4" />
+                  <span className="text-sm font-medium">YouTube</span>
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <Input
+                    placeholder="Channel URL"
+                    value={formData.youtube_url}
+                    onChange={(e) => setFormData(prev => ({ ...prev, youtube_url: e.target.value }))}
+                  />
+                  <Input
+                    type="number"
+                    placeholder="Subscribers"
+                    value={formData.youtube_subscribers}
+                    onChange={(e) => setFormData(prev => ({ ...prev, youtube_subscribers: e.target.value }))}
+                  />
+                </div>
+              </div>
+
+              {/* TikTok */}
+              <div className="space-y-3">
+                <div className="flex items-center gap-2 text-gray-800">
+                  <Hash className="h-4 w-4" />
+                  <span className="text-sm font-medium">TikTok</span>
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <Input
+                    placeholder="@username or URL"
+                    value={formData.tiktok_url}
+                    onChange={(e) => setFormData(prev => ({ ...prev, tiktok_url: e.target.value }))}
+                  />
+                  <Input
+                    type="number"
+                    placeholder="Followers"
+                    value={formData.tiktok_followers}
+                    onChange={(e) => setFormData(prev => ({ ...prev, tiktok_followers: e.target.value }))}
+                  />
+                </div>
               </div>
             </CardContent>
           </Card>
@@ -478,7 +557,7 @@ const CampaignApplicationUpdated = () => {
             </Card>
           )}
 
-          {/* Optional Note */}
+          {/* Additional Info */}
           <Card>
             <CardContent className="pt-5 pb-4">
               <Label className="text-sm text-gray-600">Anything else? (Optional)</Label>
@@ -487,12 +566,12 @@ const CampaignApplicationUpdated = () => {
                 onChange={(e) => setFormData(prev => ({ ...prev, additional_info: e.target.value }))}
                 rows={2}
                 className="mt-1.5"
-                placeholder="Tell the brand why you'd be great for this campaign..."
+                placeholder="Why would you be great for this campaign?"
               />
             </CardContent>
           </Card>
 
-          {/* Agreement - Simple */}
+          {/* Agreement */}
           <div className="bg-white rounded-xl p-4 border">
             <label className="flex items-start gap-3 cursor-pointer">
               <input
@@ -513,7 +592,7 @@ const CampaignApplicationUpdated = () => {
           {/* Trust Note */}
           <div className="flex items-start gap-2 text-xs text-gray-400 px-1">
             <Shield className="h-3.5 w-3.5 flex-shrink-0 mt-0.5" />
-            <span>Shipping address will only be requested if you're selected for this campaign.</span>
+            <span>Shipping address will only be requested if you're selected.</span>
           </div>
 
           {/* Error */}
@@ -527,7 +606,7 @@ const CampaignApplicationUpdated = () => {
           {/* Submit */}
           <Button
             type="submit"
-            disabled={submitting || showProfileModal}
+            disabled={submitting}
             className="w-full bg-purple-600 hover:bg-purple-700 py-6 text-base font-medium"
           >
             {submitting ? (
