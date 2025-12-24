@@ -118,6 +118,16 @@ const CampaignApplicationUpdated = () => {
   }
 
   const validateForm = () => {
+    // Must have at least one SNS account
+    if (!formData.instagram_url && !formData.youtube_url && !formData.tiktok_url) {
+      return 'Please add at least one SNS account'
+    }
+
+    // Age range required
+    if (!formData.age_range) {
+      return 'Please select your age range'
+    }
+
     // Content agreement required
     if (!formData.content_agreement) {
       return 'Please agree to the content terms'
@@ -144,12 +154,23 @@ const CampaignApplicationUpdated = () => {
       setSubmitting(true)
       setError('')
 
-      // Submission data - only include columns that exist in applications table
-      // Existing columns: user_id, campaign_id, applicant_name, answer_1-4, additional_info, portrait_rights_consent, status, created_at, updated_at
+      // Submission data - DB 스키마 업데이트 완료로 모든 필드 저장 가능
       const submissionData = {
         user_id: user.id,
         campaign_id: campaignId,
         applicant_name: userProfile?.name || '',
+        email: userProfile?.email || '',
+        // Profile data
+        age_range: formData.age_range || null,
+        skin_type: formData.skin_type || null,
+        // SNS URLs
+        instagram_url: formData.instagram_url || null,
+        youtube_url: formData.youtube_url || null,
+        tiktok_url: formData.tiktok_url || null,
+        // SNS Followers
+        instagram_followers: formData.instagram_followers ? parseInt(formData.instagram_followers) : null,
+        youtube_subscribers: formData.youtube_subscribers ? parseInt(formData.youtube_subscribers) : null,
+        tiktok_followers: formData.tiktok_followers ? parseInt(formData.tiktok_followers) : null,
         // Answers
         answer_1: formData.answer_1 || null,
         answer_2: formData.answer_2 || null,
@@ -161,9 +182,6 @@ const CampaignApplicationUpdated = () => {
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
       }
-
-      // Note: age_range, skin_type, SNS URLs are NOT in applications table schema
-      // These fields are shown in the form for UX but not stored
 
       if (existingApplication) {
         await database.applications.update(existingApplication.id, submissionData)
