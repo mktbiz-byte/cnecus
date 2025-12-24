@@ -160,6 +160,8 @@ const CampaignApplicationUpdated = () => {
         campaign_id: campaignId,
         applicant_name: userProfile?.name || '',
         email: userProfile?.email || '',
+        // Profile photo (cnecbiz 연동용)
+        profile_photo_url: userProfile?.profile_image_url || userProfile?.profile_image || null,
         // Profile data
         age_range: formData.age_range || null,
         skin_type: formData.skin_type || null,
