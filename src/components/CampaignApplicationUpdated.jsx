@@ -353,16 +353,16 @@ const CampaignApplicationUpdated = () => {
 
     // 질문 답변 검증 (개별 질문 필드 사용)
     if (campaign?.question1 && !applicationData.answer_1?.trim()) {
-      errors.push(language === 'ja' ? '質問 1は必須です' : '질문 1은 필수입니다')
+      errors.push('Question 1 is required')
     }
     if (campaign?.question2 && !applicationData.answer_2?.trim()) {
-      errors.push(language === 'ja' ? '質問 2は必須です' : '질문 2는 필수입니다')
+      errors.push('Question 2 is required')
     }
     if (campaign?.question3 && !applicationData.answer_3?.trim()) {
-      errors.push(language === 'ja' ? '質問 3は必須です' : '질문 3은 필수입니다')
+      errors.push('Question 3 is required')
     }
     if (campaign?.question4 && !applicationData.answer_4?.trim()) {
-      errors.push(language === 'ja' ? '質問 4は必須です' : '질문 4는 필수입니다')
+      errors.push('Question 4 is required')
     }
 
     // 초상권 동의 검증
@@ -441,7 +441,7 @@ const CampaignApplicationUpdated = () => {
 
   const formatDate = (dateString) => {
     if (!dateString) return ''
-    return new Date(dateString).toLocaleDateString(language === 'ja' ? 'ja-JP' : 'ko-KR')
+    return new Date(dateString).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })
   }
 
   const formatCurrency = (amount) => {
@@ -568,7 +568,7 @@ const CampaignApplicationUpdated = () => {
                     </svg>
                     <div>
                       <p className="text-xs text-gray-500">{t.participants}</p>
-                      <p className="text-sm font-medium text-gray-900">{campaign.max_participants}{language === 'ko' ? '명' : ''}</p>
+                      <p className="text-sm font-medium text-gray-900">{campaign.max_participants} people</p>
                     </div>
                   </div>
 

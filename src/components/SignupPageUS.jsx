@@ -11,7 +11,7 @@ import { Loader2, Mail, Lock, User, ArrowLeft, CheckCircle } from 'lucide-react'
 const SignupPageUS = () => {
   const { signUpWithEmail, signInWithGoogle } = useAuth()
   const navigate = useNavigate()
-  
+
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -32,7 +32,7 @@ const SignupPageUS = () => {
 
   const handleEmailSignup = async (e) => {
     e.preventDefault()
-    
+
     if (!formData.email || !formData.password || !formData.fullName) {
       setError('Please fill in all required fields.')
       return
@@ -51,24 +51,24 @@ const SignupPageUS = () => {
     try {
       setIsLoading(true)
       setError('')
-      
+
       await signUpWithEmail(formData.email, formData.password, {
         full_name: formData.fullName,
         platform_region: 'us',
         country_code: 'US'
       })
-      
+
       setSuccess(true)
     } catch (error) {
       console.error('Signup error:', error)
-      
+
       let errorMessage = error.message
       if (error.message.includes('already registered')) {
         errorMessage = 'This email is already registered. Please sign in instead.'
       } else if (error.message.includes('Invalid email')) {
         errorMessage = 'Please enter a valid email address.'
       }
-      
+
       setError(errorMessage)
     } finally {
       setIsLoading(false)
@@ -79,7 +79,7 @@ const SignupPageUS = () => {
     try {
       setIsLoading(true)
       setError('')
-      
+
       await signInWithGoogle()
     } catch (error) {
       console.error('Google signup error:', error)
@@ -90,24 +90,22 @@ const SignupPageUS = () => {
 
   if (success) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center p-4">
-        <div className="max-w-md mx-auto text-center bg-white rounded-lg shadow-2xl p-8">
+      <div className="min-h-screen bg-gradient-to-br from-purple-50 to-blue-50 flex items-center justify-center p-4">
+        <div className="max-w-md mx-auto text-center bg-white/80 backdrop-blur-md rounded-lg shadow-xl p-8">
           <div className="mb-6">
             <div className="mx-auto w-16 h-16 bg-green-100 rounded-full flex items-center justify-center">
-              <svg className="h-10 w-10 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-              </svg>
+              <CheckCircle className="h-10 w-10 text-green-600" />
             </div>
           </div>
           <h2 className="text-2xl font-bold text-gray-800 mb-4">Check Your Email!</h2>
           <p className="text-gray-600 mb-6">
-            We've sent a verification link to <strong>{formData.email}</strong>. 
+            We've sent a verification link to <strong>{formData.email}</strong>.
             Please check your inbox and click the link to activate your account.
           </p>
           <div className="space-y-3">
             <button
               onClick={() => navigate('/login')}
-              className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-medium py-3 px-4 rounded-md transition-colors"
+              className="w-full bg-purple-600 hover:bg-purple-700 text-white font-medium py-3 px-4 rounded-md transition-colors"
             >
               Go to Sign In
             </button>
@@ -124,14 +122,14 @@ const SignupPageUS = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-gradient-to-br from-purple-50 to-blue-50 flex items-center justify-center p-4">
       <div className="w-full max-w-md">
         {/* Back Button */}
         <div className="mb-6">
           <Button
             variant="outline"
             onClick={() => navigate('/')}
-            className="text-gray-600 hover:text-gray-800 bg-blue-50 border-blue-200 hover:bg-blue-100"
+            className="text-gray-600 hover:text-gray-800 bg-white/80 border-gray-200 hover:bg-white"
           >
             <ArrowLeft className="h-4 w-4 mr-2" />
             Back to Home
@@ -139,11 +137,11 @@ const SignupPageUS = () => {
         </div>
 
         {/* Signup Card */}
-        <Card className="shadow-xl border-0 bg-white/80 backdrop-blur-sm">
+        <Card className="shadow-xl border-0 bg-white/80 backdrop-blur-md">
           <CardHeader className="text-center pb-6">
-            <div className="text-4xl mb-4">🇺🇸</div>
-            <CardTitle className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-              Join CNEC USA
+            <div className="text-4xl mb-4">🎬</div>
+            <CardTitle className="text-2xl font-bold text-gray-800">
+              Join CNEC
             </CardTitle>
             <CardDescription className="text-gray-600">
               Start your creator journey today
@@ -202,7 +200,7 @@ const SignupPageUS = () => {
                     value={formData.fullName}
                     onChange={handleInputChange}
                     disabled={isLoading}
-                    className="pl-10 py-6 border-gray-200 focus:border-blue-500"
+                    className="pl-10 py-6 border-gray-200 focus:border-purple-500"
                     required
                   />
                 </div>
@@ -220,7 +218,7 @@ const SignupPageUS = () => {
                     value={formData.email}
                     onChange={handleInputChange}
                     disabled={isLoading}
-                    className="pl-10 py-6 border-gray-200 focus:border-blue-500"
+                    className="pl-10 py-6 border-gray-200 focus:border-purple-500"
                     required
                   />
                 </div>
@@ -238,7 +236,7 @@ const SignupPageUS = () => {
                     value={formData.password}
                     onChange={handleInputChange}
                     disabled={isLoading}
-                    className="pl-10 py-6 border-gray-200 focus:border-blue-500"
+                    className="pl-10 py-6 border-gray-200 focus:border-purple-500"
                     required
                   />
                 </div>
@@ -257,7 +255,7 @@ const SignupPageUS = () => {
                     value={formData.confirmPassword}
                     onChange={handleInputChange}
                     disabled={isLoading}
-                    className="pl-10 py-6 border-gray-200 focus:border-blue-500"
+                    className="pl-10 py-6 border-gray-200 focus:border-purple-500"
                     required
                   />
                 </div>
@@ -266,7 +264,7 @@ const SignupPageUS = () => {
               <Button
                 type="submit"
                 disabled={isLoading}
-                className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold py-6"
+                className="w-full bg-purple-600 hover:bg-purple-700 text-white font-semibold py-6"
               >
                 {isLoading ? (
                   <>
@@ -283,9 +281,9 @@ const SignupPageUS = () => {
             <div className="text-center pt-4 border-t border-gray-100">
               <p className="text-sm text-gray-600">
                 Already have an account?{' '}
-                <Link 
-                  to="/login" 
-                  className="font-semibold text-blue-600 hover:text-blue-700 hover:underline"
+                <Link
+                  to="/login"
+                  className="font-semibold text-purple-600 hover:text-purple-700 hover:underline"
                 >
                   Sign in
                 </Link>
@@ -304,4 +302,3 @@ const SignupPageUS = () => {
 }
 
 export default SignupPageUS
-
