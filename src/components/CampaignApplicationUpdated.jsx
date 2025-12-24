@@ -104,6 +104,11 @@ const CampaignApplicationUpdated = () => {
         }))
       }
 
+      // Check if profile is complete (has name)
+      if (!profileData?.name) {
+        setShowProfileModal(true)
+      }
+
     } catch (error) {
       console.error('Load error:', error)
       setError(error.message)
@@ -274,6 +279,35 @@ const CampaignApplicationUpdated = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 to-blue-50 pb-8">
+      {/* Profile Completion Modal */}
+      <Dialog open={showProfileModal} onOpenChange={setShowProfileModal}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <User className="h-5 w-5 text-purple-600" />
+              Complete Your Profile
+            </DialogTitle>
+            <DialogDescription>
+              Please set up your profile before applying to campaigns. This helps brands get to know you better.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex flex-col gap-3 mt-4">
+            <Link to="/profile">
+              <Button className="w-full bg-purple-600 hover:bg-purple-700">
+                Go to Profile Settings
+              </Button>
+            </Link>
+            <Button
+              variant="outline"
+              onClick={() => setShowProfileModal(false)}
+              className="w-full"
+            >
+              I'll do it later
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
       <div className="max-w-lg mx-auto px-4 pt-6">
         {/* Header */}
         <button
