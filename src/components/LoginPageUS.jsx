@@ -12,7 +12,7 @@ const LoginPageUS = () => {
   const { signInWithEmail, signInWithGoogle, loading } = useAuth()
   const navigate = useNavigate()
   const location = useLocation()
-  
+
   const [formData, setFormData] = useState({
     email: '',
     password: ''
@@ -32,7 +32,7 @@ const LoginPageUS = () => {
 
   const handleEmailLogin = async (e) => {
     e.preventDefault()
-    
+
     if (!formData.email || !formData.password) {
       setError('Please enter your email and password.')
       return
@@ -41,19 +41,19 @@ const LoginPageUS = () => {
     try {
       setIsLoading(true)
       setError('')
-      
+
       await signInWithEmail(formData.email, formData.password)
       navigate(from, { replace: true })
     } catch (error) {
       console.error('Login error:', error)
-      
+
       let errorMessage = error.message
       if (error.message.includes('Invalid login credentials')) {
         errorMessage = 'Invalid email or password.'
       } else if (error.message.includes('Email not confirmed')) {
         errorMessage = 'Please verify your email address.'
       }
-      
+
       setError(errorMessage)
     } finally {
       setIsLoading(false)
@@ -64,7 +64,7 @@ const LoginPageUS = () => {
     try {
       setIsLoading(true)
       setError('')
-      
+
       await signInWithGoogle()
     } catch (error) {
       console.error('Google login error:', error)
@@ -74,14 +74,14 @@ const LoginPageUS = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-gradient-to-br from-purple-50 to-blue-50 flex items-center justify-center p-4">
       <div className="w-full max-w-md">
         {/* Back Button */}
         <div className="mb-6">
           <Button
             variant="outline"
             onClick={() => navigate('/')}
-            className="text-gray-600 hover:text-gray-800 bg-blue-50 border-blue-200 hover:bg-blue-100"
+            className="text-gray-600 hover:text-gray-800 bg-white/80 border-gray-200 hover:bg-white"
           >
             <ArrowLeft className="h-4 w-4 mr-2" />
             Back to Home
@@ -89,14 +89,14 @@ const LoginPageUS = () => {
         </div>
 
         {/* Login Card */}
-        <Card className="shadow-xl border-0 bg-white/80 backdrop-blur-sm">
+        <Card className="shadow-xl border-0 bg-white/80 backdrop-blur-md">
           <CardHeader className="text-center pb-6">
-            <div className="text-4xl mb-4">🇺🇸</div>
-            <CardTitle className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+            <div className="text-4xl mb-4">🎬</div>
+            <CardTitle className="text-2xl font-bold text-gray-800">
               Welcome Back
             </CardTitle>
             <CardDescription className="text-gray-600">
-              Sign in to your CNEC USA account
+              Sign in to your CNEC account
             </CardDescription>
           </CardHeader>
 
@@ -152,7 +152,7 @@ const LoginPageUS = () => {
                     value={formData.email}
                     onChange={handleInputChange}
                     disabled={isLoading}
-                    className="pl-10 py-6 border-gray-200 focus:border-blue-500"
+                    className="pl-10 py-6 border-gray-200 focus:border-purple-500"
                     required
                   />
                 </div>
@@ -170,7 +170,7 @@ const LoginPageUS = () => {
                     value={formData.password}
                     onChange={handleInputChange}
                     disabled={isLoading}
-                    className="pl-10 py-6 border-gray-200 focus:border-blue-500"
+                    className="pl-10 py-6 border-gray-200 focus:border-purple-500"
                     required
                   />
                 </div>
@@ -179,7 +179,7 @@ const LoginPageUS = () => {
               <Button
                 type="submit"
                 disabled={isLoading}
-                className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold py-6"
+                className="w-full bg-purple-600 hover:bg-purple-700 text-white font-semibold py-6"
               >
                 {isLoading ? (
                   <>
@@ -196,9 +196,9 @@ const LoginPageUS = () => {
             <div className="text-center pt-4 border-t border-gray-100">
               <p className="text-sm text-gray-600">
                 Don't have an account?{' '}
-                <Link 
-                  to="/signup" 
-                  className="font-semibold text-blue-600 hover:text-blue-700 hover:underline"
+                <Link
+                  to="/signup"
+                  className="font-semibold text-purple-600 hover:text-purple-700 hover:underline"
                 >
                   Sign up for free
                 </Link>
@@ -217,4 +217,3 @@ const LoginPageUS = () => {
 }
 
 export default LoginPageUS
-

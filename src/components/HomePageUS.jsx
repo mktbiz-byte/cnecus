@@ -6,26 +6,25 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog'
-import { 
-  Loader2, Play, Users, Target, Shield,
-  Instagram, Youtube, Hash, Twitter, ExternalLink,
-  Star, Award, Calendar, DollarSign, Eye, ArrowRight,
-  CheckCircle, Clock, MapPin, Phone, Mail, User, Zap,
-  Menu, X, Sparkles, TrendingUp, Video, Upload, Wallet
+import {
+  Loader2, Users, Target, Award, TrendingUp,
+  Instagram, Youtube, Hash, Twitter, Calendar,
+  DollarSign, ArrowRight, CheckCircle, Menu, X
 } from 'lucide-react'
 
 const HomePageUS = () => {
   const { user, signOut } = useAuth()
   const navigate = useNavigate()
-  
+
   const [campaigns, setCampaigns] = useState([])
   const [stats, setStats] = useState({
     totalCampaigns: 0,
-    totalCreators: 0,
+    totalUsers: 0,
     totalApplications: 0,
     totalRewards: 0
   })
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(null)
   const [selectedCampaign, setSelectedCampaign] = useState(null)
   const [detailModal, setDetailModal] = useState(false)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
@@ -37,12 +36,15 @@ const HomePageUS = () => {
   const loadPageData = async () => {
     try {
       setLoading(true)
-      await Promise.all([
+      setError(null)
+
+      const [campaignsData, statsData] = await Promise.all([
         loadCampaigns(),
         loadStats()
       ])
     } catch (error) {
-      console.error('Page data load error:', error)
+      console.error('Load page data error:', error)
+      setError(error.message)
     } finally {
       setLoading(false)
     }
@@ -51,53 +53,54 @@ const HomePageUS = () => {
   const loadCampaigns = async () => {
     try {
       const campaignsData = await database.campaigns.getAll()
-      const activeCampaigns = campaignsData?.filter(campaign => 
+      const activeCampaigns = campaignsData?.filter(campaign =>
         campaign.status === 'active' && campaign.platform_region === 'us'
       ) || []
       setCampaigns(activeCampaigns)
+      return activeCampaigns
     } catch (error) {
       console.error('Load campaigns error:', error)
       setCampaigns([])
+      return []
     }
   }
 
   const loadStats = async () => {
     try {
-      const [campaignsData, applicationsData, usersData] = await Promise.all([
-        database.campaigns.getAll(),
-        database.applications.getAll(),
-        database.userProfiles.getAll()
-      ])
-      
-      const allCampaigns = campaignsData?.filter(c => c.platform_region === 'us') || []
-      const applications = applicationsData || []
-      const users = usersData?.filter(u => u.platform_region === 'us') || []
-      
-      const campaignMultiplier = import.meta.env.VITE_STATS_CAMPAIGN_MULTIPLIER || 50
-      const creatorMultiplier = import.meta.env.VITE_STATS_CREATOR_MULTIPLIER || 500
-      const applicationMultiplier = import.meta.env.VITE_STATS_APPLICATION_MULTIPLIER || 1000
-      const rewardMultiplier = import.meta.env.VITE_STATS_REWARD_MULTIPLIER || 100
-      
-      const baseCampaigns = Math.max(allCampaigns.length, 1)
-      const baseCreators = Math.max(users.length, 1)
-      const baseApplications = Math.max(applications.length, 1)
-      const baseRewards = Math.max(allCampaigns.reduce((sum, campaign) => sum + (campaign.reward_amount || 0), 0), 1000)
-      
-      setStats({
-        totalCampaigns: baseCampaigns * parseInt(campaignMultiplier),
-        totalCreators: baseCreators * parseInt(creatorMultiplier),
-        totalApplications: baseApplications * parseInt(applicationMultiplier),
-        totalRewards: baseRewards * parseInt(rewardMultiplier)
+      const statsData = await database.stats.getOverall()
+      setStats(statsData || {
+        totalCampaigns: 0,
+        totalUsers: 0,
+        totalApplications: 0,
+        totalRewards: 0
       })
+      return statsData
     } catch (error) {
       console.error('Load stats error:', error)
       setStats({
-        totalCampaigns: 50,
-        totalCreators: 2500,
-        totalApplications: 5000,
-        totalRewards: 250000
+        totalCampaigns: 0,
+        totalUsers: 0,
+        totalApplications: 0,
+        totalRewards: 0
       })
+      return {}
     }
+  }
+
+  const formatCurrency = (amount) => {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD',
+      minimumFractionDigits: 0
+    }).format(amount || 0)
+  }
+
+  const formatDate = (date) => {
+    return new Date(date).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    })
   }
 
   const handleCampaignClick = (campaign) => {
@@ -111,22 +114,6 @@ const HomePageUS = () => {
       return
     }
     navigate(`/campaign-application?campaign_id=${campaignId}`)
-  }
-
-  const formatCurrency = (amount) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-      minimumFractionDigits: 0
-    }).format(amount)
-  }
-
-  const formatDate = (date) => {
-    return new Date(date).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric'
-    })
   }
 
   const getPlatformIcon = (platform) => {
@@ -144,19 +131,19 @@ const HomePageUS = () => {
     }
   }
 
-  const getPlatformColor = (platform) => {
-    switch (platform?.toLowerCase()) {
-      case 'instagram':
-        return 'bg-gradient-to-r from-purple-500 to-pink-500 text-white'
-      case 'tiktok':
-        return 'bg-black text-white'
-      case 'youtube':
-        return 'bg-red-600 text-white'
-      case 'twitter':
-        return 'bg-blue-400 text-white'
-      default:
-        return 'bg-gray-600 text-white'
+  const getPlatformBadge = (platform) => {
+    const platformStyles = {
+      instagram: 'bg-pink-100 text-pink-800',
+      tiktok: 'bg-purple-100 text-purple-800',
+      youtube: 'bg-red-100 text-red-800',
+      twitter: 'bg-blue-100 text-blue-800'
     }
+
+    return (
+      <Badge className={platformStyles[platform?.toLowerCase()] || 'bg-gray-100 text-gray-800'}>
+        {platform?.charAt(0).toUpperCase() + platform?.slice(1)}
+      </Badge>
+    )
   }
 
   const getActivePlatforms = (targetPlatforms) => {
@@ -169,45 +156,61 @@ const HomePageUS = () => {
   }
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-gradient-to-br from-purple-50 to-blue-50">
       {/* Header */}
-      <header className="bg-white shadow-sm sticky top-0 z-50 border-b">
+      <header className="bg-white/80 backdrop-blur-md shadow-sm sticky top-0 z-50">
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-3">
-              <div className="text-3xl">🇺🇸</div>
+              <div className="text-3xl">🎬</div>
               <div>
-                <h1 className="text-2xl font-bold text-gray-900">CNEC USA</h1>
-                <p className="text-xs text-gray-600">K-Beauty Creator Network</p>
+                <h1 className="text-xl font-bold text-gray-800">CNEC</h1>
+                <p className="text-xs text-gray-600">K-Beauty × Short-Form Video</p>
               </div>
             </div>
-            
-            <nav className="hidden md:flex items-center space-x-3">
-              <Button variant="ghost" className="text-gray-700">
-                <a href="#campaigns">Campaigns</a>
-              </Button>
-              <Button variant="ghost" className="text-gray-700">
-                <a href="#how-it-works">How It Works</a>
-              </Button>
-              {user ? (
-                <>
-                  <Button variant="outline">
-                    <Link to="/mypage">Dashboard</Link>
-                  </Button>
-                  <Button variant="ghost" onClick={signOut}>Sign Out</Button>
-                </>
-              ) : (
-                <>
-                  <Button variant="outline">
-                    <Link to="/login">Sign In</Link>
-                  </Button>
-                  <Button className="bg-blue-600 hover:bg-blue-700 text-white">
-                    <Link to="/signup">Start Earning</Link>
-                  </Button>
-                </>
-              )}
+
+            <nav className="hidden md:flex items-center space-x-6">
+              <a href="#campaigns" className="text-gray-600 hover:text-purple-600 transition-colors">
+                Campaigns
+              </a>
+              <a href="#about" className="text-gray-600 hover:text-purple-600 transition-colors">
+                About
+              </a>
+              <a href="#contact" className="text-gray-600 hover:text-purple-600 transition-colors">
+                Contact
+              </a>
             </nav>
 
+            <div className="hidden md:flex items-center space-x-4">
+              {user ? (
+                <div className="flex items-center space-x-3">
+                  <span className="text-sm text-gray-600">{user.email}</span>
+                  <Link to="/mypage">
+                    <Button variant="outline" size="sm">
+                      My Page
+                    </Button>
+                  </Link>
+                  <Button variant="outline" size="sm" onClick={signOut}>
+                    Sign Out
+                  </Button>
+                </div>
+              ) : (
+                <div className="flex items-center space-x-2">
+                  <Link to="/login">
+                    <Button variant="outline" size="sm">
+                      Sign In
+                    </Button>
+                  </Link>
+                  <Link to="/signup">
+                    <Button size="sm" className="bg-purple-600 hover:bg-purple-700">
+                      Sign Up
+                    </Button>
+                  </Link>
+                </div>
+              )}
+            </div>
+
+            {/* Mobile menu button */}
             <button
               className="md:hidden p-2"
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
@@ -216,32 +219,30 @@ const HomePageUS = () => {
             </button>
           </div>
 
+          {/* Mobile menu */}
           {mobileMenuOpen && (
             <div className="md:hidden mt-4 pb-4 border-t pt-4">
               <div className="flex flex-col space-y-2">
-                <Button variant="ghost" className="justify-start">
-                  <a href="#campaigns">Campaigns</a>
-                </Button>
-                <Button variant="ghost" className="justify-start">
-                  <a href="#how-it-works">How It Works</a>
-                </Button>
+                <a href="#campaigns" className="text-gray-600 hover:text-purple-600 py-2">Campaigns</a>
+                <a href="#about" className="text-gray-600 hover:text-purple-600 py-2">About</a>
+                <a href="#contact" className="text-gray-600 hover:text-purple-600 py-2">Contact</a>
                 {user ? (
                   <>
-                    <Button variant="outline" className="justify-start">
-                      <Link to="/mypage">Dashboard</Link>
-                    </Button>
-                    <Button variant="ghost" className="justify-start" onClick={signOut}>
+                    <Link to="/mypage">
+                      <Button variant="outline" className="w-full justify-start">My Page</Button>
+                    </Link>
+                    <Button variant="outline" className="w-full justify-start" onClick={signOut}>
                       Sign Out
                     </Button>
                   </>
                 ) : (
                   <>
-                    <Button variant="outline" className="justify-start">
-                      <Link to="/login">Sign In</Link>
-                    </Button>
-                    <Button className="justify-start bg-blue-600 text-white">
-                      <Link to="/signup">Start Earning</Link>
-                    </Button>
+                    <Link to="/login">
+                      <Button variant="outline" className="w-full justify-start">Sign In</Button>
+                    </Link>
+                    <Link to="/signup">
+                      <Button className="w-full justify-start bg-purple-600 hover:bg-purple-700">Sign Up</Button>
+                    </Link>
                   </>
                 )}
               </div>
@@ -250,250 +251,175 @@ const HomePageUS = () => {
         </div>
       </header>
 
-      {/* Hero Section - NEW */}
-      <section className="relative py-20 px-4 bg-gradient-to-br from-blue-50 to-white">
-        <div className="container mx-auto">
-          <div className="max-w-4xl mx-auto text-center">
-            {/* Trust Badge */}
-            <Badge className="mb-6 bg-green-100 text-green-800 px-4 py-2 text-sm border-0">
-              <CheckCircle className="h-4 w-4 mr-2 inline" />
-              Direct Payment · No Middleman · Weekly Payouts
-            </Badge>
-
-            {/* Main Headline */}
-            <h1 className="text-5xl md:text-6xl font-bold mb-6 text-gray-900">
-              Get Paid Fast for<br />Your Content
-            </h1>
-
-            {/* Subheadline */}
-            <p className="text-xl text-gray-600 mb-8 leading-relaxed max-w-2xl mx-auto">
-              Create short-form videos for K-beauty brands and receive <span className="font-semibold text-blue-600">weekly payments directly to your bank account</span>. No delays, no hassle.
-            </p>
-
-            {/* CTA Buttons */}
-            <div className="flex flex-col sm:flex-row gap-4 justify-center mb-12">
-              <Button size="lg" className="bg-blue-600 hover:bg-blue-700 text-white text-lg px-8 py-6">
-                <Link to="/signup" className="flex items-center">
-                  Start Earning Now
-                  <ArrowRight className="ml-2 h-5 w-5" />
-                </Link>
+      {/* Hero Section */}
+      <section className="py-20 text-center">
+        <div className="container mx-auto px-4">
+          <h1 className="text-4xl md:text-6xl font-bold text-gray-800 mb-6">
+            K-Beauty × Short-Form Video<br />
+            <span className="text-purple-600">Creator Platform</span>
+          </h1>
+          <p className="text-xl md:text-2xl text-gray-600 mb-8 max-w-3xl mx-auto">
+            Connect with top K-Beauty brands and create authentic content that earns you real money
+          </p>
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <Link to="/signup">
+              <Button size="lg" className="bg-purple-600 hover:bg-purple-700">
+                Join as Creator
               </Button>
-              <Button size="lg" variant="outline" className="text-lg px-8 py-6">
-                <a href="#how-it-works">See How It Works</a>
-              </Button>
-            </div>
-
-            {/* Social Proof Stats */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-6 max-w-3xl mx-auto">
-              <div>
-                <div className="text-3xl font-bold text-gray-900">{stats.totalCreators.toLocaleString()}+</div>
-                <div className="text-sm text-gray-600">Active Creators</div>
-              </div>
-              <div>
-                <div className="text-3xl font-bold text-gray-900">{formatCurrency(stats.totalRewards)}</div>
-                <div className="text-sm text-gray-600">Paid Out</div>
-              </div>
-              <div>
-                <div className="text-3xl font-bold text-gray-900">{stats.totalCampaigns}+</div>
-                <div className="text-sm text-gray-600">Campaigns</div>
-              </div>
-              <div>
-                <div className="text-3xl font-bold text-gray-900">4.8★</div>
-                <div className="text-sm text-gray-600">Creator Rating</div>
-              </div>
-            </div>
+            </Link>
+            <Button variant="outline" size="lg" onClick={() => document.getElementById('campaigns')?.scrollIntoView({ behavior: 'smooth' })}>
+              View Campaigns
+            </Button>
           </div>
         </div>
       </section>
 
-      {/* How It Works Section - NEW */}
-      <section id="how-it-works" className="py-20 px-4 bg-gray-50">
-        <div className="container mx-auto">
-          <div className="text-center mb-16">
-            <h2 className="text-4xl font-bold mb-4 text-gray-900">How It Works</h2>
-            <p className="text-xl text-gray-600">Four simple steps to start earning</p>
-          </div>
+      {/* Stats Section */}
+      <section className="py-16 bg-white/50">
+        <div className="container mx-auto px-4">
+          <div className="grid md:grid-cols-4 gap-8">
+            <Card className="text-center border-0 shadow-lg">
+              <CardContent className="pt-6">
+                <Target className="h-8 w-8 text-purple-600 mx-auto mb-2" />
+                <div className="text-3xl font-bold text-purple-600 mb-1">
+                  {stats.totalCampaigns || 0}
+                </div>
+                <div className="text-gray-600">Total Campaigns</div>
+              </CardContent>
+            </Card>
 
-          <div className="grid md:grid-cols-4 gap-8 max-w-6xl mx-auto">
-            {/* Step 1 */}
-            <div className="text-center">
-              <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <Target className="h-8 w-8 text-blue-600" />
-              </div>
-              <div className="text-sm font-semibold text-blue-600 mb-2">STEP 1</div>
-              <h3 className="text-xl font-bold mb-2 text-gray-900">Apply</h3>
-              <p className="text-gray-600">Browse campaigns and apply to brands you love</p>
-            </div>
+            <Card className="text-center border-0 shadow-lg">
+              <CardContent className="pt-6">
+                <Users className="h-8 w-8 text-blue-600 mx-auto mb-2" />
+                <div className="text-3xl font-bold text-blue-600 mb-1">
+                  {stats.totalUsers || 0}
+                </div>
+                <div className="text-gray-600">Total Creators</div>
+              </CardContent>
+            </Card>
 
-            {/* Step 2 */}
-            <div className="text-center">
-              <div className="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <Video className="h-8 w-8 text-purple-600" />
-              </div>
-              <div className="text-sm font-semibold text-purple-600 mb-2">STEP 2</div>
-              <h3 className="text-xl font-bold mb-2 text-gray-900">Create</h3>
-              <p className="text-gray-600">Film authentic short-form content following brand guidelines</p>
-            </div>
+            <Card className="text-center border-0 shadow-lg">
+              <CardContent className="pt-6">
+                <TrendingUp className="h-8 w-8 text-green-600 mx-auto mb-2" />
+                <div className="text-3xl font-bold text-green-600 mb-1">
+                  {stats.totalApplications || 0}
+                </div>
+                <div className="text-gray-600">Total Applications</div>
+              </CardContent>
+            </Card>
 
-            {/* Step 3 */}
-            <div className="text-center">
-              <div className="w-16 h-16 bg-pink-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <Upload className="h-8 w-8 text-pink-600" />
-              </div>
-              <div className="text-sm font-semibold text-pink-600 mb-2">STEP 3</div>
-              <h3 className="text-xl font-bold mb-2 text-gray-900">Upload</h3>
-              <p className="text-gray-600">Post to your social media and submit proof</p>
-            </div>
-
-            {/* Step 4 */}
-            <div className="text-center">
-              <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <Wallet className="h-8 w-8 text-green-600" />
-              </div>
-              <div className="text-sm font-semibold text-green-600 mb-2">STEP 4</div>
-              <h3 className="text-xl font-bold mb-2 text-gray-900">Get Paid</h3>
-              <p className="text-gray-600">Receive weekly payments directly to your account</p>
-            </div>
+            <Card className="text-center border-0 shadow-lg">
+              <CardContent className="pt-6">
+                <Award className="h-8 w-8 text-orange-600 mx-auto mb-2" />
+                <div className="text-3xl font-bold text-orange-600 mb-1">
+                  {formatCurrency(stats.totalRewards)}
+                </div>
+                <div className="text-gray-600">Total Rewards</div>
+              </CardContent>
+            </Card>
           </div>
         </div>
       </section>
 
-      {/* Weekly Payouts Section - NEW */}
-      <section className="py-20 px-4 bg-gradient-to-br from-green-50 to-white">
-        <div className="container mx-auto max-w-5xl">
-          <div className="bg-white rounded-2xl shadow-xl p-12">
-            <div className="grid md:grid-cols-2 gap-12 items-center">
-              <div>
-                <Badge className="mb-4 bg-green-100 text-green-800 border-0">
-                  <CheckCircle className="h-4 w-4 mr-2 inline" />
-                  Reliable Weekly Payments
-                </Badge>
-                <h2 className="text-4xl font-bold mb-6 text-gray-900">
-                  Consistent Income<br />Every Week
-                </h2>
-                <p className="text-lg text-gray-600 mb-6">
-                  Get paid every week like clockwork. No waiting months for payment. No hidden fees. No middleman taking a cut.
-                </p>
-                <div className="space-y-4">
-                  <div className="flex items-start">
-                    <CheckCircle className="h-6 w-6 text-green-600 mr-3 flex-shrink-0 mt-1" />
-                    <div>
-                      <div className="font-semibold text-gray-900">Direct Bank Transfer</div>
-                      <div className="text-gray-600">Money goes straight to your account</div>
-                    </div>
-                  </div>
-                  <div className="flex items-start">
-                    <CheckCircle className="h-6 w-6 text-green-600 mr-3 flex-shrink-0 mt-1" />
-                    <div>
-                      <div className="font-semibold text-gray-900">Transparent Tracking</div>
-                      <div className="text-gray-600">See your earnings in real-time</div>
-                    </div>
-                  </div>
-                  <div className="flex items-start">
-                    <CheckCircle className="h-6 w-6 text-green-600 mr-3 flex-shrink-0 mt-1" />
-                    <div>
-                      <div className="font-semibold text-gray-900">No Minimum Payout</div>
-                      <div className="text-gray-600">Get paid regardless of amount</div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-              <div className="bg-gradient-to-br from-green-100 to-blue-100 rounded-xl p-8">
-                <div className="text-center mb-6">
-                  <div className="text-5xl font-bold text-gray-900 mb-2">$500-$2,000</div>
-                  <div className="text-gray-600">Average monthly earnings</div>
-                </div>
-                <div className="space-y-3">
-                  <div className="bg-white rounded-lg p-4 flex justify-between items-center">
-                    <span className="text-gray-600">Week 1</span>
-                    <span className="font-semibold text-gray-900">$350</span>
-                  </div>
-                  <div className="bg-white rounded-lg p-4 flex justify-between items-center">
-                    <span className="text-gray-600">Week 2</span>
-                    <span className="font-semibold text-gray-900">$420</span>
-                  </div>
-                  <div className="bg-white rounded-lg p-4 flex justify-between items-center">
-                    <span className="text-gray-600">Week 3</span>
-                    <span className="font-semibold text-gray-900">$380</span>
-                  </div>
-                  <div className="bg-white rounded-lg p-4 flex justify-between items-center">
-                    <span className="text-gray-600">Week 4</span>
-                    <span className="font-semibold text-gray-900">$450</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Active Campaigns Section */}
-      <section id="campaigns" className="py-20 px-4 bg-white">
-        <div className="container mx-auto">
+      {/* Campaigns Section */}
+      <section id="campaigns" className="py-16">
+        <div className="container mx-auto px-4">
           <div className="text-center mb-12">
-            <h2 className="text-4xl font-bold mb-4 text-gray-900">Active Campaigns</h2>
-            <p className="text-xl text-gray-600">Start earning with these K-beauty brands</p>
+            <h2 className="text-3xl font-bold text-gray-800 mb-4">
+              Active Campaigns
+            </h2>
+            <p className="text-gray-600">
+              Apply to the latest K-Beauty brand campaigns and start earning
+            </p>
           </div>
 
           {loading ? (
-            <div className="flex justify-center items-center py-20">
-              <Loader2 className="h-12 w-12 animate-spin text-blue-600" />
+            <div className="text-center py-12">
+              <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4" />
+              <p className="text-gray-600">Loading...</p>
+            </div>
+          ) : error ? (
+            <div className="text-center py-12">
+              <div className="text-red-400 text-6xl mb-4">⚠️</div>
+              <h3 className="text-lg font-semibold text-red-600 mb-2">Failed to load campaigns</h3>
+              <p className="text-red-500 mb-4">{error}</p>
+              <Button onClick={loadPageData} variant="outline">
+                Try Again
+              </Button>
             </div>
           ) : campaigns.length === 0 ? (
-            <div className="text-center py-20">
-              <Target className="h-16 w-16 text-gray-400 mx-auto mb-4" />
-              <p className="text-xl text-gray-600 mb-4">No active campaigns at the moment</p>
-              <p className="text-gray-500">Check back soon for new opportunities!</p>
+            <div className="text-center py-12">
+              <div className="text-gray-400 text-6xl mb-4">📋</div>
+              <h3 className="text-lg font-semibold text-gray-600 mb-2">
+                No active campaigns at the moment
+              </h3>
+              <p className="text-gray-500">
+                Check back soon for new opportunities!
+              </p>
             </div>
           ) : (
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-7xl mx-auto">
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
               {campaigns.map((campaign) => (
-                <Card key={campaign.id} className="hover:shadow-lg transition-shadow cursor-pointer border-2 overflow-hidden" onClick={() => handleCampaignClick(campaign)}>
+                <Card
+                  key={campaign.id}
+                  className="hover:shadow-xl transition-all duration-300 hover:-translate-y-1 border-0 shadow-lg cursor-pointer overflow-hidden"
+                  onClick={() => handleCampaignClick(campaign)}
+                >
                   {campaign.image_url && (
                     <div className="w-full h-48 overflow-hidden bg-gray-100">
-                      <img 
-                        src={campaign.image_url} 
+                      <img
+                        src={campaign.image_url}
                         alt={campaign.title}
                         className="w-full h-full object-cover"
                       />
                     </div>
                   )}
                   <CardHeader>
-                    <div className="flex items-start justify-between mb-2">
-                      <div className="flex gap-1.5 flex-wrap">
-                        {getActivePlatforms(campaign.target_platforms).map((platform) => (
-                          <Badge key={platform} className={`${getPlatformColor(platform)} flex items-center gap-1 px-2 py-0.5 text-xs`}>
-                            <span className="flex items-center">{getPlatformIcon(platform)}</span>
-                            <span className="font-medium capitalize">{platform}</span>
-                          </Badge>
-                        ))}
-                      </div>
-                      <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
-                        <DollarSign className="h-3 w-3 mr-1" />
-                        {formatCurrency(campaign.reward_amount)}
+                    <div className="flex justify-between items-start mb-2">
+                      <Badge variant="secondary" className="bg-green-100 text-green-800">
+                        Recruiting
                       </Badge>
+                      <div className="text-right">
+                        <div className="text-2xl font-bold text-purple-600">
+                          {formatCurrency(campaign.reward_amount)}
+                        </div>
+                        <div className="text-xs text-gray-500">
+                          Reward
+                        </div>
+                      </div>
                     </div>
-                    <CardTitle className="text-xl">{campaign.title}</CardTitle>
-                    <CardDescription className="line-clamp-2">{campaign.description}</CardDescription>
+                    <CardTitle className="text-lg">{campaign.title}</CardTitle>
+                    <CardDescription className="text-purple-600 font-medium">
+                      {campaign.brand}
+                    </CardDescription>
                   </CardHeader>
                   <CardContent>
-                    <div className="space-y-3">
-                      <div className="flex items-center text-sm text-gray-600">
-                        <Calendar className="h-4 w-4 mr-2" />
-                        Apply by {formatDate(campaign.deadline)}
-                      </div>
-                      <div className="flex items-center text-sm text-gray-600">
-                        <Users className="h-4 w-4 mr-2" />
-                        {campaign.max_participants || campaign.total_slots} spots available
-                      </div>
-                      <Button className="w-full bg-blue-600 hover:bg-blue-700 text-white" onClick={(e) => {
+                    <p className="text-gray-600 mb-4 line-clamp-3">
+                      {campaign.description}
+                    </p>
+
+                    <div className="flex flex-wrap gap-1 mb-4">
+                      {getActivePlatforms(campaign.target_platforms).map((platform) => (
+                        <span key={platform}>
+                          {getPlatformBadge(platform)}
+                        </span>
+                      ))}
+                    </div>
+
+                    <div className="flex items-center text-sm text-gray-500 mb-4">
+                      <Calendar className="h-4 w-4 mr-2" />
+                      Deadline: {formatDate(campaign.deadline || campaign.end_date)}
+                    </div>
+
+                    <Button
+                      className="w-full bg-purple-600 hover:bg-purple-700"
+                      onClick={(e) => {
                         e.stopPropagation()
                         handleApply(campaign.id)
-                      }}>
-                        Apply Now
-                        <ArrowRight className="ml-2 h-4 w-4" />
-                      </Button>
-                    </div>
+                      }}
+                    >
+                      Apply Now
+                    </Button>
                   </CardContent>
                 </Card>
               ))}
@@ -502,21 +428,129 @@ const HomePageUS = () => {
         </div>
       </section>
 
-      {/* CTA Section */}
-      <section className="py-20 px-4 bg-gradient-to-r from-blue-600 to-purple-600 text-white">
-        <div className="container mx-auto text-center max-w-3xl">
-          <h2 className="text-4xl font-bold mb-6">Ready to Start Earning?</h2>
-          <p className="text-xl mb-8 opacity-90">
-            Join thousands of creators who are already making money with K-beauty brands
-          </p>
-          <Button size="lg" className="bg-white text-blue-600 hover:bg-gray-100 text-lg px-8 py-6">
-            <Link to="/signup" className="flex items-center">
-              Create Free Account
-              <ArrowRight className="ml-2 h-5 w-5" />
-            </Link>
-          </Button>
+      {/* About Section */}
+      <section id="about" className="py-16 bg-white/50">
+        <div className="container mx-auto px-4">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl font-bold text-gray-800 mb-4">
+              What is CNEC?
+            </h2>
+            <p className="text-gray-600">
+              A specialized platform connecting K-Beauty brands with content creators
+            </p>
+          </div>
+
+          <div className="grid md:grid-cols-3 gap-8">
+            <Card className="text-center border-0 shadow-lg">
+              <CardContent className="pt-8">
+                <div className="text-4xl mb-4">🎯</div>
+                <h3 className="text-xl font-semibold mb-2">
+                  Specialized Marketing
+                </h3>
+                <p className="text-gray-600">
+                  Focused exclusively on K-Beauty for effective brand promotions
+                </p>
+              </CardContent>
+            </Card>
+
+            <Card className="text-center border-0 shadow-lg">
+              <CardContent className="pt-8">
+                <div className="text-4xl mb-4">📱</div>
+                <h3 className="text-xl font-semibold mb-2">
+                  Short-Form Video Focus
+                </h3>
+                <p className="text-gray-600">
+                  Optimized for TikTok, Instagram Reels, and YouTube Shorts
+                </p>
+              </CardContent>
+            </Card>
+
+            <Card className="text-center border-0 shadow-lg">
+              <CardContent className="pt-8">
+                <div className="text-4xl mb-4">🤝</div>
+                <h3 className="text-xl font-semibold mb-2">
+                  Reliable Support
+                </h3>
+                <p className="text-gray-600">
+                  Full service support for both brands and creators
+                </p>
+              </CardContent>
+            </Card>
+          </div>
         </div>
       </section>
+
+      {/* Contact Section */}
+      <section id="contact" className="py-16">
+        <div className="container mx-auto px-4 text-center">
+          <h2 className="text-3xl font-bold text-gray-800 mb-4">
+            Contact Us
+          </h2>
+          <p className="text-gray-600 mb-8">
+            Have questions or need help? We're here for you
+          </p>
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <Button size="lg" className="bg-purple-600 hover:bg-purple-700" asChild>
+              <a href="mailto:support@cnec-us.com">
+                Email Us
+              </a>
+            </Button>
+            <Button variant="outline" size="lg" asChild>
+              <a href="tel:+1-800-CNEC-USA">
+                Call Us
+              </a>
+            </Button>
+          </div>
+        </div>
+      </section>
+
+      {/* Footer */}
+      <footer className="bg-gray-800 text-white py-12">
+        <div className="container mx-auto px-4">
+          <div className="grid md:grid-cols-4 gap-8">
+            <div>
+              <div className="flex items-center space-x-2 mb-4">
+                <div className="text-2xl">🎬</div>
+                <div className="text-xl font-bold">CNEC</div>
+              </div>
+              <p className="text-gray-400">
+                K-Beauty × Short-Form Video Creator Platform
+              </p>
+            </div>
+
+            <div>
+              <h4 className="font-semibold mb-4">Services</h4>
+              <ul className="space-y-2 text-gray-400">
+                <li><a href="#campaigns" className="hover:text-white transition-colors">Campaigns</a></li>
+                <li><Link to="/signup" className="hover:text-white transition-colors">
+                  Creator Registration
+                </Link></li>
+              </ul>
+            </div>
+
+            <div>
+              <h4 className="font-semibold mb-4">Support</h4>
+              <ul className="space-y-2 text-gray-400">
+                <li><a href="#" className="hover:text-white transition-colors">FAQ</a></li>
+                <li><a href="#" className="hover:text-white transition-colors">Terms of Service</a></li>
+                <li><a href="#" className="hover:text-white transition-colors">Privacy Policy</a></li>
+              </ul>
+            </div>
+
+            <div>
+              <h4 className="font-semibold mb-4">Contact</h4>
+              <ul className="space-y-2 text-gray-400">
+                <li>Email: support@cnec-us.com</li>
+                <li>Tel: +1-800-CNEC-USA</li>
+              </ul>
+            </div>
+          </div>
+
+          <div className="border-t border-gray-700 mt-8 pt-8 text-center text-gray-400">
+            <p>&copy; 2025 CNEC. All rights reserved.</p>
+          </div>
+        </div>
+      </footer>
 
       {/* Campaign Detail Modal */}
       {selectedCampaign && (
@@ -524,31 +558,40 @@ const HomePageUS = () => {
           <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle className="text-2xl">{selectedCampaign.title}</DialogTitle>
-              <DialogDescription>
-                <Badge className={`${getPlatformColor(selectedCampaign.platform_type)} mt-2`}>
-                  {getPlatformIcon(selectedCampaign.platform_type)}
-                  <span className="ml-1">{selectedCampaign.platform_type}</span>
-                </Badge>
+              <DialogDescription className="text-purple-600 font-medium">
+                {selectedCampaign.brand}
               </DialogDescription>
             </DialogHeader>
-            
+
             <div className="space-y-6">
+              {selectedCampaign.image_url && (
+                <div className="w-full h-48 overflow-hidden rounded-lg bg-gray-100">
+                  <img
+                    src={selectedCampaign.image_url}
+                    alt={selectedCampaign.title}
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+              )}
+
               <div className="grid grid-cols-2 gap-4">
-                <div className="bg-green-50 p-4 rounded-lg">
+                <div className="bg-purple-50 p-4 rounded-lg">
                   <div className="text-sm text-gray-600 mb-1">Reward</div>
-                  <div className="text-2xl font-bold text-green-700">{formatCurrency(selectedCampaign.reward_amount)}</div>
+                  <div className="text-2xl font-bold text-purple-700">
+                    {formatCurrency(selectedCampaign.reward_amount)}
+                  </div>
                 </div>
                 <div className="bg-blue-50 p-4 rounded-lg">
                   <div className="text-sm text-gray-600 mb-1">Spots Available</div>
                   <div className="text-2xl font-bold text-blue-700">
-                    {(selectedCampaign.max_participants || selectedCampaign.total_slots) - (selectedCampaign.slots_filled || 0)} / {selectedCampaign.max_participants || selectedCampaign.total_slots}
+                    {selectedCampaign.max_participants || selectedCampaign.total_slots || 'Open'}
                   </div>
                 </div>
               </div>
 
               <div>
                 <h3 className="font-semibold mb-2 flex items-center">
-                  <Target className="h-5 w-5 mr-2" />
+                  <Target className="h-5 w-5 mr-2 text-purple-600" />
                   Campaign Description
                 </h3>
                 <p className="text-gray-700 whitespace-pre-wrap">{selectedCampaign.description}</p>
@@ -557,22 +600,34 @@ const HomePageUS = () => {
               {selectedCampaign.requirements && (
                 <div>
                   <h3 className="font-semibold mb-2 flex items-center">
-                    <CheckCircle className="h-5 w-5 mr-2" />
+                    <CheckCircle className="h-5 w-5 mr-2 text-green-600" />
                     Requirements
                   </h3>
                   <p className="text-gray-700 whitespace-pre-wrap">{selectedCampaign.requirements}</p>
                 </div>
               )}
 
-              <div className="flex items-center text-sm text-gray-600">
-                <Calendar className="h-4 w-4 mr-2" />
-                Application Deadline: {formatDate(selectedCampaign.deadline)}
+              <div className="flex flex-wrap gap-2">
+                {getActivePlatforms(selectedCampaign.target_platforms).map((platform) => (
+                  <span key={platform}>
+                    {getPlatformBadge(platform)}
+                  </span>
+                ))}
               </div>
 
-              <Button className="w-full bg-blue-600 hover:bg-blue-700 text-white" size="lg" onClick={() => {
-                setDetailModal(false)
-                handleApply(selectedCampaign.id)
-              }}>
+              <div className="flex items-center text-sm text-gray-600">
+                <Calendar className="h-4 w-4 mr-2" />
+                Application Deadline: {formatDate(selectedCampaign.deadline || selectedCampaign.end_date)}
+              </div>
+
+              <Button
+                className="w-full bg-purple-600 hover:bg-purple-700"
+                size="lg"
+                onClick={() => {
+                  setDetailModal(false)
+                  handleApply(selectedCampaign.id)
+                }}
+              >
                 Apply to This Campaign
                 <ArrowRight className="ml-2 h-5 w-5" />
               </Button>
