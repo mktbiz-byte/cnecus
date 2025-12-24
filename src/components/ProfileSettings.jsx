@@ -93,21 +93,20 @@ const ProfileSettings = () => {
       const fileName = `${user.id}-${Date.now()}.${fileExt}`
       const filePath = `profiles/${fileName}`
 
-      // Upload to Supabase Storage
+      // Upload to Supabase Storage (campaign-images 버킷 사용)
       const { data, error: uploadError } = await supabase.storage
-        .from('avatars')
+        .from('campaign-images')
         .upload(filePath, file, { upsert: true })
 
       if (uploadError) {
-        // If storage doesn't exist, just use a placeholder URL
         console.error('Upload error:', uploadError)
-        setError('Image upload not available. Please try again later.')
+        setError('Image upload failed. Please try again.')
         return
       }
 
       // Get public URL
       const { data: { publicUrl } } = supabase.storage
-        .from('avatars')
+        .from('campaign-images')
         .getPublicUrl(filePath)
 
       setProfile(prev => ({ ...prev, profile_image_url: publicUrl }))

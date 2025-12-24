@@ -560,9 +560,9 @@ const MyPageWithWithdrawal = () => {
       const fileName = `${user.id}-${Date.now()}.${fileExt}`
       const filePath = `profiles/${fileName}`
 
-      // Supabase Storage에 업로드
+      // Supabase Storage에 업로드 (기존 campaign-images 버킷 사용)
       const { data, error: uploadError } = await supabase.storage
-        .from('avatars')
+        .from('campaign-images')
         .upload(filePath, file, { upsert: true })
 
       if (uploadError) {
@@ -573,22 +573,28 @@ const MyPageWithWithdrawal = () => {
 
       // Public URL 가져오기
       const { data: { publicUrl } } = supabase.storage
-        .from('avatars')
+        .from('campaign-images')
         .getPublicUrl(filePath)
 
       // editForm 업데이트
       setEditForm(prev => ({ ...prev, profile_image_url: publicUrl }))
 
-      // DB에도 바로 저장
+      // DB에도 바로 저장 (cnecbiz 연동을 위해 여러 필드에 저장)
       const { error: updateError } = await supabase
         .from('user_profiles')
-        .update({ profile_image_url: publicUrl, updated_at: new Date().toISOString() })
+        .update({
+          profile_image: publicUrl,        // cnecbiz 1순위
+          profile_photo_url: publicUrl,    // cnecbiz 2순위
+          profile_image_url: publicUrl,    // cnecbiz 3순위
+          avatar_url: publicUrl,           // cnecbiz 4순위
+          updated_at: new Date().toISOString()
+        })
         .eq('user_id', user.id)
 
       if (updateError) {
         console.error('DB update error:', updateError)
       } else {
-        setProfile(prev => ({ ...prev, profile_image_url: publicUrl }))
+        setProfile(prev => ({ ...prev, profile_image_url: publicUrl, profile_image: publicUrl }))
         setSuccess('Profile photo uploaded!')
         setTimeout(() => setSuccess(''), 3000)
       }
@@ -636,7 +642,14 @@ const MyPageWithWithdrawal = () => {
       if (editForm.region !== undefined) updateData.region = editForm.region?.trim() || null
       if (editForm.skin_type !== undefined) updateData.skin_type = editForm.skin_type?.trim() || null
       if (editForm.age !== undefined) updateData.age = editForm.age ? parseInt(editForm.age) : null
-      if (editForm.profile_image_url !== undefined) updateData.profile_image_url = editForm.profile_image_url || null
+      // cnecbiz 연동을 위해 모든 프로필 이미지 필드에 저장
+      if (editForm.profile_image_url !== undefined) {
+        const imageUrl = editForm.profile_image_url || null
+        updateData.profile_image = imageUrl        // cnecbiz 1순위
+        updateData.profile_photo_url = imageUrl   // cnecbiz 2순위
+        updateData.profile_image_url = imageUrl   // cnecbiz 3순위
+        updateData.avatar_url = imageUrl          // cnecbiz 4순위
+      }
 
       // SNS URL 필드들
       if (editForm.instagram_url !== undefined) updateData.instagram_url = editForm.instagram_url?.trim() || null
