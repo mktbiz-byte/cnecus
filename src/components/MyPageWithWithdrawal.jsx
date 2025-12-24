@@ -560,9 +560,9 @@ const MyPageWithWithdrawal = () => {
       const fileName = `${user.id}-${Date.now()}.${fileExt}`
       const filePath = `profiles/${fileName}`
 
-      // Supabase Storage에 업로드
+      // Supabase Storage에 업로드 (기존 campaign-images 버킷 사용)
       const { data, error: uploadError } = await supabase.storage
-        .from('avatars')
+        .from('campaign-images')
         .upload(filePath, file, { upsert: true })
 
       if (uploadError) {
@@ -573,7 +573,7 @@ const MyPageWithWithdrawal = () => {
 
       // Public URL 가져오기
       const { data: { publicUrl } } = supabase.storage
-        .from('avatars')
+        .from('campaign-images')
         .getPublicUrl(filePath)
 
       // editForm 업데이트
