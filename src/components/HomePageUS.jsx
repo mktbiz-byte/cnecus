@@ -278,180 +278,96 @@ const HomePageUS = () => {
         </div>
       </header>
 
-      {/* Hero Section */}
-      <section className="py-16 md:py-24 text-center relative overflow-hidden">
+      {/* Hero Section - Compact */}
+      <section className="py-10 md:py-16 text-center relative overflow-hidden">
         <div className="container mx-auto px-4 relative z-10">
           {/* Social Proof Badge */}
-          <div className="inline-flex items-center bg-white/90 rounded-full px-4 py-2 shadow-md mb-6">
+          <div className="inline-flex items-center bg-white/90 rounded-full px-4 py-2 shadow-md mb-4">
             <div className="flex -space-x-2 mr-3">
               {[1,2,3].map(i => (
-                <div key={i} className="w-8 h-8 rounded-full bg-gradient-to-r from-purple-400 to-pink-400 border-2 border-white" />
+                <div key={i} className="w-6 h-6 rounded-full bg-gradient-to-r from-purple-400 to-pink-400 border-2 border-white" />
               ))}
             </div>
             <span className="text-sm font-medium text-gray-700">
-              Join <span className="text-purple-600 font-bold">2,500+</span> creators worldwide
+              <span className="text-purple-600 font-bold">2,500+</span> creators
             </span>
           </div>
 
-          <h1 className="text-4xl md:text-6xl font-bold text-gray-800 mb-6">
-            Turn Your Content Into<br />
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-600 to-pink-600">
-              K-Beauty Collaborations
-            </span>
+          <h1 className="text-3xl md:text-5xl font-bold text-gray-800 mb-4">
+            K-Beauty <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-600 to-pink-600">Collaborations</span>
           </h1>
-          <p className="text-xl md:text-2xl text-gray-600 mb-8 max-w-3xl mx-auto">
-            Get paid to create authentic short-form content with the world's top Korean beauty brands
+          <p className="text-lg md:text-xl text-gray-600 mb-6 max-w-2xl mx-auto">
+            Create content with top Korean beauty brands & get paid via PayPal
           </p>
 
-          {/* Trust Badges */}
-          <div className="flex flex-wrap justify-center gap-4 mb-8">
-            <div className="flex items-center text-sm text-gray-600 bg-white/80 rounded-full px-4 py-2">
-              <Shield className="h-4 w-4 text-green-600 mr-2" />
-              Secure Payments
+          {/* Trust Badges - Inline */}
+          <div className="flex flex-wrap justify-center gap-3 mb-6">
+            <div className="flex items-center text-xs text-gray-600 bg-white/80 rounded-full px-3 py-1.5">
+              <Shield className="h-3 w-3 text-green-600 mr-1" />
+              Secure
             </div>
-            <div className="flex items-center text-sm text-gray-600 bg-white/80 rounded-full px-4 py-2">
-              <Zap className="h-4 w-4 text-yellow-600 mr-2" />
+            <div className="flex items-center text-xs text-gray-600 bg-white/80 rounded-full px-3 py-1.5">
+              <Zap className="h-3 w-3 text-yellow-600 mr-1" />
               Fast Approval
             </div>
-            <div className="flex items-center text-sm text-gray-600 bg-white/80 rounded-full px-4 py-2">
-              <DollarSign className="h-4 w-4 text-green-600 mr-2" />
-              PayPal Payouts
+            <div className="flex items-center text-xs text-gray-600 bg-white/80 rounded-full px-3 py-1.5">
+              <DollarSign className="h-3 w-3 text-green-600 mr-1" />
+              PayPal
             </div>
           </div>
 
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+          <div className="flex flex-col sm:flex-row gap-3 justify-center">
             <Link to="/signup">
-              <Button size="lg" className="bg-purple-600 hover:bg-purple-700 text-lg px-8">
-                Start Earning Today
-                <ArrowRight className="ml-2 h-5 w-5" />
+              <Button size="lg" className="bg-purple-600 hover:bg-purple-700 px-6">
+                Start Earning
+                <ArrowRight className="ml-2 h-4 w-4" />
               </Button>
             </Link>
-            <Button variant="outline" size="lg" className="text-lg px-8" onClick={() => document.getElementById('campaigns')?.scrollIntoView({ behavior: 'smooth' })}>
-              View Campaigns
-            </Button>
           </div>
         </div>
       </section>
 
-      {/* Partner Brands Section */}
-      <section className="py-8 bg-white/50 border-y border-gray-100">
+      {/* Campaigns Section - MOVED UP & COMPACT CARDS */}
+      <section id="campaigns" className="py-8 bg-white/50">
         <div className="container mx-auto px-4">
-          <p className="text-center text-sm text-gray-500 mb-6">TRUSTED BY TOP K-BEAUTY BRANDS</p>
-          <div className="flex flex-wrap justify-center items-center gap-8 md:gap-12">
-            {partnerBrands.map((brand) => (
-              <span key={brand} className="text-xl font-semibold text-gray-400 hover:text-gray-600 transition-colors">
-                {brand}
-              </span>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Stats Section */}
-      <section className="py-16 bg-white/50">
-        <div className="container mx-auto px-4">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-8">
-            <Card className="text-center border-0 shadow-lg bg-gradient-to-br from-purple-500 to-purple-600 text-white">
-              <CardContent className="pt-6">
-                <Target className="h-8 w-8 mx-auto mb-2 opacity-80" />
-                <div className="text-3xl font-bold mb-1">{stats.totalCampaigns || '50'}+</div>
-                <div className="text-purple-100">Active Campaigns</div>
-              </CardContent>
-            </Card>
-            <Card className="text-center border-0 shadow-lg bg-gradient-to-br from-blue-500 to-blue-600 text-white">
-              <CardContent className="pt-6">
-                <Users className="h-8 w-8 mx-auto mb-2 opacity-80" />
-                <div className="text-3xl font-bold mb-1">{stats.totalUsers || '2.5'}K+</div>
-                <div className="text-blue-100">Creators</div>
-              </CardContent>
-            </Card>
-            <Card className="text-center border-0 shadow-lg bg-gradient-to-br from-green-500 to-green-600 text-white">
-              <CardContent className="pt-6">
-                <TrendingUp className="h-8 w-8 mx-auto mb-2 opacity-80" />
-                <div className="text-3xl font-bold mb-1">{stats.totalApplications || '10'}K+</div>
-                <div className="text-green-100">Collaborations</div>
-              </CardContent>
-            </Card>
-            <Card className="text-center border-0 shadow-lg bg-gradient-to-br from-orange-500 to-orange-600 text-white">
-              <CardContent className="pt-6">
-                <Award className="h-8 w-8 mx-auto mb-2 opacity-80" />
-                <div className="text-3xl font-bold mb-1">$500K+</div>
-                <div className="text-orange-100">Paid to Creators</div>
-              </CardContent>
-            </Card>
-          </div>
-        </div>
-      </section>
-
-      {/* How It Works Section */}
-      <section id="how-it-works" className="py-16">
-        <div className="container mx-auto px-4">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold text-gray-800 mb-4">How It Works</h2>
-            <p className="text-gray-600">Start earning in 4 simple steps</p>
-          </div>
-
-          <div className="grid md:grid-cols-4 gap-8">
-            {[
-              { step: 1, icon: "📝", title: "Sign Up", desc: "Create your free creator account in 2 minutes" },
-              { step: 2, icon: "🎯", title: "Apply", desc: "Browse campaigns and apply to ones you love" },
-              { step: 3, icon: "📱", title: "Create", desc: "Receive products and create authentic content" },
-              { step: 4, icon: "💰", title: "Get Paid", desc: "Earn money directly to your PayPal account" }
-            ].map((item) => (
-              <div key={item.step} className="text-center">
-                <div className="relative inline-block mb-4">
-                  <div className="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center text-3xl">
-                    {item.icon}
-                  </div>
-                  <div className="absolute -top-2 -right-2 w-6 h-6 bg-purple-600 text-white rounded-full text-sm flex items-center justify-center font-bold">
-                    {item.step}
-                  </div>
-                </div>
-                <h3 className="text-lg font-semibold mb-2">{item.title}</h3>
-                <p className="text-gray-600 text-sm">{item.desc}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Campaigns Section */}
-      <section id="campaigns" className="py-16 bg-white/50">
-        <div className="container mx-auto px-4">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold text-gray-800 mb-4">Active Campaigns</h2>
-            <p className="text-gray-600">Apply to the latest K-Beauty brand campaigns</p>
+          <div className="flex items-center justify-between mb-6">
+            <div>
+              <h2 className="text-xl md:text-2xl font-bold text-gray-800">Active Campaigns</h2>
+              <p className="text-sm text-gray-600">Apply to K-Beauty campaigns</p>
+            </div>
+            <Badge variant="outline" className="text-purple-600 border-purple-200">
+              {campaigns.length} open
+            </Badge>
           </div>
 
           {loading ? (
-            <div className="text-center py-12">
-              <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4 text-purple-600" />
-              <p className="text-gray-600">Loading campaigns...</p>
+            <div className="text-center py-8">
+              <Loader2 className="h-6 w-6 animate-spin mx-auto mb-2 text-purple-600" />
+              <p className="text-sm text-gray-600">Loading...</p>
             </div>
           ) : error ? (
-            <div className="text-center py-12">
-              <div className="text-red-400 text-6xl mb-4">⚠️</div>
-              <h3 className="text-lg font-semibold text-red-600 mb-2">Failed to load campaigns</h3>
-              <Button onClick={loadPageData} variant="outline">Try Again</Button>
+            <div className="text-center py-8">
+              <div className="text-red-400 text-4xl mb-2">⚠️</div>
+              <p className="text-sm text-red-600 mb-2">Failed to load</p>
+              <Button onClick={loadPageData} variant="outline" size="sm">Retry</Button>
             </div>
           ) : campaigns.length === 0 ? (
-            <div className="text-center py-12">
-              <div className="text-gray-400 text-6xl mb-4">📋</div>
-              <h3 className="text-lg font-semibold text-gray-600 mb-2">No active campaigns at the moment</h3>
-              <p className="text-gray-500">Check back soon for new opportunities!</p>
+            <div className="text-center py-8">
+              <div className="text-gray-400 text-4xl mb-2">📋</div>
+              <p className="text-sm text-gray-600">No active campaigns</p>
             </div>
           ) : (
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-4">
               {campaigns.map((campaign) => (
                 <Card
                   key={campaign.id}
-                  className="hover:shadow-xl transition-all duration-300 hover:-translate-y-1 border-0 shadow-lg cursor-pointer overflow-hidden group"
+                  className="hover:shadow-lg transition-all duration-200 hover:-translate-y-0.5 border-0 shadow-md cursor-pointer overflow-hidden group"
                   onClick={() => handleCampaignClick(campaign)}
                 >
-                  {/* Image with Urgency Badge */}
+                  {/* Compact Image */}
                   <div className="relative">
                     {campaign.image_url ? (
-                      <div className="w-full h-48 overflow-hidden bg-gray-100">
+                      <div className="w-full aspect-square overflow-hidden bg-gray-100">
                         <img
                           src={campaign.image_url}
                           alt={campaign.title}
@@ -459,69 +375,145 @@ const HomePageUS = () => {
                         />
                       </div>
                     ) : (
-                      <div className="w-full h-48 bg-gradient-to-br from-purple-100 to-pink-100 flex items-center justify-center">
-                        <span className="text-6xl">✨</span>
+                      <div className="w-full aspect-square bg-gradient-to-br from-purple-100 to-pink-100 flex items-center justify-center">
+                        <span className="text-4xl">✨</span>
                       </div>
                     )}
 
-                    {/* Urgency Badge */}
-                    <div className="absolute top-3 left-3">
+                    {/* Urgency Badge - Top Left */}
+                    <div className="absolute top-2 left-2">
                       {getUrgencyBadge(campaign.deadline || campaign.end_date)}
                     </div>
 
-                    {/* Spots Badge */}
-                    <div className="absolute top-3 right-3">
-                      <Badge className="bg-white/90 text-gray-700">
-                        <Users className="w-3 h-3 mr-1" />
-                        {campaign.max_participants || 10} spots
+                    {/* Reward Badge - Top Right */}
+                    <div className="absolute top-2 right-2">
+                      <Badge className="bg-purple-600 text-white text-xs font-bold">
+                        {formatCurrency(campaign.reward_amount)}
                       </Badge>
                     </div>
                   </div>
 
-                  <CardHeader className="pb-2">
-                    <div className="flex justify-between items-start">
-                      <Badge variant="secondary" className="bg-green-100 text-green-800">
-                        <Zap className="w-3 h-3 mr-1" />
-                        Recruiting
+                  {/* Compact Content */}
+                  <div className="p-3">
+                    <div className="flex items-center gap-1 mb-1">
+                      <Badge variant="secondary" className="bg-green-100 text-green-700 text-xs px-1.5 py-0">
+                        <Zap className="w-2.5 h-2.5" />
                       </Badge>
-                      <div className="text-right">
-                        <div className="text-2xl font-bold text-purple-600">
-                          {formatCurrency(campaign.reward_amount)}
-                        </div>
+                      <span className="text-xs text-purple-600 font-medium truncate">{campaign.brand}</span>
+                    </div>
+
+                    <h3 className="font-semibold text-sm text-gray-800 line-clamp-2 mb-2 leading-tight">
+                      {campaign.title}
+                    </h3>
+
+                    <div className="flex items-center justify-between">
+                      <div className="flex gap-0.5">
+                        {getActivePlatforms(campaign.target_platforms).slice(0, 2).map((platform) => (
+                          <span key={platform} className="text-gray-400">
+                            {getPlatformIcon(platform)}
+                          </span>
+                        ))}
+                      </div>
+                      <div className="flex items-center text-xs text-gray-500">
+                        <Users className="w-3 h-3 mr-0.5" />
+                        {campaign.max_participants || 10}
                       </div>
                     </div>
-                    <CardTitle className="text-lg mt-2">{campaign.title}</CardTitle>
-                    <CardDescription className="text-purple-600 font-medium">
-                      {campaign.brand}
-                    </CardDescription>
-                  </CardHeader>
-
-                  <CardContent>
-                    <p className="text-gray-600 mb-4 line-clamp-2 text-sm">{campaign.description}</p>
-
-                    <div className="flex flex-wrap gap-1 mb-4">
-                      {getActivePlatforms(campaign.target_platforms).map((platform) => (
-                        <span key={platform}>{getPlatformBadge(platform)}</span>
-                      ))}
-                    </div>
-
-                    <div className="flex items-center text-sm text-gray-500 mb-4">
-                      <Calendar className="h-4 w-4 mr-2" />
-                      Deadline: {formatDate(campaign.deadline || campaign.end_date)}
-                    </div>
-
-                    <Button
-                      className="w-full bg-purple-600 hover:bg-purple-700"
-                      onClick={(e) => { e.stopPropagation(); handleApply(campaign.id) }}
-                    >
-                      Apply Now
-                      <ArrowRight className="ml-2 h-4 w-4" />
-                    </Button>
-                  </CardContent>
+                  </div>
                 </Card>
               ))}
             </div>
           )}
+
+          {/* View All Button */}
+          {campaigns.length > 0 && (
+            <div className="text-center mt-6">
+              <Link to="/signup">
+                <Button variant="outline" className="text-purple-600 border-purple-200 hover:bg-purple-50">
+                  Sign up to apply
+                  <ArrowRight className="ml-2 h-4 w-4" />
+                </Button>
+              </Link>
+            </div>
+          )}
+        </div>
+      </section>
+
+      {/* Partner Brands Section */}
+      <section className="py-6 bg-white/50 border-y border-gray-100">
+        <div className="container mx-auto px-4">
+          <p className="text-center text-xs text-gray-500 mb-4">TRUSTED BY TOP K-BEAUTY BRANDS</p>
+          <div className="flex flex-wrap justify-center items-center gap-6 md:gap-10">
+            {partnerBrands.map((brand) => (
+              <span key={brand} className="text-lg font-semibold text-gray-400 hover:text-gray-600 transition-colors">
+                {brand}
+              </span>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Stats Section - Compact */}
+      <section className="py-10 bg-white/50">
+        <div className="container mx-auto px-4">
+          <div className="grid grid-cols-4 gap-2 md:gap-4">
+            <Card className="text-center border-0 shadow-md bg-gradient-to-br from-purple-500 to-purple-600 text-white">
+              <CardContent className="py-4 px-2">
+                <div className="text-xl md:text-2xl font-bold mb-0.5">{stats.totalCampaigns || '50'}+</div>
+                <div className="text-purple-100 text-xs">Campaigns</div>
+              </CardContent>
+            </Card>
+            <Card className="text-center border-0 shadow-md bg-gradient-to-br from-blue-500 to-blue-600 text-white">
+              <CardContent className="py-4 px-2">
+                <div className="text-xl md:text-2xl font-bold mb-0.5">{stats.totalUsers || '2.5'}K</div>
+                <div className="text-blue-100 text-xs">Creators</div>
+              </CardContent>
+            </Card>
+            <Card className="text-center border-0 shadow-md bg-gradient-to-br from-green-500 to-green-600 text-white">
+              <CardContent className="py-4 px-2">
+                <div className="text-xl md:text-2xl font-bold mb-0.5">{stats.totalApplications || '10'}K</div>
+                <div className="text-green-100 text-xs">Collabs</div>
+              </CardContent>
+            </Card>
+            <Card className="text-center border-0 shadow-md bg-gradient-to-br from-orange-500 to-orange-600 text-white">
+              <CardContent className="py-4 px-2">
+                <div className="text-xl md:text-2xl font-bold mb-0.5">$500K</div>
+                <div className="text-orange-100 text-xs">Paid Out</div>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      </section>
+
+      {/* How It Works Section - Compact */}
+      <section id="how-it-works" className="py-10">
+        <div className="container mx-auto px-4">
+          <div className="text-center mb-8">
+            <h2 className="text-2xl font-bold text-gray-800 mb-2">How It Works</h2>
+            <p className="text-sm text-gray-600">Start earning in 4 simple steps</p>
+          </div>
+
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
+            {[
+              { step: 1, icon: "📝", title: "Sign Up", desc: "Create free account" },
+              { step: 2, icon: "🎯", title: "Apply", desc: "Choose campaigns" },
+              { step: 3, icon: "📱", title: "Create", desc: "Make great content" },
+              { step: 4, icon: "💰", title: "Get Paid", desc: "Earn via PayPal" }
+            ].map((item) => (
+              <div key={item.step} className="text-center">
+                <div className="relative inline-block mb-3">
+                  <div className="w-12 h-12 md:w-14 md:h-14 bg-purple-100 rounded-full flex items-center justify-center text-2xl">
+                    {item.icon}
+                  </div>
+                  <div className="absolute -top-1 -right-1 w-5 h-5 bg-purple-600 text-white rounded-full text-xs flex items-center justify-center font-bold">
+                    {item.step}
+                  </div>
+                </div>
+                <h3 className="text-sm font-semibold mb-1">{item.title}</h3>
+                <p className="text-gray-600 text-xs">{item.desc}</p>
+              </div>
+            ))}
+          </div>
         </div>
       </section>
 
