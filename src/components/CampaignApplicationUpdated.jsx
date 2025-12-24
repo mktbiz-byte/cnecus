@@ -8,11 +8,9 @@ import { Badge } from '@/components/ui/badge'
 import { Textarea } from '@/components/ui/textarea'
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog'
 import {
   Loader2, ArrowLeft, Users, Calendar,
-  CheckCircle, AlertCircle, Instagram, Youtube,
-  User, Shield, Sparkles
+  CheckCircle, AlertCircle, User, Shield, Sparkles
 } from 'lucide-react'
 
 const CampaignApplicationUpdated = () => {
@@ -30,7 +28,6 @@ const CampaignApplicationUpdated = () => {
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
-  const [showProfileModal, setShowProfileModal] = useState(false)
 
   // Minimal form - NO shipping address (collected after selection)
   const [formData, setFormData] = useState({
@@ -71,18 +68,7 @@ const CampaignApplicationUpdated = () => {
       const profileData = await database.userProfiles.get(user.id)
       setUserProfile(profileData)
 
-      // Check if profile has Instagram (required)
-      if (!profileData?.instagram_url) {
-        setShowProfileModal(true)
-      }
-
-      // Pre-fill from profile
-      if (profileData) {
-        setFormData(prev => ({
-          ...prev,
-          skin_type: profileData.skin_type || ''
-        }))
-      }
+      // No profile completion check - let users apply freely
 
       // Check existing application
       const existingApp = await database.applications.getByUserAndCampaign(user.id, campaignId)
@@ -133,16 +119,13 @@ const CampaignApplicationUpdated = () => {
       setSubmitting(true)
       setError('')
 
-      // Minimal data - NO address/phone (collected after approval)
+      // Minimal data - only fields that exist in DB schema
       const submissionData = {
         user_id: user.id,
         campaign_id: campaignId,
         applicant_name: userProfile?.name || '',
         age_range: formData.age_range,
         skin_type: formData.skin_type || null,
-        instagram_url: userProfile?.instagram_url || '',
-        youtube_url: userProfile?.youtube_url || null,
-        tiktok_url: userProfile?.tiktok_url || null,
         answer_1: formData.answer_1 || null,
         answer_2: formData.answer_2 || null,
         answer_3: formData.answer_3 || null,
@@ -253,26 +236,6 @@ const CampaignApplicationUpdated = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 to-blue-50 pb-8">
-      {/* Profile Modal */}
-      <Dialog open={showProfileModal} onOpenChange={setShowProfileModal}>
-        <DialogContent className="max-w-sm">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <Instagram className="h-5 w-5 text-pink-500" />
-              Connect Instagram First
-            </DialogTitle>
-            <DialogDescription>
-              Add your Instagram URL to your profile to apply for campaigns.
-            </DialogDescription>
-          </DialogHeader>
-          <Link to="/profile-settings">
-            <Button className="w-full bg-purple-600 hover:bg-purple-700 mt-2">
-              Go to Profile Settings
-            </Button>
-          </Link>
-        </DialogContent>
-      </Dialog>
-
       <div className="max-w-lg mx-auto px-4 pt-6">
         {/* Header */}
         <button
@@ -393,21 +356,6 @@ const CampaignApplicationUpdated = () => {
                   </Select>
                 </div>
               </div>
-
-              {/* Instagram Connected */}
-              <div className="mt-4 flex items-center justify-between py-2 px-3 bg-gray-50 rounded-lg">
-                <div className="flex items-center gap-2">
-                  <Instagram className="h-4 w-4 text-pink-500" />
-                  <span className="text-sm text-gray-700">Instagram</span>
-                </div>
-                {userProfile?.instagram_url ? (
-                  <Badge className="bg-green-100 text-green-700 text-xs">Connected</Badge>
-                ) : (
-                  <Link to="/profile-settings" className="text-xs text-purple-600 hover:underline">
-                    Connect
-                  </Link>
-                )}
-              </div>
             </CardContent>
           </Card>
 
@@ -527,7 +475,7 @@ const CampaignApplicationUpdated = () => {
           {/* Submit */}
           <Button
             type="submit"
-            disabled={submitting || showProfileModal}
+            disabled={submitting}
             className="w-full bg-purple-600 hover:bg-purple-700 py-6 text-base font-medium"
           >
             {submitting ? (
