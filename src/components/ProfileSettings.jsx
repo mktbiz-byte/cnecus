@@ -21,12 +21,15 @@ const ProfileSettings = () => {
   const { user } = useAuth()
   const { language } = useLanguage()
   
-  // 실제 데이터베이스 스키마에 맞춘 최소한의 필드만 사용
+  // Profile fields including shipping info
   const [profile, setProfile] = useState({
     name: '',
     email: '',
     age: '',
     skin_type: '',
+    phone_number: '',
+    postal_code: '',
+    address: '',
     instagram_url: '',
     youtube_url: '',
     tiktok_url: '',
@@ -44,17 +47,71 @@ const ProfileSettings = () => {
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
 
-  // 다국어 텍스트
+  // Multi-language texts
   const texts = {
+    en: {
+      title: 'Profile Settings',
+      subtitle: 'Manage your personal information and account settings',
+      personalInfo: 'Personal Information',
+      shippingInfo: 'Shipping Information',
+      accountSettings: 'Account Settings',
+      name: 'Full Name',
+      email: 'Email',
+      age: 'Age',
+      skinType: 'Skin Type',
+      phoneNumber: 'Phone Number',
+      postalCode: 'Postal Code',
+      address: 'Shipping Address',
+      socialMedia: 'Social Media',
+      instagramUrl: 'Instagram URL',
+      youtubeUrl: 'YouTube URL',
+      tiktokUrl: 'TikTok URL',
+      bio: 'Bio',
+      changePassword: 'Change Password',
+      currentPassword: 'Current Password',
+      newPassword: 'New Password',
+      confirmPassword: 'Confirm Password',
+      save: 'Save Changes',
+      saving: 'Saving...',
+      backToHome: 'Back to Home',
+      emailNote: 'Email cannot be changed',
+      shippingNote: 'Used for product deliveries in campaigns',
+      phonePlaceholder: 'e.g., 555-123-4567',
+      postalPlaceholder: 'e.g., 90210',
+      addressPlaceholder: 'Enter your full shipping address',
+      skinTypes: {
+        dry: 'Dry',
+        oily: 'Oily',
+        combination: 'Combination',
+        sensitive: 'Sensitive',
+        normal: 'Normal'
+      },
+      errors: {
+        nameRequired: 'Please enter your name',
+        loadError: 'Failed to load profile',
+        saveError: 'Failed to save profile',
+        passwordFields: 'Please fill in all password fields',
+        passwordMismatch: 'New passwords do not match',
+        passwordLength: 'Password must be at least 6 characters'
+      },
+      success: {
+        profileSaved: 'Profile saved successfully!',
+        passwordChanged: 'Password changed successfully!'
+      }
+    },
     ko: {
       title: '프로필 설정',
       subtitle: '개인정보 및 계정 설정을 관리하세요',
       personalInfo: '개인정보',
+      shippingInfo: '배송 정보',
       accountSettings: '계정 설정',
       name: '이름',
       email: '이메일',
       age: '나이',
       skinType: '피부 타입',
+      phoneNumber: '연락처',
+      postalCode: '우편번호',
+      address: '배송 주소',
       socialMedia: '소셜 미디어',
       instagramUrl: '인스타그램 URL',
       youtubeUrl: '유튜브 URL',
@@ -67,46 +124,34 @@ const ProfileSettings = () => {
       save: '저장',
       saving: '저장 중...',
       backToHome: '홈으로 돌아가기',
+      emailNote: '이메일은 변경할 수 없습니다',
+      shippingNote: '캠페인 제품 배송에 사용됩니다',
+      phonePlaceholder: '예: 010-1234-5678',
+      postalPlaceholder: '예: 12345',
+      addressPlaceholder: '상세 주소를 입력하세요',
       skinTypes: {
         dry: '건성',
         oily: '지성',
         combination: '복합성',
         sensitive: '민감성',
         normal: '보통'
-      }
-    },
-    ja: {
-      title: 'プロフィール設定',
-      subtitle: '個人情報とアカウント設定を管理します',
-      personalInfo: '個人情報',
-      accountSettings: 'アカウント設定',
-      name: '名前',
-      email: 'メール',
-      age: '年齢',
-      skinType: '肌タイプ',
-      socialMedia: 'ソーシャルメディア',
-      instagramUrl: 'Instagram URL',
-      youtubeUrl: 'YouTube URL',
-      tiktokUrl: 'TikTok URL',
-      bio: '自己紹介',
-      changePassword: 'パスワード変更',
-      currentPassword: '現在のパスワード',
-      newPassword: '新しいパスワード',
-      confirmPassword: 'パスワード確認',
-      save: '保存',
-      saving: '保存中...',
-      backToHome: 'ホームに戻る',
-      skinTypes: {
-        dry: '乾燥肌',
-        oily: '脂性肌',
-        combination: '混合肌',
-        sensitive: '敏感肌',
-        normal: '普通肌'
+      },
+      errors: {
+        nameRequired: '이름을 입력해주세요',
+        loadError: '프로필을 불러오는데 실패했습니다',
+        saveError: '프로필 저장에 실패했습니다',
+        passwordFields: '모든 비밀번호 필드를 입력해주세요',
+        passwordMismatch: '새 비밀번호가 일치하지 않습니다',
+        passwordLength: '비밀번호는 최소 6자 이상이어야 합니다'
+      },
+      success: {
+        profileSaved: '프로필이 저장되었습니다!',
+        passwordChanged: '비밀번호가 변경되었습니다!'
       }
     }
   }
 
-  const t = texts[language] || texts.ko
+  const t = texts[language] || texts.en
 
   useEffect(() => {
     if (user) {
@@ -128,13 +173,15 @@ const ProfileSettings = () => {
           email: profileData.email || user.email || '',
           age: profileData.age || '',
           skin_type: profileData.skin_type || '',
+          phone_number: profileData.phone_number || '',
+          postal_code: profileData.postal_code || '',
+          address: profileData.address || '',
           instagram_url: profileData.instagram_url || '',
           youtube_url: profileData.youtube_url || '',
           tiktok_url: profileData.tiktok_url || '',
           bio: profileData.bio || ''
         })
       } else {
-        // 프로필이 없으면 기본값으로 설정
         setProfile(prev => ({
           ...prev,
           email: user.email || ''
@@ -161,13 +208,16 @@ const ProfileSettings = () => {
 
       console.log('프로필 저장 시작:', profile)
 
-      // 실제 데이터베이스 스키마에 맞춘 데이터만 전송
+      // Profile data including shipping info
       const profileData = {
         user_id: user.id,
         name: profile.name.trim(),
         email: profile.email.trim(),
         age: profile.age ? parseInt(profile.age) : null,
         skin_type: profile.skin_type || null,
+        phone_number: profile.phone_number?.trim() || null,
+        postal_code: profile.postal_code?.trim() || null,
+        address: profile.address?.trim() || null,
         instagram_url: profile.instagram_url.trim() || null,
         youtube_url: profile.youtube_url.trim() || null,
         tiktok_url: profile.tiktok_url.trim() || null,
@@ -246,7 +296,7 @@ const ProfileSettings = () => {
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="flex items-center space-x-2">
           <Loader2 className="h-6 w-6 animate-spin" />
-          <span>프로필을 불러오는 중...</span>
+          <span>Loading profile...</span>
         </div>
       </div>
     )
@@ -290,7 +340,7 @@ const ProfileSettings = () => {
         )}
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          {/* 개인정보 섹션 */}
+          {/* Personal Info Section */}
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center">
@@ -298,7 +348,7 @@ const ProfileSettings = () => {
                 {t.personalInfo}
               </CardTitle>
               <CardDescription>
-                기본 개인정보를 관리하세요
+                {t.subtitle}
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
@@ -326,7 +376,7 @@ const ProfileSettings = () => {
                   className="bg-gray-50"
                 />
                 <p className="text-sm text-gray-500">
-                  이메일은 변경할 수 없습니다
+                  {t.emailNote}
                 </p>
               </div>
 
@@ -366,7 +416,54 @@ const ProfileSettings = () => {
 
               <Separator />
 
-              {/* 소셜 미디어 */}
+              {/* Shipping Information */}
+              <div className="space-y-4">
+                <div>
+                  <h3 className="text-lg font-medium flex items-center">
+                    <Home className="h-5 w-5 mr-2" />
+                    {t.shippingInfo}
+                  </h3>
+                  <p className="text-sm text-gray-500 mt-1">{t.shippingNote}</p>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="phone_number">{t.phoneNumber}</Label>
+                    <Input
+                      id="phone_number"
+                      type="tel"
+                      value={profile.phone_number}
+                      onChange={(e) => setProfile(prev => ({ ...prev, phone_number: e.target.value }))}
+                      placeholder={t.phonePlaceholder}
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="postal_code">{t.postalCode}</Label>
+                    <Input
+                      id="postal_code"
+                      value={profile.postal_code}
+                      onChange={(e) => setProfile(prev => ({ ...prev, postal_code: e.target.value }))}
+                      placeholder={t.postalPlaceholder}
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="address">{t.address}</Label>
+                  <Textarea
+                    id="address"
+                    value={profile.address}
+                    onChange={(e) => setProfile(prev => ({ ...prev, address: e.target.value }))}
+                    placeholder={t.addressPlaceholder}
+                    rows={2}
+                  />
+                </div>
+              </div>
+
+              <Separator />
+
+              {/* Social Media */}
               <div className="space-y-4">
                 <h3 className="text-lg font-medium flex items-center">
                   <Globe className="h-5 w-5 mr-2" />
@@ -447,7 +544,7 @@ const ProfileSettings = () => {
             </CardContent>
           </Card>
 
-          {/* 계정 설정 섹션 */}
+          {/* Account Settings Section */}
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center">
@@ -455,7 +552,7 @@ const ProfileSettings = () => {
                 {t.accountSettings}
               </CardTitle>
               <CardDescription>
-                계정 보안 설정을 관리하세요
+                Manage your account security settings
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
