@@ -127,8 +127,16 @@ const ProfileSettings = () => {
       setError('')
       setSuccess('')
 
+      // 프로필 사진 필수 확인
+      if (!profile.profile_image_url) {
+        setError('Please upload a profile photo first')
+        setSaving(false)
+        return
+      }
+
       if (!profile.name.trim()) {
         setError('Please enter your name')
+        setSaving(false)
         return
       }
 
@@ -244,10 +252,14 @@ const ProfileSettings = () => {
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-6">
-            {/* Profile Photo */}
+            {/* Profile Photo - Required */}
             <div className="flex items-center gap-4">
               <div className="relative">
-                <div className="w-20 h-20 rounded-full bg-gradient-to-br from-purple-400 to-pink-400 flex items-center justify-center overflow-hidden">
+                <div className={`w-20 h-20 rounded-full flex items-center justify-center overflow-hidden ${
+                  profile.profile_image_url
+                    ? 'bg-gray-200'
+                    : 'bg-gradient-to-br from-red-400 to-orange-400 ring-2 ring-red-500 ring-offset-2'
+                }`}>
                   {profile.profile_image_url ? (
                     <img
                       src={profile.profile_image_url}
@@ -255,9 +267,7 @@ const ProfileSettings = () => {
                       className="w-full h-full object-cover"
                     />
                   ) : (
-                    <span className="text-white text-2xl font-bold">
-                      {profile.name?.charAt(0)?.toUpperCase() || 'U'}
-                    </span>
+                    <Camera className="h-8 w-8 text-white" />
                   )}
                 </div>
                 <label className="absolute bottom-0 right-0 w-7 h-7 bg-purple-600 rounded-full flex items-center justify-center cursor-pointer hover:bg-purple-700 transition-colors">
@@ -278,6 +288,9 @@ const ProfileSettings = () => {
               <div>
                 <p className="font-medium text-gray-800">{profile.name || 'Your Name'}</p>
                 <p className="text-sm text-gray-500">{profile.email}</p>
+                {!profile.profile_image_url && (
+                  <p className="text-xs text-red-500 mt-1 font-medium">⚠️ Profile photo required</p>
+                )}
               </div>
             </div>
 
