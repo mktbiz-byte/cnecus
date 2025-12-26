@@ -50,9 +50,22 @@ const HomePageUS = () => {
   const loadCampaigns = async () => {
     try {
       const campaignsData = await database.campaigns.getAll()
-      const activeCampaigns = campaignsData?.filter(campaign =>
-        campaign.status === 'active' && campaign.platform_region === 'us'
-      ) || []
+      const now = new Date()
+      const activeCampaigns = campaignsData?.filter(campaign => {
+        // Check if campaign is active and belongs to US region
+        if (campaign.status !== 'active' || campaign.platform_region !== 'us') {
+          return false
+        }
+        // Check if application deadline has not passed
+        const deadline = campaign.deadline || campaign.end_date
+        if (deadline) {
+          const deadlineDate = new Date(deadline)
+          if (deadlineDate < now) {
+            return false // Deadline has passed, hide this campaign
+          }
+        }
+        return true
+      }) || []
       setCampaigns(activeCampaigns)
       return activeCampaigns
     } catch (error) {
