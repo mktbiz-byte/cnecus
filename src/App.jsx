@@ -22,6 +22,7 @@ import ProfileSettings from './components/ProfileSettings';
 import AuthCallbackSafe from './components/AuthCallbackSafe';
 import TermsPage from './components/TermsPage';
 import PrivacyPage from './components/PrivacyPage';
+import CreatorContactForm from './components/CreatorContactForm';
 
 // 관리자 컴포넌트
 import AdminDashboardSimple from './components/admin/AdminDashboardSimple';
@@ -87,6 +88,7 @@ const AppContent = () => {
         <Route path="/profile-settings" element={<ProfileSettings />} />
         <Route path="/terms" element={<TermsPage />} />
         <Route path="/privacy" element={<PrivacyPage />} />
+        <Route path="/creator-contact" element={<CreatorContactForm />} />
 
         {/* 관리자 페이지 - 보안을 위해 /admin/ 경로 제거 */}
         <Route path="/secret-admin-login" element={<SecretAdminLogin />} />

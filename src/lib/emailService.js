@@ -215,6 +215,77 @@ const EMAIL_TEMPLATES = {
     `
   },
 
+  // 3.5. Contact Information Request (for confirmed creators)
+  CONTACT_INFO_REQUEST: {
+    subject: '[CNEC US] Action Required: Please submit your shipping address',
+    template: (data) => `
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>CNEC US - Shipping Address Required</title>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; }
+        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+        .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0; }
+        .content { background: white; padding: 30px; border: 1px solid #e0e0e0; }
+        .footer { background: #f8f9fa; padding: 20px; text-align: center; border-radius: 0 0 10px 10px; }
+        .button { display: inline-block; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 15px 40px; text-decoration: none; border-radius: 8px; margin: 20px 0; font-weight: bold; font-size: 16px; }
+        .info-box { background: #f0f8ff; border: 1px solid #667eea; padding: 20px; border-radius: 8px; margin: 20px 0; }
+        .highlight { color: #667eea; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Congratulations!</h1>
+            <p>You have been selected for the campaign</p>
+        </div>
+        <div class="content">
+            <h2>Hi ${data.name},</h2>
+
+            <p>Great news! You have been <span class="highlight">officially confirmed</span> for the <strong>${data.campaignTitle}</strong> campaign!</p>
+
+            <div class="info-box">
+                <h3>Campaign Details</h3>
+                <p><strong>Campaign:</strong> ${data.campaignTitle}</p>
+                <p><strong>Brand:</strong> ${data.brandName || 'N/A'}</p>
+                <p><strong>Reward:</strong> $${data.rewardAmount || 'TBD'}</p>
+            </div>
+
+            <h3>Action Required</h3>
+            <p>To receive your campaign products, we need your <strong>shipping address</strong> and <strong>phone number</strong>.</p>
+            <p>Please click the button below to submit your contact information:</p>
+
+            <div style="text-align: center;">
+                <a href="${data.contactFormUrl}" class="button">Submit Contact Information</a>
+            </div>
+
+            <p style="color: #666; font-size: 14px;">
+                This link is unique to your application. Please do not share it with others.
+            </p>
+
+            <h3>What's Next?</h3>
+            <ol>
+                <li>Submit your contact information (phone & address)</li>
+                <li>We will ship the products to your address</li>
+                <li>Create amazing content following the campaign guidelines</li>
+                <li>Post and submit your content URL</li>
+                <li>Receive your reward!</li>
+            </ol>
+
+            <p>If you have any questions, please don't hesitate to contact us.</p>
+        </div>
+        <div class="footer">
+            <p>&copy; 2025 CNEC US. All rights reserved.</p>
+            <p>This is an automated email.</p>
+        </div>
+    </div>
+</body>
+</html>
+    `
+  },
+
   // 4. Campaign Guide Delivered
   GUIDE_DELIVERED: {
     subject: '[CNEC US] Your campaign materials are ready!',
