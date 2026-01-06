@@ -163,7 +163,7 @@ const ConfirmedCreatorsNew = () => {
         console.log('캠페인 데이터:', campaignData)
       }
       
-      // 확정된 크리에이터 데이터 로드 (실제 데이터베이스 구조에 맞게)
+      // 확정된 크리에이터 데이터 로드 (approved 또는 completed 상태)
       let query = supabase
         .from('applications')
         .select(`
@@ -183,7 +183,7 @@ const ConfirmedCreatorsNew = () => {
             instagram_url
           )
         `)
-        .eq('status', 'approved')
+        .in('status', ['approved', 'completed'])
         .order('updated_at', { ascending: false })
       
       if (campaignId && campaignId !== 'undefined') {

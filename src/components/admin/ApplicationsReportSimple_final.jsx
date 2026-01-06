@@ -1,14 +1,15 @@
 import React, { useState, useEffect } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { useLanguage } from '../../contexts/LanguageContext'
-import { database } from '../../lib/supabase'
+import { database, supabase } from '../../lib/supabase'
+import { sendEmail } from '../../lib/emailService'
 import AdminNavigation from './AdminNavigation'
-import { 
+import {
   Loader2, Eye, CheckCircle, XCircle, Clock, Search, Filter,
   Users, FileText, AlertCircle, Download, ExternalLink,
   Calendar, Mail, Instagram, Youtube, Video, RefreshCw,
   Link as LinkIcon, FolderOpen, Presentation, Wand2, X, Save,
-  ArrowLeft, DollarSign, FileText as FileTextIcon, Edit
+  ArrowLeft, DollarSign, FileText as FileTextIcon, Edit, Send
 } from 'lucide-react'
 import DriveModal from './DriveModal'
 
@@ -31,6 +32,7 @@ const ApplicationsReportSimple = () => {
   const [selectedApplication, setSelectedApplication] = useState(null)
   const [detailModal, setDetailModal] = useState(false)
   const [driveModal, setDriveModal] = useState(false)
+  const [sendingEmail, setSendingEmail] = useState({})
   const [driveForm, setDriveForm] = useState({
     google_drive_url: '',
     google_slides_url: '',
@@ -284,6 +286,63 @@ const ApplicationsReportSimple = () => {
 
     if (confirm(confirmMessage)) {
       await updateApplicationStatus(application.id, newStatus)
+    }
+  }
+
+  // 연락처 요청 이메일 발송
+  const sendContactInfoEmail = async (application) => {
+    const applicationId = application.id
+
+    try {
+      setSendingEmail(prev => ({ ...prev, [applicationId]: true }))
+
+      const email = application.user_profiles?.email || application.email
+      const name = application.user_profiles?.name || application.applicant_name || 'Creator'
+      const campaign = campaigns.find(c => c.id === application.campaign_id)
+      const campaignTitle = campaign?.title || 'Campaign'
+      const brandName = campaign?.brand || ''
+      const rewardAmount = campaign?.reward_amount || ''
+
+      if (!email) {
+        throw new Error('이메일 주소가 없습니다.')
+      }
+
+      // 연락처 폼 URL 생성
+      const contactFormUrl = `https://cnec-us.com/creator-contact?id=${applicationId}`
+
+      await sendEmail('CONTACT_INFO_REQUEST', email, {
+        name,
+        campaignTitle,
+        brandName,
+        rewardAmount,
+        contactFormUrl
+      })
+
+      // 이메일 발송 기록 업데이트
+      await supabase
+        .from('applications')
+        .update({
+          contact_email_sent: true,
+          contact_email_sent_at: new Date().toISOString()
+        })
+        .eq('id', applicationId)
+
+      setSuccess(`${name}님에게 연락처 요청 이메일을 발송했습니다.`)
+      setTimeout(() => setSuccess(''), 3000)
+
+      // 로컬 상태 업데이트
+      setApplications(prev => prev.map(app =>
+        app.id === applicationId
+          ? { ...app, contact_email_sent: true, contact_email_sent_at: new Date().toISOString() }
+          : app
+      ))
+
+    } catch (error) {
+      console.error('이메일 발송 오류:', error)
+      setError(error.message || '이메일 발송에 실패했습니다.')
+      setTimeout(() => setError(''), 5000)
+    } finally {
+      setSendingEmail(prev => ({ ...prev, [applicationId]: false }))
     }
   }
 
@@ -702,6 +761,25 @@ const ApplicationsReportSimple = () => {
                             >
                               <FolderOpen className="h-4 w-4 mr-1" />
                               {t.provideDriveAccess}
+                            </button>
+                            <button
+                              onClick={() => sendContactInfoEmail(application)}
+                              disabled={sendingEmail[application.id] || application.contact_submitted}
+                              className={`inline-flex items-center px-3 py-1 border shadow-sm text-sm leading-4 font-medium rounded-md ${
+                                application.contact_submitted
+                                  ? 'border-gray-300 text-gray-500 bg-gray-50 cursor-not-allowed'
+                                  : application.contact_email_sent
+                                  ? 'border-purple-300 text-purple-700 bg-purple-50 hover:bg-purple-100'
+                                  : 'border-pink-300 text-pink-700 bg-pink-50 hover:bg-pink-100'
+                              }`}
+                              title={application.contact_submitted ? '연락처 제출 완료' : application.contact_email_sent ? '이메일 재발송' : '연락처 요청 메일 발송'}
+                            >
+                              {sendingEmail[application.id] ? (
+                                <Loader2 className="h-4 w-4 mr-1 animate-spin" />
+                              ) : (
+                                <Send className="h-4 w-4 mr-1" />
+                              )}
+                              {application.contact_submitted ? '제출완료' : application.contact_email_sent ? '재발송' : '연락처 요청'}
                             </button>
                           </>
                         )}
