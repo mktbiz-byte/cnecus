@@ -77,6 +77,12 @@ const MyPageWithWithdrawal = () => {
     notes: ''
   })
 
+  // Shooting guide and video upload states
+  const [expandedGuides, setExpandedGuides] = useState({})
+  const [showVideoUploadModal, setShowVideoUploadModal] = useState(false)
+  const [videoSubmissionUrl, setVideoSubmissionUrl] = useState('')
+  const [uploadingVideo, setUploadingVideo] = useState(false)
+
   // 프로필 편집 관련 상태
   const [isEditing, setIsEditing] = useState(false)
   const [uploadingImage, setUploadingImage] = useState(false)
@@ -392,11 +398,26 @@ const MyPageWithWithdrawal = () => {
       setLoading(true)
 
       // 🚀 모든 데이터를 병렬로 로딩 (속도 대폭 향상)
-      const [profileData, applicationsData, pointTransactionsResult] = await Promise.all([
+      // Get applications with campaign data (personalized_guide is in applications table)
+      const { data: applicationsWithGuide } = await supabase
+        .from('applications')
+        .select(`
+          *,
+          campaigns (
+            id,
+            title,
+            brand,
+            reward_amount
+          )
+        `)
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false })
+
+      const [profileData, _, pointTransactionsResult] = await Promise.all([
         // 1. 프로필 정보
         database.userProfiles.get(user.id),
-        // 2. 신청 내역
-        database.applications.getByUser(user.id),
+        // 2. 신청 내역 (already loaded above with shooting_guide)
+        Promise.resolve(applicationsWithGuide),
         // 3. 포인트 거래 내역 (출금 + 전체)
         supabase
           .from('point_transactions')
@@ -426,8 +447,8 @@ const MyPageWithWithdrawal = () => {
         })
       }
 
-      // 신청 내역 설정
-      setApplications(applicationsData || [])
+      // 신청 내역 설정 (with shooting_guide from campaigns)
+      setApplications(applicationsWithGuide || [])
 
       // 포인트 거래 내역 처리
       const { data: pointData, error: pointError } = pointTransactionsResult
@@ -850,7 +871,7 @@ const MyPageWithWithdrawal = () => {
       // 에러 상태 초기화
       setError('')
       setSuccess('')
-      
+
       if (!application) {
         setError('Application information not found.')
         return
@@ -862,11 +883,66 @@ const MyPageWithWithdrawal = () => {
         notes: application.additional_info || ''
       })
       setShowSnsUploadModal(true)
-      
+
       console.log('SNS 업로드 모달 열림:', application.id, application.campaign_title)
     } catch (error) {
       console.error('SNS 업로드 모달 열기 오류:', error)
       setError('Could not open modal.')
+    }
+  }
+
+  // Toggle shooting guide expansion
+  const toggleGuideExpand = (applicationId) => {
+    setExpandedGuides(prev => ({
+      ...prev,
+      [applicationId]: !prev[applicationId]
+    }))
+  }
+
+  // Check if application has personalized guide (stored in applications.personalized_guide)
+  const hasShootingGuide = (application) => {
+    return application.personalized_guide?.scenes?.length > 0
+  }
+
+  // Open video upload modal
+  const openVideoUploadModal = (application) => {
+    setSelectedApplication(application)
+    setVideoSubmissionUrl(application.video_submission_url || '')
+    setShowVideoUploadModal(true)
+  }
+
+  // Handle video submission
+  const handleVideoSubmit = async () => {
+    if (!videoSubmissionUrl.trim()) {
+      setError('Please enter a video URL.')
+      return
+    }
+
+    try {
+      setUploadingVideo(true)
+      setError('')
+
+      const { error: updateError } = await supabase
+        .from('applications')
+        .update({
+          video_submission_url: videoSubmissionUrl,
+          video_submitted_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', selectedApplication.id)
+
+      if (updateError) throw updateError
+
+      setSuccess('Video submitted successfully!')
+      setShowVideoUploadModal(false)
+      loadUserData()
+
+      setTimeout(() => setSuccess(''), 3000)
+    } catch (error) {
+      console.error('Video submit error:', error)
+      setError('Failed to submit video.')
+    } finally {
+      setUploadingVideo(false)
     }
   }
 
@@ -1489,125 +1565,233 @@ const MyPageWithWithdrawal = () => {
                 </div>
               </div>
               
-              {/* 신청 목록 */}
-              <div className="overflow-x-auto">
-                <table className="min-w-full divide-y divide-gray-200">
-                  <thead className="bg-gray-50">
-                    <tr>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        {'キャンペーン'}
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        {'ステータス'}
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        {'応募日'}
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        {'資料'}
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody className="bg-white divide-y divide-gray-200">
-                    {applications.length === 0 ? (
-                      <tr>
-                        <td colSpan="4" className="px-6 py-12 text-center text-gray-500">
-                          {t.noData}
-                        </td>
-                      </tr>
-                    ) : (
-                      applications.map((application) => (
-                        <tr key={application.id}>
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            <div className="text-sm font-medium text-gray-900">
-                              {application.campaign_title || ('キャンペーン情報なし')}
+              {/* Campaign Applications List - Card Format */}
+              <div className="space-y-4">
+                {applications.length === 0 ? (
+                  <div className="text-center py-12 text-gray-500">
+                    <Award className="mx-auto h-12 w-12 text-gray-400 mb-4" />
+                    <p>{t.noData}</p>
+                  </div>
+                ) : (
+                  applications.map((application) => (
+                    <div key={application.id} className="border border-gray-200 rounded-lg overflow-hidden">
+                      {/* Campaign Header */}
+                      <div className="p-4 bg-gradient-to-r from-purple-50 to-blue-50 flex justify-between items-start">
+                        <div>
+                          <h3 className="font-semibold text-gray-900">
+                            {application.campaigns?.title || application.campaign_title || 'Campaign'}
+                          </h3>
+                          <p className="text-sm text-purple-600">{application.campaigns?.brand}</p>
+                          <p className="text-xs text-gray-500 mt-1">
+                            Applied: {new Date(application.created_at).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })}
+                          </p>
+                        </div>
+                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                          application.status === 'approved' ? 'bg-green-100 text-green-800' :
+                          application.status === 'rejected' ? 'bg-red-100 text-red-800' :
+                          application.status === 'completed' ? 'bg-blue-100 text-blue-800' :
+                          'bg-yellow-100 text-yellow-800'
+                        }`}>
+                          {application.status === 'approved' ? 'Approved' :
+                           application.status === 'rejected' ? 'Rejected' :
+                           application.status === 'completed' ? 'Completed' :
+                           'Pending'}
+                        </span>
+                      </div>
+
+                      {/* Approved Campaign Content */}
+                      {(application.status === 'approved' || application.status === 'completed') && (
+                        <div className="p-4 border-t border-gray-100">
+                          {/* SNS Upload Warning */}
+                          <div className="mb-4 p-3 bg-amber-50 border border-amber-200 rounded-lg">
+                            <div className="flex items-start">
+                              <AlertTriangle className="h-5 w-5 text-amber-600 mt-0.5 mr-2 flex-shrink-0" />
+                              <p className="text-sm text-amber-800">
+                                <strong>Important:</strong> Before uploading to SNS, please ensure your video has been reviewed and approved. Do not post until the final version is confirmed.
+                              </p>
                             </div>
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                              application.status === 'approved' ? 'bg-green-100 text-green-800' :
-                              application.status === 'rejected' ? 'bg-red-100 text-red-800' :
-                              'bg-yellow-100 text-yellow-800'
-                            }`}>
-                              {application.status === 'approved' ? ('Approved') :
-                               application.status === 'rejected' ? ('Rejected') :
-                               ('Pending')}
-                            </span>
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                            {new Date(application.created_at).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            {application.status === 'approved' ? (
-                              <div className="space-y-2">
-                                <div className="flex flex-wrap gap-2">
-                                  {application.google_drive_url && (
-                                    <a
-                                      href={application.google_drive_url}
-                                      target="_blank"
-                                      rel="noopener noreferrer"
-                                      className="inline-flex items-center px-3 py-1 rounded-md text-xs font-medium bg-blue-100 text-blue-800 hover:bg-blue-200 transition-colors"
-                                    >
-                                      📁 {'Google Drive'}
-                                    </a>
-                                  )}
-                                  {application.google_slides_url && (
-                                    <a
-                                      href={application.google_slides_url}
-                                      target="_blank"
-                                      rel="noopener noreferrer"
-                                      className="inline-flex items-center px-3 py-1 rounded-md text-xs font-medium bg-green-100 text-green-800 hover:bg-green-200 transition-colors"
-                                    >
-                                      📊 {'Google Slides'}
-                                    </a>
-                                  )}
-                                </div>
-                                
-                                {/* SNS 업로드 및 포인트 신청 버튼 */}
-                                <div className="mt-2">
-                                  {/* video_links가 있고 point_transactions에 승인된 기록이 있으면 완료 상태 */}
-                                  {application.video_links && pointTransactions.some(pt => 
-                                    pt.application_id === application.id && pt.transaction_type === 'reward'
-                                  ) ? (
-                                    <span className="inline-flex items-center px-3 py-1 rounded-md text-xs font-medium bg-green-100 text-green-800">
-                                      ✅ {t.pointRequestApproved}
-                                    </span>
-                                  ) : application.video_links && pointTransactions.some(pt => 
-                                    pt.application_id === application.id && pt.transaction_type === 'pending'
-                                  ) ? (
-                                    <span className="inline-flex items-center px-3 py-1 rounded-md text-xs font-medium bg-yellow-100 text-yellow-800">
-                                      ⏳ {t.pointRequestPending}
-                                    </span>
-                                  ) : (
-                                    <button
-                                      onClick={(e) => {
-                                        e.preventDefault()
-                                        e.stopPropagation()
-                                        openSnsUploadModal(application)
-                                      }}
-                                      type="button"
-                                      className="inline-flex items-center px-3 py-1 rounded-md text-xs font-medium bg-red-100 text-red-800 hover:bg-red-200 transition-colors"
-                                    >
-                                      📱 {t.snsUpload}
-                                    </button>
-                                  )}
-                                </div>
-                                
-                                {(!application.google_drive_url && !application.google_slides_url) && (
-                                  <span className="text-xs text-gray-400">
-                                    {'資料準備中'}
-                                  </span>
-                                )}
-                              </div>
-                            ) : (
-                              <span className="text-xs text-gray-400">-</span>
+                          </div>
+
+                          {/* Action Buttons */}
+                          <div className="flex flex-wrap gap-2 mb-4">
+                            {hasShootingGuide(application) && (
+                              <button
+                                onClick={() => toggleGuideExpand(application.id)}
+                                className="inline-flex items-center px-3 py-2 rounded-md text-sm font-medium bg-purple-100 text-purple-800 hover:bg-purple-200 transition-colors"
+                              >
+                                📖 Shooting Guide
+                                <span className="ml-1">{expandedGuides[application.id] ? '▲' : '▼'}</span>
+                              </button>
                             )}
-                          </td>
-                        </tr>
-                      ))
-                    )}
-                  </tbody>
-                </table>
+
+                            <button
+                              onClick={() => openVideoUploadModal(application)}
+                              className="inline-flex items-center px-3 py-2 rounded-md text-sm font-medium bg-blue-100 text-blue-800 hover:bg-blue-200 transition-colors"
+                            >
+                              📹 {application.video_submission_url ? 'Update Video' : 'Submit Video'}
+                            </button>
+
+                            {application.video_submission_url && (
+                              <a
+                                href={application.video_submission_url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="inline-flex items-center px-3 py-2 rounded-md text-sm font-medium bg-green-100 text-green-800 hover:bg-green-200 transition-colors"
+                              >
+                                🔗 View Submitted Video
+                              </a>
+                            )}
+                          </div>
+
+                          {/* Video Submission Status */}
+                          {application.video_submission_url && (
+                            <div className="flex items-center text-sm text-green-600 mb-4">
+                              ✅ Video submitted on {new Date(application.video_submitted_at).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })}
+                            </div>
+                          )}
+
+                          {/* Revision Request Alert */}
+                          {application.revision_requested && (
+                            <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
+                              <p className="text-sm text-red-800">
+                                <strong>Revision Requested:</strong> {application.revision_notes || 'Please check with the brand for revision details.'}
+                              </p>
+                            </div>
+                          )}
+
+                          {/* Expandable Shooting Guide - Using personalized_guide from applications */}
+                          {expandedGuides[application.id] && hasShootingGuide(application) && (
+                            <div className="mt-4 p-4 bg-gray-50 rounded-lg">
+                              <h4 className="font-semibold text-gray-900 mb-4 flex items-center">
+                                📖 Shooting Guide
+                              </h4>
+
+                              {/* Guide Info */}
+                              {(application.personalized_guide?.mood || application.personalized_guide?.tempo) && (
+                                <div className="mb-4 p-3 bg-purple-50 rounded-lg flex flex-wrap gap-2">
+                                  {application.personalized_guide?.mood && (
+                                    <span className="text-xs bg-purple-200 text-purple-800 px-2 py-1 rounded">
+                                      Mood: {application.personalized_guide.mood}
+                                    </span>
+                                  )}
+                                  {application.personalized_guide?.tempo && (
+                                    <span className="text-xs bg-purple-200 text-purple-800 px-2 py-1 rounded">
+                                      Tempo: {application.personalized_guide.tempo}
+                                    </span>
+                                  )}
+                                  {application.personalized_guide?.dialogue_style && (
+                                    <span className="text-xs bg-purple-200 text-purple-800 px-2 py-1 rounded">
+                                      Style: {application.personalized_guide.dialogue_style}
+                                    </span>
+                                  )}
+                                </div>
+                              )}
+
+                              {/* Scenes - Using _translated fields for English */}
+                              <div className="space-y-3">
+                                {application.personalized_guide?.scenes?.map((scene, index) => (
+                                  <div key={index} className="border border-gray-200 rounded-lg overflow-hidden bg-white">
+                                    <div className="bg-gray-100 px-4 py-2 flex justify-between items-center">
+                                      <h5 className="font-medium text-gray-800">
+                                        Scene {scene.order || index + 1}: {scene.scene_type}
+                                      </h5>
+                                    </div>
+                                    <div className="p-4 space-y-3">
+                                      {/* What to Film - scene_description_translated */}
+                                      {scene.scene_description_translated && (
+                                        <div>
+                                          <h6 className="text-sm font-medium text-gray-700 mb-1">📷 What to Film</h6>
+                                          <p className="text-sm text-gray-600 pl-5">
+                                            {scene.scene_description_translated}
+                                          </p>
+                                        </div>
+                                      )}
+                                      {/* Script - dialogue_translated */}
+                                      {scene.dialogue_translated && (
+                                        <div>
+                                          <h6 className="text-sm font-medium text-gray-700 mb-1">💬 Script / What to Say</h6>
+                                          <div className="bg-green-50 p-2 rounded pl-5">
+                                            <p className="text-sm text-gray-700 italic">
+                                              "{scene.dialogue_translated}"
+                                            </p>
+                                          </div>
+                                        </div>
+                                      )}
+                                      {/* Tips - shooting_tip_translated */}
+                                      {scene.shooting_tip_translated && (
+                                        <div>
+                                          <h6 className="text-sm font-medium text-gray-700 mb-1">💡 Tips</h6>
+                                          <p className="text-sm text-gray-600 pl-5">
+                                            {scene.shooting_tip_translated}
+                                          </p>
+                                        </div>
+                                      )}
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+
+                              {/* Required Scenes & Dialogues */}
+                              {(application.personalized_guide?.required_scenes?.length > 0 ||
+                                application.personalized_guide?.required_dialogues?.length > 0) && (
+                                <div className="mt-4 p-3 bg-amber-50 border border-amber-200 rounded-lg">
+                                  <h5 className="font-medium text-amber-800 mb-2">⚠️ Required Elements</h5>
+                                  {application.personalized_guide?.required_scenes?.length > 0 && (
+                                    <div className="mb-2">
+                                      <p className="text-xs font-medium text-amber-700">Required Scenes:</p>
+                                      <ul className="text-sm text-amber-800 list-disc pl-5">
+                                        {application.personalized_guide.required_scenes.map((item, i) => (
+                                          <li key={i}>{item}</li>
+                                        ))}
+                                      </ul>
+                                    </div>
+                                  )}
+                                  {application.personalized_guide?.required_dialogues?.length > 0 && (
+                                    <div>
+                                      <p className="text-xs font-medium text-amber-700">Required Dialogues:</p>
+                                      <ul className="text-sm text-amber-800 list-disc pl-5">
+                                        {application.personalized_guide.required_dialogues.map((item, i) => (
+                                          <li key={i}>{item}</li>
+                                        ))}
+                                      </ul>
+                                    </div>
+                                  )}
+                                </div>
+                              )}
+                            </div>
+                          )}
+
+                          {/* No Guide Message */}
+                          {!hasShootingGuide(application) && (
+                            <p className="text-sm text-gray-500 italic">
+                              Shooting guide will be available soon. Please check back later.
+                            </p>
+                          )}
+                        </div>
+                      )}
+
+                      {/* Pending Status */}
+                      {application.status === 'pending' && (
+                        <div className="p-4 border-t border-gray-100">
+                          <div className="flex items-center text-sm text-gray-600">
+                            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                            Your application is being reviewed. We'll notify you once a decision is made.
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Rejected Status */}
+                      {application.status === 'rejected' && (
+                        <div className="p-4 border-t border-gray-100">
+                          <div className="flex items-center text-sm text-gray-600">
+                            <X className="h-4 w-4 mr-2 text-red-500" />
+                            Unfortunately, your application was not selected for this campaign.
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  ))
+                )}
               </div>
               
               {/* SNS 업로드 경고 메시지 */}
@@ -2007,6 +2191,74 @@ const MyPageWithWithdrawal = () => {
                   >
                     {processing ? t.processing : t.submitWithdrawal}
                   </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Video Upload Modal */}
+        {showVideoUploadModal && (
+          <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+            <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+              <div className="mt-3">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-lg font-medium text-gray-900">📹 Submit Your Video</h3>
+                  <button
+                    onClick={() => setShowVideoUploadModal(false)}
+                    className="text-gray-400 hover:text-gray-600"
+                  >
+                    <X className="w-5 h-5" />
+                  </button>
+                </div>
+
+                <div className="mb-4 p-3 bg-blue-50 rounded-lg">
+                  <p className="text-sm text-blue-800">
+                    Enter the URL of your video (Google Drive, YouTube, Dropbox, etc.)
+                  </p>
+                </div>
+
+                {error && (
+                  <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-md">
+                    <p className="text-sm text-red-800">{error}</p>
+                  </div>
+                )}
+
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Video URL *
+                    </label>
+                    <input
+                      type="url"
+                      value={videoSubmissionUrl}
+                      onChange={(e) => setVideoSubmissionUrl(e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
+                      placeholder="https://drive.google.com/..."
+                    />
+                  </div>
+
+                  <div className="p-3 bg-amber-50 border border-amber-200 rounded-lg">
+                    <p className="text-xs text-amber-800">
+                      Make sure your video link is accessible (set sharing permissions to "Anyone with the link").
+                    </p>
+                  </div>
+
+                  <div className="flex justify-end space-x-3">
+                    <button
+                      onClick={() => setShowVideoUploadModal(false)}
+                      className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      onClick={handleVideoSubmit}
+                      disabled={uploadingVideo || !videoSubmissionUrl.trim()}
+                      className="px-4 py-2 text-sm font-medium text-white bg-purple-600 rounded-md hover:bg-purple-700 disabled:opacity-50"
+                    >
+                      {uploadingVideo ? 'Submitting...' : 'Submit Video'}
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>

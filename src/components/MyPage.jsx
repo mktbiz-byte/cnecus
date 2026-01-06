@@ -1,8 +1,7 @@
 import { useState, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { useLanguage } from '../contexts/LanguageContext'
 import { useAuth } from '../contexts/AuthContext'
-import { database } from '../lib/supabase'
+import { database, supabase } from '../lib/supabase'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -13,16 +12,20 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Alert, AlertDescription } from '@/components/ui/alert'
-import { User, Settings, Award, AlertCircle, Loader2, CheckCircle2, Palette, Mail, Phone, ArrowLeft, Edit, Save, X, FileText, Instagram, DollarSign } from 'lucide-react'
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import {
+  User, Settings, Award, AlertCircle, Loader2, CheckCircle2, Palette, Mail, Phone,
+  ArrowLeft, Edit, Save, X, FileText, Instagram, DollarSign, Video, BookOpen,
+  ChevronDown, ChevronUp, Upload, ExternalLink, AlertTriangle, Camera, MessageSquare, Lightbulb, Clock
+} from 'lucide-react'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import WithdrawalModal from './WithdrawalModal'
 import WithdrawalHistory from './WithdrawalHistory'
 
 const MyPage = () => {
   const { user, userProfile, signOut } = useAuth()
-  const { language, t } = useLanguage()
   const navigate = useNavigate()
-  
+
   const [applications, setApplications] = useState([])
   const [loading, setLoading] = useState(false)
   const [updating, setUpdating] = useState(false)
@@ -30,7 +33,20 @@ const MyPage = () => {
   const [success, setSuccess] = useState('')
   const [editMode, setEditMode] = useState(false)
   const [withdrawalModalOpen, setWithdrawalModalOpen] = useState(false)
-  
+
+  // Guide modal state
+  const [guideModal, setGuideModal] = useState(false)
+  const [selectedGuide, setSelectedGuide] = useState(null)
+  const [selectedApplication, setSelectedApplication] = useState(null)
+
+  // Video upload state
+  const [videoUploadModal, setVideoUploadModal] = useState(false)
+  const [videoUrl, setVideoUrl] = useState('')
+  const [uploadingVideo, setUploadingVideo] = useState(false)
+
+  // Expanded guides state
+  const [expandedGuides, setExpandedGuides] = useState({})
+
   const [profileData, setProfileData] = useState({
     name: '',
     phone: '',
@@ -55,7 +71,6 @@ const MyPage = () => {
   }, [user, navigate])
 
   useEffect(() => {
-    // 사용자 프로필로 폼 초기화
     if (userProfile) {
       setProfileData({
         name: userProfile.name || user?.user_metadata?.name || '',
@@ -77,15 +92,31 @@ const MyPage = () => {
     try {
       setLoading(true)
       setError('')
-      
-      const applicationsData = await database.applications.getByUser(user.id)
+
+      // Get applications with campaign data including shooting_guide
+      const { data: applicationsData, error: appError } = await supabase
+        .from('applications')
+        .select(`
+          *,
+          campaigns (
+            id,
+            title,
+            brand,
+            reward_amount,
+            shooting_guide
+          )
+        `)
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false })
+
+      if (appError) {
+        console.error('Load applications error:', appError)
+      }
+
       setApplications(applicationsData || [])
     } catch (error) {
       console.error('Load page data error:', error)
-      setError(language === 'ko' 
-        ? '데이터를 불러올 수 없습니다.'
-        : 'データを読み込めません。'
-      )
+      setError('Failed to load data.')
     } finally {
       setLoading(false)
     }
@@ -112,23 +143,15 @@ const MyPage = () => {
       setError('')
       setSuccess('')
 
-      // 프로필 업데이트 함수 호출
       await database.userProfiles.update(user.id, profileData)
-      
-      setSuccess(language === 'ko' 
-        ? '프로필이 성공적으로 업데이트되었습니다.'
-        : 'プロフィールが正常に更新されました。'
-      )
+
+      setSuccess('Profile updated successfully.')
       setEditMode(false)
-      
-      // 성공 메시지 3초 후 제거
+
       setTimeout(() => setSuccess(''), 3000)
     } catch (error) {
       console.error('Update profile error:', error)
-      setError(language === 'ko' 
-        ? '프로필 업데이트에 실패했습니다.'
-        : 'プロフィールの更新に失敗しました。'
-      )
+      setError('Failed to update profile.')
     } finally {
       setUpdating(false)
     }
@@ -136,14 +159,14 @@ const MyPage = () => {
 
   const getStatusBadge = (status) => {
     const statusStyles = {
-      pending: { bg: 'bg-yellow-100', text: 'text-yellow-800', label: language === 'ko' ? '검토중' : '審査中' },
-      approved: { bg: 'bg-green-100', text: 'text-green-800', label: language === 'ko' ? '승인됨' : '承認済み' },
-      rejected: { bg: 'bg-red-100', text: 'text-red-800', label: language === 'ko' ? '거절됨' : '拒否' },
-      completed: { bg: 'bg-blue-100', text: 'text-blue-800', label: language === 'ko' ? '완료됨' : '完了' }
+      pending: { bg: 'bg-yellow-100', text: 'text-yellow-800', label: 'Under Review' },
+      approved: { bg: 'bg-green-100', text: 'text-green-800', label: 'Approved' },
+      rejected: { bg: 'bg-red-100', text: 'text-red-800', label: 'Rejected' },
+      completed: { bg: 'bg-blue-100', text: 'text-blue-800', label: 'Completed' }
     }
-    
+
     const style = statusStyles[status] || statusStyles.pending
-    
+
     return (
       <Badge className={`${style.bg} ${style.text}`}>
         {style.label}
@@ -152,14 +175,76 @@ const MyPage = () => {
   }
 
   const formatCurrency = (amount) => {
-    return new Intl.NumberFormat('ja-JP', {
+    return new Intl.NumberFormat('en-US', {
       style: 'currency',
-      currency: 'JPY'
+      currency: 'USD',
+      minimumFractionDigits: 0
     }).format(amount || 0)
   }
 
   const formatDate = (dateString) => {
-    return new Date(dateString).toLocaleDateString(language === 'ko' ? 'ko-KR' : 'ja-JP')
+    return new Date(dateString).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric'
+    })
+  }
+
+  const openGuideModal = (application) => {
+    setSelectedApplication(application)
+    setSelectedGuide(application.campaigns?.shooting_guide)
+    setGuideModal(true)
+  }
+
+  const openVideoUploadModal = (application) => {
+    setSelectedApplication(application)
+    setVideoUrl(application.video_submission_url || '')
+    setVideoUploadModal(true)
+  }
+
+  const handleVideoSubmit = async () => {
+    if (!videoUrl.trim()) {
+      setError('Please enter a video URL.')
+      return
+    }
+
+    try {
+      setUploadingVideo(true)
+      setError('')
+
+      const { error: updateError } = await supabase
+        .from('applications')
+        .update({
+          video_submission_url: videoUrl,
+          video_submitted_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', selectedApplication.id)
+
+      if (updateError) throw updateError
+
+      setSuccess('Video submitted successfully!')
+      setVideoUploadModal(false)
+      loadPageData()
+
+      setTimeout(() => setSuccess(''), 3000)
+    } catch (error) {
+      console.error('Video submit error:', error)
+      setError('Failed to submit video.')
+    } finally {
+      setUploadingVideo(false)
+    }
+  }
+
+  const toggleGuideExpand = (applicationId) => {
+    setExpandedGuides(prev => ({
+      ...prev,
+      [applicationId]: !prev[applicationId]
+    }))
+  }
+
+  const hasGuide = (application) => {
+    return application.campaigns?.shooting_guide?.scenes?.length > 0
   }
 
   if (loading) {
@@ -167,7 +252,7 @@ const MyPage = () => {
       <div className="min-h-screen bg-gradient-to-br from-purple-50 to-blue-50 flex items-center justify-center">
         <div className="text-center">
           <Loader2 className="h-12 w-12 animate-spin text-purple-600 mx-auto mb-4" />
-          <p className="text-gray-600">{t('loading')}</p>
+          <p className="text-gray-600">Loading...</p>
         </div>
       </div>
     )
@@ -176,7 +261,7 @@ const MyPage = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 to-blue-50 py-8">
       <div className="container mx-auto px-4 max-w-6xl">
-        {/* 헤더 */}
+        {/* Header */}
         <div className="flex items-center justify-between mb-8">
           <div className="flex items-center space-x-4">
             <Button
@@ -185,51 +270,49 @@ const MyPage = () => {
               className="text-gray-600 hover:text-gray-800"
             >
               <ArrowLeft className="h-4 w-4 mr-2" />
-              {language === 'ko' ? '홈으로' : 'ホームへ'}
+              Home
             </Button>
             <div>
-              <h1 className="text-3xl font-bold text-gray-800">
-                {language === 'ko' ? '마이페이지' : 'マイページ'}
-              </h1>
+              <h1 className="text-3xl font-bold text-gray-800">My Page</h1>
               <p className="text-gray-600">{user?.email}</p>
             </div>
           </div>
-          
+
           <Button variant="outline" onClick={signOut}>
-            {t('logout')}
+            Sign Out
           </Button>
         </div>
 
-        {/* 알림 메시지 */}
+        {/* Alert Messages */}
         {error && (
           <Alert variant="destructive" className="mb-6">
             <AlertDescription>{error}</AlertDescription>
           </Alert>
         )}
-        
+
         {success && (
           <Alert className="mb-6 border-green-200 bg-green-50">
             <AlertDescription className="text-green-800">{success}</AlertDescription>
           </Alert>
         )}
 
-        <Tabs defaultValue="profile" className="space-y-6">
+        <Tabs defaultValue="applications" className="space-y-6">
           <TabsList className="grid w-full grid-cols-3">
             <TabsTrigger value="profile" className="flex items-center space-x-2">
               <User className="h-4 w-4" />
-              <span>{language === 'ko' ? '프로필' : 'プロフィール'}</span>
+              <span>Profile</span>
             </TabsTrigger>
             <TabsTrigger value="applications" className="flex items-center space-x-2">
               <FileText className="h-4 w-4" />
-              <span>{language === 'ko' ? '신청 내역' : '応募履歴'}</span>
+              <span>My Campaigns</span>
             </TabsTrigger>
             <TabsTrigger value="rewards" className="flex items-center space-x-2">
               <Award className="h-4 w-4" />
-              <span>{language === 'ko' ? '보상 내역' : '報酬履歴'}</span>
+              <span>Rewards</span>
             </TabsTrigger>
           </TabsList>
 
-          {/* 프로필 탭 */}
+          {/* Profile Tab */}
           <TabsContent value="profile">
             <Card className="shadow-xl border-0">
               <CardHeader>
@@ -237,16 +320,13 @@ const MyPage = () => {
                   <div>
                     <CardTitle className="flex items-center space-x-2">
                       <User className="h-5 w-5" />
-                      <span>{language === 'ko' ? '프로필 정보' : 'プロフィール情報'}</span>
+                      <span>Profile Information</span>
                     </CardTitle>
                     <CardDescription>
-                      {language === 'ko' 
-                        ? '캠페인 신청 시 사용될 정보입니다.'
-                        : 'キャンペーン応募時に使用される情報です。'
-                      }
+                      This information will be used for campaign applications.
                     </CardDescription>
                   </div>
-                  
+
                   <div className="flex space-x-2">
                     {editMode ? (
                       <>
@@ -256,7 +336,7 @@ const MyPage = () => {
                           disabled={updating}
                         >
                           <X className="h-4 w-4 mr-2" />
-                          {language === 'ko' ? '취소' : 'キャンセル'}
+                          Cancel
                         </Button>
                         <Button
                           onClick={handleSaveProfile}
@@ -268,7 +348,7 @@ const MyPage = () => {
                           ) : (
                             <Save className="h-4 w-4 mr-2" />
                           )}
-                          {language === 'ko' ? '저장' : '保存'}
+                          Save
                         </Button>
                       </>
                     ) : (
@@ -277,74 +357,64 @@ const MyPage = () => {
                         onClick={() => setEditMode(true)}
                       >
                         <Edit className="h-4 w-4 mr-2" />
-                        {language === 'ko' ? '편집' : '編集'}
+                        Edit
                       </Button>
                     )}
                   </div>
                 </div>
               </CardHeader>
-              
+
               <CardContent className="space-y-6">
-                {/* 기본 정보 */}
+                {/* Basic Information */}
                 <div className="space-y-4">
-                  <h3 className="text-lg font-semibold text-gray-800">
-                    {language === 'ko' ? '기본 정보' : '基本情報'}
-                  </h3>
-                  
+                  <h3 className="text-lg font-semibold text-gray-800">Basic Information</h3>
+
                   <div className="grid md:grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <Label htmlFor="name">
-                        {language === 'ko' ? '이름' : '名前'}
-                      </Label>
+                      <Label htmlFor="name">Name</Label>
                       {editMode ? (
                         <Input
                           id="name"
                           name="name"
                           value={profileData.name}
                           onChange={handleInputChange}
-                          placeholder={language === 'ko' ? '이름을 입력하세요' : '名前を入力してください'}
+                          placeholder="Enter your name"
                         />
                       ) : (
                         <div className="p-3 bg-gray-50 rounded-md">
-                          {profileData.name || (language === 'ko' ? '미입력' : '未入力')}
+                          {profileData.name || 'Not provided'}
                         </div>
                       )}
                     </div>
-                    
+
                     <div className="space-y-2">
-                      <Label htmlFor="email">
-                        {language === 'ko' ? '이메일' : 'メールアドレス'}
-                      </Label>
+                      <Label htmlFor="email">Email</Label>
                       <div className="p-3 bg-gray-50 rounded-md text-gray-600">
                         {user?.email}
                       </div>
                     </div>
                   </div>
-                  
+
                   <div className="grid md:grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <Label htmlFor="phone">
-                        {language === 'ko' ? '전화번호' : '電話番号'}
-                      </Label>
+                      <Label htmlFor="phone">Phone Number</Label>
                       {editMode ? (
                         <Input
                           id="phone"
                           name="phone"
                           value={profileData.phone}
                           onChange={handleInputChange}
-                          placeholder={language === 'ko' ? '전화번호를 입력하세요' : '電話番号を入力してください'}
+                          placeholder="Enter your phone number"
                         />
                       ) : (
                         <div className="p-3 bg-gray-50 rounded-md">
-                          {profileData.phone || (language === 'ko' ? '미입력' : '未入力')}
+                          {profileData.phone || 'Not provided'}
                         </div>
                       )}
                     </div>
-                    
+
                     <div className="space-y-2">
-                      <Label htmlFor="age">
-                        {language === 'ko' ? '나이' : '年齢'}
-                      </Label>
+                      <Label htmlFor="age">Age</Label>
                       {editMode ? (
                         <Input
                           id="age"
@@ -354,76 +424,72 @@ const MyPage = () => {
                           max="100"
                           value={profileData.age}
                           onChange={handleInputChange}
-                          placeholder={language === 'ko' ? '나이를 입력하세요' : '年齢を入力してください'}
+                          placeholder="Enter your age"
                         />
                       ) : (
                         <div className="p-3 bg-gray-50 rounded-md">
-                          {profileData.age ? `${profileData.age}${language === 'ko' ? '세' : '歳'}` : (language === 'ko' ? '미입력' : '未入力')}
+                          {profileData.age ? `${profileData.age} years old` : 'Not provided'}
                         </div>
                       )}
                     </div>
                   </div>
-                  
+
                   <div className="space-y-2">
-                    <Label htmlFor="skin_type">
-                      {language === 'ko' ? '피부 타입' : '肌タイプ'}
-                    </Label>
+                    <Label htmlFor="skin_type">Skin Type</Label>
                     {editMode ? (
                       <Select value={profileData.skin_type} onValueChange={(value) => handleSelectChange('skin_type', value)}>
                         <SelectTrigger>
-                          <SelectValue placeholder={language === 'ko' ? '피부 타입 선택' : '肌タイプを選択'} />
+                          <SelectValue placeholder="Select skin type" />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="dry">{language === 'ko' ? '건성' : '乾燥肌'}</SelectItem>
-                          <SelectItem value="oily">{language === 'ko' ? '지성' : '脂性肌'}</SelectItem>
-                          <SelectItem value="combination">{language === 'ko' ? '복합성' : '混合肌'}</SelectItem>
-                          <SelectItem value="sensitive">{language === 'ko' ? '민감성' : '敏感肌'}</SelectItem>
-                          <SelectItem value="normal">{language === 'ko' ? '보통' : '普通肌'}</SelectItem>
+                          <SelectItem value="dry">Dry</SelectItem>
+                          <SelectItem value="oily">Oily</SelectItem>
+                          <SelectItem value="combination">Combination</SelectItem>
+                          <SelectItem value="sensitive">Sensitive</SelectItem>
+                          <SelectItem value="normal">Normal</SelectItem>
                         </SelectContent>
                       </Select>
                     ) : (
                       <div className="p-3 bg-gray-50 rounded-md">
                         {profileData.skin_type ? (
                           {
-                            dry: language === 'ko' ? '건성' : '乾燥肌',
-                            oily: language === 'ko' ? '지성' : '脂性肌',
-                            combination: language === 'ko' ? '복합성' : '混合肌',
-                            sensitive: language === 'ko' ? '민감성' : '敏感肌',
-                            normal: language === 'ko' ? '보통' : '普通肌'
+                            dry: 'Dry',
+                            oily: 'Oily',
+                            combination: 'Combination',
+                            sensitive: 'Sensitive',
+                            normal: 'Normal'
                           }[profileData.skin_type]
-                        ) : (language === 'ko' ? '미입력' : '未入力')}
+                        ) : 'Not provided'}
                       </div>
                     )}
                   </div>
-                  
+
                   <div className="space-y-2">
-                    <Label htmlFor="bio">
-                      {language === 'ko' ? '자기소개' : '自己紹介'}
-                    </Label>
+                    <Label htmlFor="bio">Bio</Label>
                     {editMode ? (
                       <Textarea
                         id="bio"
                         name="bio"
                         value={profileData.bio}
                         onChange={handleInputChange}
-                        placeholder={language === 'ko' ? '자기소개를 입력하세요' : '自己紹介を入力してください'}
+                        placeholder="Tell us about yourself"
                         rows={3}
                       />
                     ) : (
                       <div className="p-3 bg-gray-50 rounded-md min-h-[80px]">
-                        {profileData.bio || (language === 'ko' ? '미입력' : '未入力')}
+                        {profileData.bio || 'Not provided'}
                       </div>
                     )}
                   </div>
                 </div>
 
-                {/* SNS 정보 */}
+                {/* SNS Information */}
                 <div className="space-y-4">
                   <h3 className="text-lg font-semibold text-gray-800 flex items-center">
                     <Instagram className="h-5 w-5 mr-2" />
-                    {language === 'ko' ? 'SNS 정보' : 'SNS情報'}
+                    Social Media
                   </h3>
-                  
+
                   {/* Instagram */}
                   <div className="grid md:grid-cols-2 gap-4">
                     <div className="space-y-2">
@@ -442,14 +508,12 @@ const MyPage = () => {
                             <a href={profileData.instagram_url} target="_blank" rel="noopener noreferrer" className="text-purple-600 hover:underline">
                               {profileData.instagram_url}
                             </a>
-                          ) : (language === 'ko' ? '미입력' : '未入力')}
+                          ) : 'Not provided'}
                         </div>
                       )}
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="instagram_followers">
-                        {language === 'ko' ? 'Instagram 팔로워 수' : 'Instagramフォロワー数'}
-                      </Label>
+                      <Label htmlFor="instagram_followers">Instagram Followers</Label>
                       {editMode ? (
                         <Input
                           id="instagram_followers"
@@ -462,12 +526,12 @@ const MyPage = () => {
                         />
                       ) : (
                         <div className="p-3 bg-gray-50 rounded-md">
-                          {profileData.instagram_followers ? profileData.instagram_followers.toLocaleString() : (language === 'ko' ? '미입력' : '未入力')}
+                          {profileData.instagram_followers ? profileData.instagram_followers.toLocaleString() : 'Not provided'}
                         </div>
                       )}
                     </div>
                   </div>
-                  
+
                   {/* TikTok */}
                   <div className="grid md:grid-cols-2 gap-4">
                     <div className="space-y-2">
@@ -486,14 +550,12 @@ const MyPage = () => {
                             <a href={profileData.tiktok_url} target="_blank" rel="noopener noreferrer" className="text-purple-600 hover:underline">
                               {profileData.tiktok_url}
                             </a>
-                          ) : (language === 'ko' ? '미입력' : '未入力')}
+                          ) : 'Not provided'}
                         </div>
                       )}
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="tiktok_followers">
-                        {language === 'ko' ? 'TikTok 팔로워 수' : 'TikTokフォロワー数'}
-                      </Label>
+                      <Label htmlFor="tiktok_followers">TikTok Followers</Label>
                       {editMode ? (
                         <Input
                           id="tiktok_followers"
@@ -506,12 +568,12 @@ const MyPage = () => {
                         />
                       ) : (
                         <div className="p-3 bg-gray-50 rounded-md">
-                          {profileData.tiktok_followers ? profileData.tiktok_followers.toLocaleString() : (language === 'ko' ? '미입력' : '未入力')}
+                          {profileData.tiktok_followers ? profileData.tiktok_followers.toLocaleString() : 'Not provided'}
                         </div>
                       )}
                     </div>
                   </div>
-                  
+
                   {/* YouTube */}
                   <div className="grid md:grid-cols-2 gap-4">
                     <div className="space-y-2">
@@ -530,14 +592,12 @@ const MyPage = () => {
                             <a href={profileData.youtube_url} target="_blank" rel="noopener noreferrer" className="text-purple-600 hover:underline">
                               {profileData.youtube_url}
                             </a>
-                          ) : (language === 'ko' ? '미입력' : '未入力')}
+                          ) : 'Not provided'}
                         </div>
                       )}
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="youtube_followers">
-                        {language === 'ko' ? 'YouTube 구독자 수' : 'YouTube登録者数'}
-                      </Label>
+                      <Label htmlFor="youtube_followers">YouTube Subscribers</Label>
                       {editMode ? (
                         <Input
                           id="youtube_followers"
@@ -550,7 +610,7 @@ const MyPage = () => {
                         />
                       ) : (
                         <div className="p-3 bg-gray-50 rounded-md">
-                          {profileData.youtube_followers ? profileData.youtube_followers.toLocaleString() : (language === 'ko' ? '미입력' : '未入力')}
+                          {profileData.youtube_followers ? profileData.youtube_followers.toLocaleString() : 'Not provided'}
                         </div>
                       )}
                     </div>
@@ -560,68 +620,238 @@ const MyPage = () => {
             </Card>
           </TabsContent>
 
-          {/* 신청 내역 탭 */}
+          {/* Applications Tab */}
           <TabsContent value="applications">
             <Card className="shadow-xl border-0">
               <CardHeader>
                 <CardTitle className="flex items-center space-x-2">
                   <FileText className="h-5 w-5" />
-                  <span>{language === 'ko' ? '캠페인 신청 내역' : 'キャンペーン応募履歴'}</span>
+                  <span>My Campaign Applications</span>
                 </CardTitle>
                 <CardDescription>
-                  {language === 'ko' 
-                    ? '신청한 캠페인들의 진행 상황을 확인할 수 있습니다.'
-                    : '応募したキャンペーンの進行状況を確認できます。'
-                  }
+                  View your campaign applications and access shooting guides.
                 </CardDescription>
               </CardHeader>
-              
+
               <CardContent>
                 {applications.length === 0 ? (
                   <div className="text-center py-12">
                     <div className="text-gray-400 text-6xl mb-4">📋</div>
                     <h3 className="text-lg font-semibold text-gray-600 mb-2">
-                      {language === 'ko' ? '신청한 캠페인이 없습니다' : '応募したキャンペーンはありません'}
+                      No applications yet
                     </h3>
                     <p className="text-gray-500 mb-4">
-                      {language === 'ko' 
-                        ? '새로운 캠페인에 신청해보세요!'
-                        : '新しいキャンペーンに応募してみましょう！'
-                      }
+                      Apply to campaigns and start creating!
                     </p>
                     <Link to="/">
                       <Button className="bg-purple-600 hover:bg-purple-700">
-                        {language === 'ko' ? '캠페인 보기' : 'キャンペーンを見る'}
+                        Browse Campaigns
                       </Button>
                     </Link>
                   </div>
                 ) : (
-                  <div className="space-y-4">
+                  <div className="space-y-6">
                     {applications.map((application) => (
-                      <Card key={application.id} className="border border-gray-200">
-                        <CardContent className="pt-6">
-                          <div className="flex justify-between items-start">
-                            <div className="flex-1">
-                              <h4 className="text-lg font-semibold text-gray-800 mb-1">
-                                {application.campaigns?.title}
-                              </h4>
-                              <p className="text-purple-600 font-medium mb-2">
-                                {application.campaigns?.brand}
-                              </p>
-                              <div className="flex items-center space-x-4 text-sm text-gray-600">
-                                <span>
-                                  {language === 'ko' ? '신청일:' : '応募日:'} {formatDate(application.created_at)}
-                                </span>
-                                <span>
-                                  {language === 'ko' ? '보상:' : '報酬:'} {formatCurrency(application.campaigns?.reward_amount)}
-                                </span>
+                      <Card key={application.id} className="border border-gray-200 overflow-hidden">
+                        <CardContent className="p-0">
+                          {/* Campaign Header */}
+                          <div className="p-6 bg-gradient-to-r from-purple-50 to-blue-50">
+                            <div className="flex justify-between items-start">
+                              <div className="flex-1">
+                                <h4 className="text-lg font-semibold text-gray-800 mb-1">
+                                  {application.campaigns?.title}
+                                </h4>
+                                <p className="text-purple-600 font-medium mb-2">
+                                  {application.campaigns?.brand}
+                                </p>
+                                <div className="flex items-center space-x-4 text-sm text-gray-600">
+                                  <span>Applied: {formatDate(application.created_at)}</span>
+                                  <span>Reward: {formatCurrency(application.campaigns?.reward_amount)}</span>
+                                </div>
+                              </div>
+
+                              <div className="text-right">
+                                {getStatusBadge(application.status)}
                               </div>
                             </div>
-                            
-                            <div className="text-right">
-                              {getStatusBadge(application.status)}
-                            </div>
                           </div>
+
+                          {/* Approved Campaign Actions */}
+                          {(application.status === 'approved' || application.status === 'completed') && (
+                            <div className="p-6 border-t border-gray-100">
+                              {/* SNS Upload Warning */}
+                              <Alert className="mb-4 border-orange-200 bg-orange-50">
+                                <AlertTriangle className="h-4 w-4 text-orange-600" />
+                                <AlertDescription className="text-orange-800">
+                                  <strong>Important:</strong> Before uploading to your SNS, please ensure your video has been reviewed and approved for any revision requests. Do not post until the final version is confirmed.
+                                </AlertDescription>
+                              </Alert>
+
+                              {/* Action Buttons */}
+                              <div className="flex flex-wrap gap-3 mb-4">
+                                {hasGuide(application) && (
+                                  <Button
+                                    variant="outline"
+                                    onClick={() => toggleGuideExpand(application.id)}
+                                    className="flex items-center"
+                                  >
+                                    <BookOpen className="h-4 w-4 mr-2" />
+                                    Shooting Guide
+                                    {expandedGuides[application.id] ? (
+                                      <ChevronUp className="h-4 w-4 ml-2" />
+                                    ) : (
+                                      <ChevronDown className="h-4 w-4 ml-2" />
+                                    )}
+                                  </Button>
+                                )}
+
+                                <Button
+                                  onClick={() => openVideoUploadModal(application)}
+                                  className="bg-purple-600 hover:bg-purple-700"
+                                >
+                                  <Upload className="h-4 w-4 mr-2" />
+                                  {application.video_submission_url ? 'Update Video' : 'Submit Video'}
+                                </Button>
+
+                                {application.video_submission_url && (
+                                  <a href={application.video_submission_url} target="_blank" rel="noopener noreferrer">
+                                    <Button variant="outline">
+                                      <ExternalLink className="h-4 w-4 mr-2" />
+                                      View Submitted Video
+                                    </Button>
+                                  </a>
+                                )}
+                              </div>
+
+                              {/* Video Submission Status */}
+                              {application.video_submission_url && (
+                                <div className="flex items-center text-sm text-green-600 mb-4">
+                                  <CheckCircle2 className="h-4 w-4 mr-2" />
+                                  Video submitted on {formatDate(application.video_submitted_at)}
+                                </div>
+                              )}
+
+                              {/* Revision Request Alert */}
+                              {application.revision_requested && (
+                                <Alert className="mb-4 border-red-200 bg-red-50">
+                                  <AlertCircle className="h-4 w-4 text-red-600" />
+                                  <AlertDescription className="text-red-800">
+                                    <strong>Revision Requested:</strong> {application.revision_notes || 'Please check with the brand for revision details.'}
+                                  </AlertDescription>
+                                </Alert>
+                              )}
+
+                              {/* Expandable Shooting Guide */}
+                              {expandedGuides[application.id] && hasGuide(application) && (
+                                <div className="mt-4 border-t pt-4">
+                                  <h5 className="font-semibold text-gray-800 mb-4 flex items-center">
+                                    <BookOpen className="h-5 w-5 mr-2 text-purple-600" />
+                                    Shooting Guide
+                                  </h5>
+
+                                  {/* General Tips */}
+                                  {application.campaigns?.shooting_guide?.general_tips_en && (
+                                    <div className="mb-6 p-4 bg-purple-50 rounded-lg">
+                                      <h6 className="font-medium text-purple-800 mb-2 flex items-center">
+                                        <Lightbulb className="h-4 w-4 mr-2" />
+                                        General Tips
+                                      </h6>
+                                      <p className="text-purple-700 text-sm">
+                                        {application.campaigns.shooting_guide.general_tips_en}
+                                      </p>
+                                    </div>
+                                  )}
+
+                                  {/* Scenes */}
+                                  <div className="space-y-4">
+                                    {application.campaigns?.shooting_guide?.scenes?.map((scene, index) => (
+                                      <div key={index} className="border rounded-lg overflow-hidden">
+                                        <div className="bg-gray-100 px-4 py-3 flex items-center justify-between">
+                                          <h6 className="font-semibold text-gray-800">
+                                            Scene {scene.scene_number || index + 1}: {scene.title_en || scene.title}
+                                          </h6>
+                                          {scene.duration && (
+                                            <Badge variant="secondary" className="flex items-center">
+                                              <Clock className="h-3 w-3 mr-1" />
+                                              {scene.duration}
+                                            </Badge>
+                                          )}
+                                        </div>
+                                        <div className="p-4 space-y-4">
+                                          {/* Scene Description */}
+                                          {(scene.description_en || scene.description) && (
+                                            <div>
+                                              <h6 className="text-sm font-medium text-gray-700 mb-1 flex items-center">
+                                                <Camera className="h-4 w-4 mr-2 text-blue-600" />
+                                                What to Film
+                                              </h6>
+                                              <p className="text-gray-600 text-sm pl-6">
+                                                {scene.description_en || scene.description}
+                                              </p>
+                                            </div>
+                                          )}
+
+                                          {/* Script */}
+                                          {(scene.script_en || scene.script) && (
+                                            <div>
+                                              <h6 className="text-sm font-medium text-gray-700 mb-1 flex items-center">
+                                                <MessageSquare className="h-4 w-4 mr-2 text-green-600" />
+                                                Script / What to Say
+                                              </h6>
+                                              <div className="bg-green-50 p-3 rounded-md pl-6">
+                                                <p className="text-gray-700 text-sm italic">
+                                                  "{scene.script_en || scene.script}"
+                                                </p>
+                                              </div>
+                                            </div>
+                                          )}
+
+                                          {/* Tips */}
+                                          {(scene.tips_en || scene.tips) && (
+                                            <div>
+                                              <h6 className="text-sm font-medium text-gray-700 mb-1 flex items-center">
+                                                <Lightbulb className="h-4 w-4 mr-2 text-yellow-600" />
+                                                Tips
+                                              </h6>
+                                              <p className="text-gray-600 text-sm pl-6">
+                                                {scene.tips_en || scene.tips}
+                                              </p>
+                                            </div>
+                                          )}
+                                        </div>
+                                      </div>
+                                    ))}
+                                  </div>
+                                </div>
+                              )}
+
+                              {/* No Guide Available */}
+                              {!hasGuide(application) && (
+                                <div className="text-sm text-gray-500 italic">
+                                  Shooting guide will be available soon. Please check back later.
+                                </div>
+                              )}
+                            </div>
+                          )}
+
+                          {/* Pending/Rejected Status Info */}
+                          {application.status === 'pending' && (
+                            <div className="p-6 border-t border-gray-100">
+                              <div className="flex items-center text-sm text-gray-600">
+                                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                                Your application is being reviewed. We'll notify you once a decision is made.
+                              </div>
+                            </div>
+                          )}
+
+                          {application.status === 'rejected' && (
+                            <div className="p-6 border-t border-gray-100">
+                              <div className="flex items-center text-sm text-gray-600">
+                                <AlertCircle className="h-4 w-4 mr-2 text-red-500" />
+                                Unfortunately, your application was not selected for this campaign.
+                              </div>
+                            </div>
+                          )}
                         </CardContent>
                       </Card>
                     ))}
@@ -631,54 +861,49 @@ const MyPage = () => {
             </Card>
           </TabsContent>
 
-          {/* 보상 내역 탭 */}
-           <TabsContent value="rewards">
+          {/* Rewards Tab */}
+          <TabsContent value="rewards">
             <Card className="shadow-xl border-0">
               <CardHeader>
                 <CardTitle className="flex items-center space-x-2">
                   <Award className="h-5 w-5" />
-                  <span>{language === 'ko' ? '보상 및 포인트' : '報酬・ポイント'}</span>
+                  <span>Rewards & Points</span>
                 </CardTitle>
                 <CardDescription>
-                  {language === 'ko' 
-                    ? '캠페인 참여로 획득한 포인트 및 출금 내역입니다.'
-                    : 'キャンペーン参加で獲得したポイントと出金履歴です。'}
+                  Your earnings from campaign participation and withdrawal history.
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
                 <div className="p-6 bg-gray-50 rounded-lg">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-sm text-gray-600">{language === 'ko' ? '현재 보유 포인트' : '現在の保有ポイント'}</p>
+                      <p className="text-sm text-gray-600">Available Balance</p>
                       <p className="text-3xl font-bold text-purple-600">{formatCurrency(userProfile?.points || 0)}</p>
                     </div>
-                    <Button 
+                    <Button
                       onClick={() => setWithdrawalModalOpen(true)}
                       className="bg-purple-600 hover:bg-purple-700"
                     >
                       <DollarSign className="h-4 w-4 mr-2" />
-                      {language === 'ko' ? '출금 신청' : '出金申請'}
+                      Withdraw
                     </Button>
                   </div>
                 </div>
-                
+
                 <Separator />
 
                 <WithdrawalHistory userId={user?.id} />
               </CardContent>
             </Card>
-            
-            {/* 출금 신청 모달 */}
-            <WithdrawalModal 
+
+            {/* Withdrawal Modal */}
+            <WithdrawalModal
               isOpen={withdrawalModalOpen}
               onClose={() => setWithdrawalModalOpen(false)}
               userId={user?.id}
               availablePoints={userProfile?.points || 0}
               onSuccess={() => {
-                setSuccess(language === 'ko' 
-                  ? '출금 신청이 완료되었습니다. 처리까지 영업일 기준 3-5일이 소요됩니다.'
-                  : '出金申請が完了しました。処理まで営業日基準3-5日かかります。'
-                )
+                setSuccess('Withdrawal request submitted. Processing takes 3-5 business days.')
                 setTimeout(() => setSuccess(''), 5000)
                 loadPageData()
               }}
@@ -686,6 +911,58 @@ const MyPage = () => {
           </TabsContent>
         </Tabs>
       </div>
+
+      {/* Video Upload Modal */}
+      <Dialog open={videoUploadModal} onOpenChange={setVideoUploadModal}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center">
+              <Video className="h-5 w-5 mr-2" />
+              Submit Your Video
+            </DialogTitle>
+            <DialogDescription>
+              Enter the URL of your video (Google Drive, YouTube, Dropbox, etc.)
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="videoUrl">Video URL</Label>
+              <Input
+                id="videoUrl"
+                value={videoUrl}
+                onChange={(e) => setVideoUrl(e.target.value)}
+                placeholder="https://drive.google.com/..."
+              />
+            </div>
+
+            <Alert className="border-blue-200 bg-blue-50">
+              <AlertCircle className="h-4 w-4 text-blue-600" />
+              <AlertDescription className="text-blue-800 text-sm">
+                Make sure your video link is accessible (set sharing permissions to "Anyone with the link").
+              </AlertDescription>
+            </Alert>
+          </div>
+
+          <div className="flex justify-end space-x-2">
+            <Button variant="outline" onClick={() => setVideoUploadModal(false)}>
+              Cancel
+            </Button>
+            <Button
+              onClick={handleVideoSubmit}
+              disabled={uploadingVideo || !videoUrl.trim()}
+              className="bg-purple-600 hover:bg-purple-700"
+            >
+              {uploadingVideo ? (
+                <Loader2 className="h-4 w-4 animate-spin mr-2" />
+              ) : (
+                <Upload className="h-4 w-4 mr-2" />
+              )}
+              Submit Video
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }
