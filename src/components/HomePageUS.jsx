@@ -56,12 +56,12 @@ const HomePageUS = () => {
         if (campaign.status !== 'active' || campaign.platform_region !== 'us') {
           return false
         }
-        // Check if application deadline has not passed
-        const deadline = campaign.deadline || campaign.end_date
-        if (deadline) {
-          const deadlineDate = new Date(deadline)
+        // Check if application deadline has not passed (prioritize application_deadline field)
+        const applicationDeadline = campaign.application_deadline || campaign.deadline || campaign.end_date
+        if (applicationDeadline) {
+          const deadlineDate = new Date(applicationDeadline)
           if (deadlineDate < now) {
-            return false // Deadline has passed, hide this campaign
+            return false // Application deadline has passed, hide this campaign
           }
         }
         return true
@@ -121,21 +121,23 @@ const HomePageUS = () => {
     return diffDays
   }
 
-  // Get urgency badge like Korean version
+  // Get D-day urgency badge (only show for 3 days or less before deadline)
   const getUrgencyBadge = (deadline) => {
+    if (!deadline) return null
     const days = getDaysRemaining(deadline)
+    // Only show D-day badge for 3 days or less (D-3, D-2, D-1, D-Day)
     if (days <= 3 && days > 0) {
       return (
-        <Badge className="bg-red-500 text-white animate-pulse">
+        <Badge className="bg-red-500 text-white animate-pulse font-bold shadow-lg">
           <Clock className="w-3 h-3 mr-1" />
-          {days}d left
+          D-{days}
         </Badge>
       )
-    } else if (days <= 7 && days > 0) {
+    } else if (days === 0) {
       return (
-        <Badge className="bg-orange-500 text-white">
+        <Badge className="bg-red-600 text-white animate-pulse font-bold shadow-lg">
           <Clock className="w-3 h-3 mr-1" />
-          {days}d left
+          D-Day
         </Badge>
       )
     }
@@ -393,9 +395,9 @@ const HomePageUS = () => {
                       </div>
                     )}
 
-                    {/* Urgency Badge - Top Left */}
+                    {/* D-day Urgency Badge - Top Left (only shown for 3 days or less) */}
                     <div className="absolute top-2 left-2">
-                      {getUrgencyBadge(campaign.deadline || campaign.end_date)}
+                      {getUrgencyBadge(campaign.application_deadline || campaign.deadline || campaign.end_date)}
                     </div>
 
                     {/* Reward Badge - Top Right */}
@@ -419,7 +421,7 @@ const HomePageUS = () => {
                       {campaign.title}
                     </h3>
 
-                    <div className="flex items-center justify-between">
+                    <div className="flex items-center justify-between mb-2">
                       <div className="flex gap-0.5">
                         {getActivePlatforms(campaign.target_platforms).slice(0, 2).map((platform) => (
                           <span key={platform} className="text-gray-400">
@@ -432,6 +434,16 @@ const HomePageUS = () => {
                         {campaign.max_participants || 10}
                       </div>
                     </div>
+
+                    {/* Application Deadline Display */}
+                    {(campaign.application_deadline || campaign.deadline || campaign.end_date) && (
+                      <div className="flex items-center text-xs text-gray-500 border-t pt-2 mt-1">
+                        <Calendar className="w-3 h-3 mr-1 text-purple-500" />
+                        <span className="text-gray-600">
+                          Deadline: {formatDate(campaign.application_deadline || campaign.deadline || campaign.end_date)}
+                        </span>
+                      </div>
+                    )}
                   </div>
                 </Card>
               ))}
@@ -712,7 +724,7 @@ const HomePageUS = () => {
 
               <div className="flex items-center text-sm text-gray-600">
                 <Calendar className="h-4 w-4 mr-2" />
-                Application Deadline: {formatDate(selectedCampaign.deadline || selectedCampaign.end_date)}
+                Application Deadline: {formatDate(selectedCampaign.application_deadline || selectedCampaign.deadline || selectedCampaign.end_date)}
               </div>
 
               <Button
