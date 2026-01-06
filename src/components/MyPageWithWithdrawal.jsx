@@ -398,7 +398,7 @@ const MyPageWithWithdrawal = () => {
       setLoading(true)
 
       // 🚀 모든 데이터를 병렬로 로딩 (속도 대폭 향상)
-      // Get applications with campaign data including shooting_guide
+      // Get applications with campaign data (personalized_guide is in applications table)
       const { data: applicationsWithGuide } = await supabase
         .from('applications')
         .select(`
@@ -407,8 +407,7 @@ const MyPageWithWithdrawal = () => {
             id,
             title,
             brand,
-            reward_amount,
-            shooting_guide
+            reward_amount
           )
         `)
         .eq('user_id', user.id)
@@ -900,9 +899,9 @@ const MyPageWithWithdrawal = () => {
     }))
   }
 
-  // Check if application has shooting guide
+  // Check if application has personalized guide (stored in applications.personalized_guide)
   const hasShootingGuide = (application) => {
-    return application.campaigns?.shooting_guide?.scenes?.length > 0
+    return application.personalized_guide?.scenes?.length > 0
   }
 
   // Open video upload modal
@@ -1660,61 +1659,70 @@ const MyPageWithWithdrawal = () => {
                             </div>
                           )}
 
-                          {/* Expandable Shooting Guide */}
+                          {/* Expandable Shooting Guide - Using personalized_guide from applications */}
                           {expandedGuides[application.id] && hasShootingGuide(application) && (
                             <div className="mt-4 p-4 bg-gray-50 rounded-lg">
                               <h4 className="font-semibold text-gray-900 mb-4 flex items-center">
                                 📖 Shooting Guide
                               </h4>
 
-                              {/* General Tips */}
-                              {application.campaigns?.shooting_guide?.general_tips_en && (
-                                <div className="mb-4 p-3 bg-purple-50 rounded-lg">
-                                  <h5 className="font-medium text-purple-800 mb-1">💡 General Tips</h5>
-                                  <p className="text-sm text-purple-700">
-                                    {application.campaigns.shooting_guide.general_tips_en}
-                                  </p>
+                              {/* Guide Info */}
+                              {(application.personalized_guide?.mood || application.personalized_guide?.tempo) && (
+                                <div className="mb-4 p-3 bg-purple-50 rounded-lg flex flex-wrap gap-2">
+                                  {application.personalized_guide?.mood && (
+                                    <span className="text-xs bg-purple-200 text-purple-800 px-2 py-1 rounded">
+                                      Mood: {application.personalized_guide.mood}
+                                    </span>
+                                  )}
+                                  {application.personalized_guide?.tempo && (
+                                    <span className="text-xs bg-purple-200 text-purple-800 px-2 py-1 rounded">
+                                      Tempo: {application.personalized_guide.tempo}
+                                    </span>
+                                  )}
+                                  {application.personalized_guide?.dialogue_style && (
+                                    <span className="text-xs bg-purple-200 text-purple-800 px-2 py-1 rounded">
+                                      Style: {application.personalized_guide.dialogue_style}
+                                    </span>
+                                  )}
                                 </div>
                               )}
 
-                              {/* Scenes */}
+                              {/* Scenes - Using _translated fields for English */}
                               <div className="space-y-3">
-                                {application.campaigns?.shooting_guide?.scenes?.map((scene, index) => (
+                                {application.personalized_guide?.scenes?.map((scene, index) => (
                                   <div key={index} className="border border-gray-200 rounded-lg overflow-hidden bg-white">
                                     <div className="bg-gray-100 px-4 py-2 flex justify-between items-center">
                                       <h5 className="font-medium text-gray-800">
-                                        Scene {scene.scene_number || index + 1}: {scene.title_en || scene.title}
+                                        Scene {scene.order || index + 1}: {scene.scene_type}
                                       </h5>
-                                      {scene.duration && (
-                                        <span className="text-xs bg-gray-200 px-2 py-1 rounded">
-                                          ⏱️ {scene.duration}
-                                        </span>
-                                      )}
                                     </div>
                                     <div className="p-4 space-y-3">
-                                      {(scene.description_en || scene.description) && (
+                                      {/* What to Film - scene_description_translated */}
+                                      {scene.scene_description_translated && (
                                         <div>
                                           <h6 className="text-sm font-medium text-gray-700 mb-1">📷 What to Film</h6>
                                           <p className="text-sm text-gray-600 pl-5">
-                                            {scene.description_en || scene.description}
+                                            {scene.scene_description_translated}
                                           </p>
                                         </div>
                                       )}
-                                      {(scene.script_en || scene.script) && (
+                                      {/* Script - dialogue_translated */}
+                                      {scene.dialogue_translated && (
                                         <div>
                                           <h6 className="text-sm font-medium text-gray-700 mb-1">💬 Script / What to Say</h6>
                                           <div className="bg-green-50 p-2 rounded pl-5">
                                             <p className="text-sm text-gray-700 italic">
-                                              "{scene.script_en || scene.script}"
+                                              "{scene.dialogue_translated}"
                                             </p>
                                           </div>
                                         </div>
                                       )}
-                                      {(scene.tips_en || scene.tips) && (
+                                      {/* Tips - shooting_tip_translated */}
+                                      {scene.shooting_tip_translated && (
                                         <div>
                                           <h6 className="text-sm font-medium text-gray-700 mb-1">💡 Tips</h6>
                                           <p className="text-sm text-gray-600 pl-5">
-                                            {scene.tips_en || scene.tips}
+                                            {scene.shooting_tip_translated}
                                           </p>
                                         </div>
                                       )}
@@ -1722,6 +1730,34 @@ const MyPageWithWithdrawal = () => {
                                   </div>
                                 ))}
                               </div>
+
+                              {/* Required Scenes & Dialogues */}
+                              {(application.personalized_guide?.required_scenes?.length > 0 ||
+                                application.personalized_guide?.required_dialogues?.length > 0) && (
+                                <div className="mt-4 p-3 bg-amber-50 border border-amber-200 rounded-lg">
+                                  <h5 className="font-medium text-amber-800 mb-2">⚠️ Required Elements</h5>
+                                  {application.personalized_guide?.required_scenes?.length > 0 && (
+                                    <div className="mb-2">
+                                      <p className="text-xs font-medium text-amber-700">Required Scenes:</p>
+                                      <ul className="text-sm text-amber-800 list-disc pl-5">
+                                        {application.personalized_guide.required_scenes.map((item, i) => (
+                                          <li key={i}>{item}</li>
+                                        ))}
+                                      </ul>
+                                    </div>
+                                  )}
+                                  {application.personalized_guide?.required_dialogues?.length > 0 && (
+                                    <div>
+                                      <p className="text-xs font-medium text-amber-700">Required Dialogues:</p>
+                                      <ul className="text-sm text-amber-800 list-disc pl-5">
+                                        {application.personalized_guide.required_dialogues.map((item, i) => (
+                                          <li key={i}>{item}</li>
+                                        ))}
+                                      </ul>
+                                    </div>
+                                  )}
+                                </div>
+                              )}
                             </div>
                           )}
 
