@@ -1,5 +1,6 @@
-import React, { useState, useEffect } from 'react'
-import { X, Loader2, Upload, Link, AlertCircle } from 'lucide-react'
+import React, { useState, useEffect, useRef } from 'react'
+import { X, Loader2, Upload, AlertCircle, Film, CheckCircle, Trash2 } from 'lucide-react'
+import { supabase } from '../../lib/supabase'
 
 const VideoUploadModal = ({
   isOpen,
@@ -8,11 +9,15 @@ const VideoUploadModal = ({
   campaign,
   onSubmit
 }) => {
-  const [videoUrl, setVideoUrl] = useState('')
-  const [cleanVideoUrl, setCleanVideoUrl] = useState('')
+  const [videoFile, setVideoFile] = useState(null)
+  const [cleanVideoFile, setCleanVideoFile] = useState(null)
   const [selectedWeek, setSelectedWeek] = useState(1)
   const [loading, setLoading] = useState(false)
+  const [uploadProgress, setUploadProgress] = useState(0)
   const [error, setError] = useState('')
+
+  const videoInputRef = useRef(null)
+  const cleanVideoInputRef = useRef(null)
 
   const is4Week = campaign?.campaign_type === '4week_challenge'
   const requiresCleanVideo = campaign?.requires_clean_video
@@ -20,9 +25,10 @@ const VideoUploadModal = ({
   // Reset form when modal opens
   useEffect(() => {
     if (isOpen) {
-      setVideoUrl('')
-      setCleanVideoUrl('')
+      setVideoFile(null)
+      setCleanVideoFile(null)
       setError('')
+      setUploadProgress(0)
       // Find the first week without a video submission
       if (is4Week) {
         for (let i = 1; i <= 4; i++) {
@@ -48,49 +54,111 @@ const VideoUploadModal = ({
     return application?.custom_deadlines?.[customKey] || campaign?.[customKey]
   }
 
-  const isValidUrl = (url) => {
-    try {
-      new URL(url)
-      return true
-    } catch {
-      return false
+  const formatFileSize = (bytes) => {
+    if (bytes === 0) return '0 Bytes'
+    const k = 1024
+    const sizes = ['Bytes', 'KB', 'MB', 'GB']
+    const i = Math.floor(Math.log(bytes) / Math.log(k))
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i]
+  }
+
+  const handleFileSelect = (e, isCleanVideo = false) => {
+    const file = e.target.files[0]
+    if (!file) return
+
+    // Validate file type
+    const validTypes = ['video/mp4', 'video/quicktime', 'video/x-msvideo', 'video/x-ms-wmv', 'video/webm', 'video/mpeg']
+    if (!validTypes.includes(file.type)) {
+      setError('Please upload a valid video file (MP4, MOV, AVI, WMV, WebM)')
+      return
     }
+
+    // Validate file size (max 500MB)
+    const maxSize = 500 * 1024 * 1024
+    if (file.size > maxSize) {
+      setError('File size must be less than 500MB')
+      return
+    }
+
+    setError('')
+    if (isCleanVideo) {
+      setCleanVideoFile(file)
+    } else {
+      setVideoFile(file)
+    }
+  }
+
+  const uploadToSupabase = async (file, folder) => {
+    const timestamp = Date.now()
+    const fileExt = file.name.split('.').pop()
+    const fileName = `${application.id}_${folder}_${timestamp}.${fileExt}`
+    const filePath = `videos/${application.user_id}/${fileName}`
+
+    const { data, error: uploadError } = await supabase.storage
+      .from('creator-videos')
+      .upload(filePath, file, {
+        cacheControl: '3600',
+        upsert: true
+      })
+
+    if (uploadError) {
+      throw new Error(`Upload failed: ${uploadError.message}`)
+    }
+
+    // Get public URL
+    const { data: urlData } = supabase.storage
+      .from('creator-videos')
+      .getPublicUrl(filePath)
+
+    return urlData.publicUrl
   }
 
   const handleSubmit = async (e) => {
     e.preventDefault()
     setError('')
 
-    if (!videoUrl.trim()) {
-      setError('Please enter a video URL')
+    if (!videoFile) {
+      setError('Please select a video file to upload')
       return
     }
 
-    if (!isValidUrl(videoUrl)) {
-      setError('Please enter a valid URL')
-      return
-    }
-
-    if (requiresCleanVideo && cleanVideoUrl && !isValidUrl(cleanVideoUrl)) {
-      setError('Please enter a valid clean video URL')
+    if (requiresCleanVideo && !cleanVideoFile) {
+      setError('Clean video is required for this campaign')
       return
     }
 
     setLoading(true)
+    setUploadProgress(10)
 
     try {
+      // Upload main video
+      setUploadProgress(20)
+      const videoUrl = await uploadToSupabase(videoFile, is4Week ? `week${selectedWeek}` : 'main')
+      setUploadProgress(60)
+
+      // Upload clean video if required
+      let cleanVideoUrl = null
+      if (cleanVideoFile) {
+        cleanVideoUrl = await uploadToSupabase(cleanVideoFile, is4Week ? `week${selectedWeek}_clean` : 'clean')
+        setUploadProgress(90)
+      }
+
+      setUploadProgress(100)
+
       await onSubmit({
         applicationId: application.id,
         videoUrl,
-        cleanVideoUrl: cleanVideoUrl || null,
+        cleanVideoUrl,
         weekNumber: is4Week ? selectedWeek : null,
         is4Week
       })
       onClose()
     } catch (err) {
-      setError(err.message || 'Failed to submit video')
+      console.error('Video upload error:', err)
+      setError(err.message || 'Failed to upload video')
     } finally {
       setLoading(false)
+      setUploadProgress(0)
     }
   }
 
@@ -111,7 +179,8 @@ const VideoUploadModal = ({
           </div>
           <button
             onClick={onClose}
-            className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+            disabled={loading}
+            className="p-2 hover:bg-gray-100 rounded-full transition-colors disabled:opacity-50"
           >
             <X className="w-5 h-5" />
           </button>
@@ -150,13 +219,14 @@ const VideoUploadModal = ({
                       key={week}
                       type="button"
                       onClick={() => setSelectedWeek(week)}
+                      disabled={loading}
                       className={`p-3 rounded-lg border-2 text-center transition-all ${
                         isSelected
                           ? 'border-purple-500 bg-purple-50'
                           : existingVideo
                           ? 'border-green-300 bg-green-50'
                           : 'border-gray-200 hover:border-gray-300'
-                      }`}
+                      } disabled:opacity-50`}
                     >
                       <div className="font-medium text-sm">Week {week}</div>
                       {deadline && (
@@ -179,54 +249,133 @@ const VideoUploadModal = ({
             </div>
           )}
 
-          {/* Video URL Input */}
+          {/* Video Upload */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Video URL <span className="text-red-500">*</span>
+              Video File <span className="text-red-500">*</span>
             </label>
-            <div className="relative">
-              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <Link className="h-5 w-5 text-gray-400" />
+
+            <input
+              ref={videoInputRef}
+              type="file"
+              accept="video/*"
+              onChange={(e) => handleFileSelect(e, false)}
+              className="hidden"
+              disabled={loading}
+            />
+
+            {!videoFile ? (
+              <button
+                type="button"
+                onClick={() => videoInputRef.current?.click()}
+                disabled={loading}
+                className="w-full border-2 border-dashed border-gray-300 rounded-xl p-6 hover:border-purple-400 hover:bg-purple-50 transition-all disabled:opacity-50"
+              >
+                <div className="flex flex-col items-center">
+                  <Film className="w-12 h-12 text-gray-400 mb-3" />
+                  <p className="text-sm font-medium text-gray-700">Click to select video</p>
+                  <p className="text-xs text-gray-500 mt-1">MP4, MOV, AVI, WebM (max 500MB)</p>
+                </div>
+              </button>
+            ) : (
+              <div className="border border-green-200 bg-green-50 rounded-xl p-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <CheckCircle className="w-8 h-8 text-green-600" />
+                    <div>
+                      <p className="text-sm font-medium text-gray-900 truncate max-w-[180px]">
+                        {videoFile.name}
+                      </p>
+                      <p className="text-xs text-gray-500">{formatFileSize(videoFile.size)}</p>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setVideoFile(null)}
+                    disabled={loading}
+                    className="p-2 text-red-600 hover:bg-red-100 rounded-full disabled:opacity-50"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                </div>
               </div>
-              <input
-                type="url"
-                value={videoUrl}
-                onChange={(e) => setVideoUrl(e.target.value)}
-                className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                placeholder="https://drive.google.com/..."
-                required
-              />
-            </div>
-            <p className="text-xs text-gray-500 mt-1">
-              Accepted: Google Drive, YouTube, Dropbox, or any viewable link.
-              Make sure the link is set to "Anyone with the link can view".
-            </p>
+            )}
           </div>
 
-          {/* Clean Video URL (if required) */}
+          {/* Clean Video Upload (if required) */}
           {requiresCleanVideo && (
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Clean Video URL
+                Clean Video
                 <span className="ml-2 text-xs font-normal text-blue-600 bg-blue-100 px-2 py-0.5 rounded">
                   Required
                 </span>
               </label>
-              <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <Link className="h-5 w-5 text-gray-400" />
+
+              <input
+                ref={cleanVideoInputRef}
+                type="file"
+                accept="video/*"
+                onChange={(e) => handleFileSelect(e, true)}
+                className="hidden"
+                disabled={loading}
+              />
+
+              {!cleanVideoFile ? (
+                <button
+                  type="button"
+                  onClick={() => cleanVideoInputRef.current?.click()}
+                  disabled={loading}
+                  className="w-full border-2 border-dashed border-blue-300 rounded-xl p-4 hover:border-blue-400 hover:bg-blue-50 transition-all disabled:opacity-50"
+                >
+                  <div className="flex flex-col items-center">
+                    <Film className="w-8 h-8 text-blue-400 mb-2" />
+                    <p className="text-sm font-medium text-gray-700">Select clean video</p>
+                  </div>
+                </button>
+              ) : (
+                <div className="border border-blue-200 bg-blue-50 rounded-xl p-3">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <CheckCircle className="w-6 h-6 text-blue-600" />
+                      <div>
+                        <p className="text-sm font-medium text-gray-900 truncate max-w-[180px]">
+                          {cleanVideoFile.name}
+                        </p>
+                        <p className="text-xs text-gray-500">{formatFileSize(cleanVideoFile.size)}</p>
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setCleanVideoFile(null)}
+                      disabled={loading}
+                      className="p-1.5 text-red-600 hover:bg-red-100 rounded-full disabled:opacity-50"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
                 </div>
-                <input
-                  type="url"
-                  value={cleanVideoUrl}
-                  onChange={(e) => setCleanVideoUrl(e.target.value)}
-                  className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                  placeholder="https://drive.google.com/..."
-                />
-              </div>
-              <div className="text-xs text-gray-500 mt-1 p-2 bg-blue-50 rounded">
+              )}
+
+              <div className="text-xs text-gray-500 mt-2 p-2 bg-blue-50 rounded">
                 <strong>Clean video:</strong> Same video but WITHOUT background music and subtitles.
                 This is needed for ad usage.
+              </div>
+            </div>
+          )}
+
+          {/* Upload Progress */}
+          {loading && (
+            <div className="space-y-2">
+              <div className="flex items-center justify-between text-sm">
+                <span className="text-gray-600">Uploading...</span>
+                <span className="text-purple-600 font-medium">{uploadProgress}%</span>
+              </div>
+              <div className="w-full bg-gray-200 rounded-full h-2">
+                <div
+                  className="bg-purple-600 h-2 rounded-full transition-all duration-300"
+                  style={{ width: `${uploadProgress}%` }}
+                />
               </div>
             </div>
           )}
@@ -235,9 +384,10 @@ const VideoUploadModal = ({
           <div className="bg-amber-50 border border-amber-200 rounded-lg p-3">
             <h4 className="text-sm font-medium text-amber-800 mb-2">💡 Tips</h4>
             <ul className="text-xs text-amber-700 space-y-1">
-              <li>• Make sure sharing permissions are set to "Anyone with the link"</li>
-              <li>• Google Drive, YouTube unlisted, and Dropbox links work best</li>
-              <li>• Video should be in the highest quality possible</li>
+              <li>• Upload video in the highest quality possible</li>
+              <li>• Supported formats: MP4, MOV, AVI, WebM</li>
+              <li>• Maximum file size: 500MB</li>
+              <li>• Use a stable internet connection for faster uploads</li>
             </ul>
           </div>
 
@@ -251,18 +401,18 @@ const VideoUploadModal = ({
           {/* Submit Button */}
           <button
             type="submit"
-            disabled={loading || !videoUrl.trim()}
+            disabled={loading || !videoFile}
             className="w-full py-3 bg-purple-600 text-white rounded-xl font-medium hover:bg-purple-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
           >
             {loading ? (
               <>
                 <Loader2 className="w-5 h-5 animate-spin" />
-                Uploading...
+                Uploading to Server...
               </>
             ) : (
               <>
                 <Upload className="w-5 h-5" />
-                Submit Video
+                Upload Video
               </>
             )}
           </button>
