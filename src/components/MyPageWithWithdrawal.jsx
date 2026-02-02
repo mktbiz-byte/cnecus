@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import { useAuth } from '../contexts/AuthContext'
 import { useLanguage } from '../contexts/LanguageContext'
 import { database, supabase } from '../lib/supabase'
@@ -89,9 +89,11 @@ const MyPageWithWithdrawal = () => {
   // Shooting guide and video upload states
   const [expandedGuides, setExpandedGuides] = useState({})
   const [showVideoUploadModal, setShowVideoUploadModal] = useState(false)
-  const [videoSubmissionUrl, setVideoSubmissionUrl] = useState('')
+  const [videoFile, setVideoFile] = useState(null)
   const [uploadingVideo, setUploadingVideo] = useState(false)
+  const [uploadProgress, setUploadProgress] = useState(0)
   const [selectedWeekNumber, setSelectedWeekNumber] = useState(1) // For 4-week challenge
+  const videoInputRef = useRef(null)
 
   // New mypage modal states
   const [showShootingGuideModal, setShowShootingGuideModal] = useState(false)
@@ -923,38 +925,102 @@ const MyPageWithWithdrawal = () => {
   // Open video upload modal
   const openVideoUploadModal = (application) => {
     setSelectedApplication(application)
-    setVideoSubmissionUrl(application.video_submission_url || '')
+    setVideoFile(null)
+    setUploadProgress(0)
     setShowVideoUploadModal(true)
   }
 
-  // Handle video submission
+  // Handle video file selection
+  const handleVideoFileSelect = (e) => {
+    const file = e.target.files[0]
+    if (!file) return
+
+    // Validate file type
+    const validTypes = ['video/mp4', 'video/quicktime', 'video/x-msvideo', 'video/webm', 'video/mpeg']
+    if (!validTypes.includes(file.type)) {
+      setError('Please upload a valid video file (MP4, MOV, AVI, WebM)')
+      return
+    }
+
+    // Validate file size (max 500MB)
+    const maxSize = 500 * 1024 * 1024
+    if (file.size > maxSize) {
+      setError('File size must be less than 500MB')
+      return
+    }
+
+    setError('')
+    setVideoFile(file)
+  }
+
+  // Format file size
+  const formatFileSize = (bytes) => {
+    if (bytes === 0) return '0 Bytes'
+    const k = 1024
+    const sizes = ['Bytes', 'KB', 'MB', 'GB']
+    const i = Math.floor(Math.log(bytes) / Math.log(k))
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i]
+  }
+
+  // Handle video submission with Supabase Storage upload
   const handleVideoSubmit = async () => {
-    if (!videoSubmissionUrl.trim()) {
-      setError('Please enter a video URL.')
+    if (!videoFile) {
+      setError('Please select a video file to upload.')
       return
     }
 
     try {
       setUploadingVideo(true)
       setError('')
+      setUploadProgress(10)
 
       // Check if this is a 4-week challenge
       const is4WeekChallenge = selectedApplication?.campaigns?.campaign_type === '4week_challenge'
 
+      // Upload to Supabase Storage
+      const timestamp = Date.now()
+      const fileExt = videoFile.name.split('.').pop()
+      const folder = is4WeekChallenge ? `week${selectedWeekNumber}` : 'main'
+      const fileName = `${selectedApplication.id}_${folder}_${timestamp}.${fileExt}`
+      const filePath = `videos/${selectedApplication.user_id}/${fileName}`
+
+      setUploadProgress(30)
+
+      const { data: uploadData, error: uploadError } = await supabase.storage
+        .from('creator-videos')
+        .upload(filePath, videoFile, {
+          cacheControl: '3600',
+          upsert: true
+        })
+
+      if (uploadError) throw new Error(`Upload failed: ${uploadError.message}`)
+
+      setUploadProgress(70)
+
+      // Get public URL
+      const { data: urlData } = supabase.storage
+        .from('creator-videos')
+        .getPublicUrl(filePath)
+
+      const videoUrl = urlData.publicUrl
+
+      setUploadProgress(90)
+
+      // Update application record
       let updateData = {
         updated_at: new Date().toISOString()
       }
 
       if (is4WeekChallenge) {
-        // For 4-week challenge, save to the specific week's column
         const weekVideoKey = `week${selectedWeekNumber}_video_url`
         const weekVideoTimeKey = `week${selectedWeekNumber}_video_submitted_at`
-        updateData[weekVideoKey] = videoSubmissionUrl
+        updateData[weekVideoKey] = videoUrl
         updateData[weekVideoTimeKey] = new Date().toISOString()
       } else {
-        // For standard campaign
-        updateData.video_submission_url = videoSubmissionUrl
+        updateData.video_submission_url = videoUrl
+        updateData.video_url = videoUrl
         updateData.video_submitted_at = new Date().toISOString()
+        updateData.status = 'video_submitted'
       }
 
       const { error: updateError } = await supabase
@@ -964,19 +1030,23 @@ const MyPageWithWithdrawal = () => {
 
       if (updateError) throw updateError
 
+      setUploadProgress(100)
+
       const successMessage = is4WeekChallenge
-        ? `Week ${selectedWeekNumber} video submitted successfully!`
-        : 'Video submitted successfully!'
+        ? `Week ${selectedWeekNumber} video uploaded successfully!`
+        : 'Video uploaded successfully!'
 
       setSuccess(successMessage)
       setShowVideoUploadModal(false)
-      setSelectedWeekNumber(1) // Reset week selection
+      setVideoFile(null)
+      setSelectedWeekNumber(1)
+      setUploadProgress(0)
       loadUserData()
 
       setTimeout(() => setSuccess(''), 3000)
     } catch (error) {
-      console.error('Video submit error:', error)
-      setError('Failed to submit video.')
+      console.error('Video upload error:', error)
+      setError(error.message || 'Failed to upload video.')
     } finally {
       setUploadingVideo(false)
     }
@@ -2488,105 +2558,199 @@ const MyPageWithWithdrawal = () => {
           </div>
         )}
 
-        {/* Video Upload Modal */}
+        {/* Video Upload Modal - Supabase Storage */}
         {showVideoUploadModal && (
           <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
-            <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
-              <div className="mt-3">
-                <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-lg font-medium text-gray-900">
-                    📹 {selectedApplication?.campaigns?.campaign_type === '4week_challenge' ? 'Submit Weekly Video' : 'Submit Your Video'}
+            <div className="relative top-10 mx-auto p-5 border w-full max-w-md shadow-lg rounded-xl bg-white">
+              <div className="flex items-center justify-between mb-4">
+                <div>
+                  <h3 className="text-lg font-bold text-gray-900">
+                    📤 {selectedApplication?.campaigns?.campaign_type === '4week_challenge' ? 'Upload Weekly Video' : 'Upload Video'}
                   </h3>
-                  <button
-                    onClick={() => {
-                      setShowVideoUploadModal(false)
-                      setSelectedWeekNumber(1)
-                    }}
-                    className="text-gray-400 hover:text-gray-600"
-                  >
-                    <X className="w-5 h-5" />
-                  </button>
-                </div>
-
-                <div className="mb-4 p-3 bg-blue-50 rounded-lg">
-                  <p className="text-sm text-blue-800">
-                    Enter the URL of your video (Google Drive, YouTube, Dropbox, etc.)
+                  <p className="text-sm text-gray-500">
+                    {selectedApplication?.campaigns?.campaign_type === '4week_challenge' ? '4-Week Challenge' : 'Standard Campaign'}
                   </p>
                 </div>
+                <button
+                  onClick={() => {
+                    setShowVideoUploadModal(false)
+                    setVideoFile(null)
+                    setSelectedWeekNumber(1)
+                    setUploadProgress(0)
+                  }}
+                  disabled={uploadingVideo}
+                  className="text-gray-400 hover:text-gray-600 disabled:opacity-50"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
 
-                {error && (
-                  <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-md">
-                    <p className="text-sm text-red-800">{error}</p>
+              {error && (
+                <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
+                  <p className="text-sm text-red-800">{error}</p>
+                </div>
+              )}
+
+              <div className="space-y-4">
+                {/* Week Selection for 4-Week Challenge */}
+                {selectedApplication?.campaigns?.campaign_type === '4week_challenge' && (
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Select Week <span className="text-red-500">*</span>
+                    </label>
+                    <div className="grid grid-cols-4 gap-2">
+                      {[1, 2, 3, 4].map(week => {
+                        const existingVideo = selectedApplication?.[`week${week}_video_url`]
+                        const deadline = selectedApplication?.custom_deadlines?.[`week${week}_deadline`] ||
+                                       selectedApplication?.campaigns?.[`week${week}_deadline`]
+                        const isSelected = selectedWeekNumber === week
+
+                        return (
+                          <button
+                            key={week}
+                            type="button"
+                            onClick={() => setSelectedWeekNumber(week)}
+                            disabled={uploadingVideo}
+                            className={`p-3 rounded-lg border-2 text-center transition-all ${
+                              isSelected
+                                ? 'border-purple-500 bg-purple-50'
+                                : existingVideo
+                                ? 'border-green-300 bg-green-50'
+                                : 'border-gray-200 hover:border-gray-300'
+                            } disabled:opacity-50`}
+                          >
+                            <div className="font-medium text-sm">Week {week}</div>
+                            {deadline && (
+                              <div className="text-xs text-gray-500 mt-1">
+                                {new Date(deadline).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                              </div>
+                            )}
+                            {existingVideo && (
+                              <div className="text-xs text-green-600 mt-1">✓</div>
+                            )}
+                          </button>
+                        )
+                      })}
+                    </div>
+                    {selectedApplication?.[`week${selectedWeekNumber}_video_url`] && (
+                      <p className="mt-2 text-xs text-amber-600">
+                        ⚠️ Week {selectedWeekNumber} already has a video. Uploading will replace it.
+                      </p>
+                    )}
                   </div>
                 )}
 
-                <div className="space-y-4">
-                  {/* Week Selection for 4-Week Challenge */}
-                  {selectedApplication?.campaigns?.campaign_type === '4week_challenge' && (
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Select Week *
-                      </label>
-                      <select
-                        value={selectedWeekNumber}
-                        onChange={(e) => setSelectedWeekNumber(parseInt(e.target.value))}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
-                      >
-                        {[1, 2, 3, 4].map(week => {
-                          const existingVideo = selectedApplication[`week${week}_video_url`]
-                          const deadline = selectedApplication.custom_deadlines?.[`week${week}_deadline`] ||
-                                         selectedApplication.campaigns?.[`week${week}_deadline`]
-                          return (
-                            <option key={week} value={week}>
-                              Week {week}
-                              {existingVideo ? ' (Already submitted)' : ''}
-                              {deadline ? ` - Due: ${new Date(deadline).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}` : ''}
-                            </option>
-                          )
-                        })}
-                      </select>
-                      {selectedApplication[`week${selectedWeekNumber}_video_url`] && (
-                        <p className="mt-1 text-xs text-amber-600">
-                          ⚠️ Week {selectedWeekNumber} already has a submitted video. Submitting again will replace it.
-                        </p>
-                      )}
+                {/* File Upload */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Video File <span className="text-red-500">*</span>
+                  </label>
+
+                  <input
+                    ref={videoInputRef}
+                    type="file"
+                    accept="video/*"
+                    onChange={handleVideoFileSelect}
+                    className="hidden"
+                    disabled={uploadingVideo}
+                  />
+
+                  {!videoFile ? (
+                    <button
+                      type="button"
+                      onClick={() => videoInputRef.current?.click()}
+                      disabled={uploadingVideo}
+                      className="w-full border-2 border-dashed border-gray-300 rounded-xl p-8 hover:border-purple-400 hover:bg-purple-50 transition-all disabled:opacity-50"
+                    >
+                      <div className="flex flex-col items-center">
+                        <Camera className="w-12 h-12 text-gray-400 mb-3" />
+                        <p className="text-sm font-medium text-gray-700">Click to select video</p>
+                        <p className="text-xs text-gray-500 mt-1">MP4, MOV, AVI, WebM (max 500MB)</p>
+                      </div>
+                    </button>
+                  ) : (
+                    <div className="border border-green-200 bg-green-50 rounded-xl p-4">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
+                            <Camera className="w-5 h-5 text-green-600" />
+                          </div>
+                          <div>
+                            <p className="text-sm font-medium text-gray-900 truncate max-w-[200px]">
+                              {videoFile.name}
+                            </p>
+                            <p className="text-xs text-gray-500">{formatFileSize(videoFile.size)}</p>
+                          </div>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => setVideoFile(null)}
+                          disabled={uploadingVideo}
+                          className="p-2 text-red-600 hover:bg-red-100 rounded-full disabled:opacity-50"
+                        >
+                          <X className="w-4 h-4" />
+                        </button>
+                      </div>
                     </div>
                   )}
+                </div>
 
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Video URL *
-                    </label>
-                    <input
-                      type="url"
-                      value={videoSubmissionUrl}
-                      onChange={(e) => setVideoSubmissionUrl(e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
-                      placeholder="https://drive.google.com/..."
-                    />
+                {/* Upload Progress */}
+                {uploadingVideo && (
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="text-gray-600">Uploading...</span>
+                      <span className="text-purple-600 font-medium">{uploadProgress}%</span>
+                    </div>
+                    <div className="w-full bg-gray-200 rounded-full h-2">
+                      <div
+                        className="bg-purple-600 h-2 rounded-full transition-all duration-300"
+                        style={{ width: `${uploadProgress}%` }}
+                      />
+                    </div>
                   </div>
+                )}
 
-                  <div className="p-3 bg-amber-50 border border-amber-200 rounded-lg">
-                    <p className="text-xs text-amber-800">
-                      Make sure your video link is accessible (set sharing permissions to "Anyone with the link").
-                    </p>
-                  </div>
+                {/* Tips */}
+                <div className="p-3 bg-amber-50 border border-amber-200 rounded-lg">
+                  <h4 className="text-sm font-medium text-amber-800 mb-1">💡 Tips</h4>
+                  <ul className="text-xs text-amber-700 space-y-0.5">
+                    <li>• Upload video in the highest quality possible</li>
+                    <li>• Supported formats: MP4, MOV, AVI, WebM</li>
+                    <li>• Maximum file size: 500MB</li>
+                  </ul>
+                </div>
 
-                  <div className="flex justify-end space-x-3">
-                    <button
-                      onClick={() => setShowVideoUploadModal(false)}
-                      className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200"
-                    >
-                      Cancel
-                    </button>
-                    <button
-                      onClick={handleVideoSubmit}
-                      disabled={uploadingVideo || !videoSubmissionUrl.trim()}
-                      className="px-4 py-2 text-sm font-medium text-white bg-purple-600 rounded-md hover:bg-purple-700 disabled:opacity-50"
-                    >
-                      {uploadingVideo ? 'Submitting...' : 'Submit Video'}
-                    </button>
-                  </div>
+                {/* Action Buttons */}
+                <div className="flex justify-end space-x-3 pt-2">
+                  <button
+                    onClick={() => {
+                      setShowVideoUploadModal(false)
+                      setVideoFile(null)
+                      setUploadProgress(0)
+                    }}
+                    disabled={uploadingVideo}
+                    className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 disabled:opacity-50"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleVideoSubmit}
+                    disabled={uploadingVideo || !videoFile}
+                    className="px-4 py-2 text-sm font-medium text-white bg-purple-600 rounded-lg hover:bg-purple-700 disabled:opacity-50 flex items-center gap-2"
+                  >
+                    {uploadingVideo ? (
+                      <>
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                        Uploading...
+                      </>
+                    ) : (
+                      <>
+                        <Camera className="w-4 h-4" />
+                        Upload Video
+                      </>
+                    )}
+                  </button>
                 </div>
               </div>
             </div>
