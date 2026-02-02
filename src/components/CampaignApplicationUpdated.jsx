@@ -470,6 +470,199 @@ const CampaignApplicationUpdated = () => {
           </Card>
         )}
 
+        {/* Campaign Details Expandable Section */}
+        {campaign && (
+          <div className="mb-5 space-y-3">
+            {/* Special Requirements Badges */}
+            {(campaign.requires_ad_code || campaign.requires_clean_video) && (
+              <div className="flex flex-wrap gap-2">
+                {campaign.requires_ad_code && (
+                  <Badge className="bg-amber-100 text-amber-700 border border-amber-200 text-xs">
+                    📊 Meta Ad Code Required
+                  </Badge>
+                )}
+                {campaign.requires_clean_video && (
+                  <Badge className="bg-teal-100 text-teal-700 border border-teal-200 text-xs">
+                    🎬 Clean Video Required
+                  </Badge>
+                )}
+              </div>
+            )}
+
+            {/* Product Information */}
+            {(campaign.brand_name_en || campaign.product_name_en || campaign.product_description_en) && (
+              <Card className="border-pink-100">
+                <CardContent className="pt-4 pb-4">
+                  <h3 className="font-semibold mb-3 flex items-center text-pink-700 text-sm">
+                    🎁 Product Information
+                  </h3>
+                  <div className="space-y-2 text-sm">
+                    {campaign.brand_name_en && (
+                      <div className="flex items-start">
+                        <span className="text-gray-500 w-16 flex-shrink-0">Brand:</span>
+                        <span className="font-medium text-gray-800">{campaign.brand_name_en}</span>
+                      </div>
+                    )}
+                    {campaign.product_name_en && (
+                      <div className="flex items-start">
+                        <span className="text-gray-500 w-16 flex-shrink-0">Product:</span>
+                        <span className="font-medium text-gray-800">{campaign.product_name_en}</span>
+                      </div>
+                    )}
+                    {campaign.product_description_en && (
+                      <p className="text-gray-700 mt-2">{campaign.product_description_en}</p>
+                    )}
+                    {campaign.product_features_en?.length > 0 && (
+                      <div className="mt-2">
+                        <span className="text-gray-500 text-xs">Key Features:</span>
+                        <ul className="mt-1 space-y-0.5">
+                          {campaign.product_features_en.map((feature, idx) => (
+                            <li key={idx} className="text-gray-700 flex items-start text-xs">
+                              <span className="text-pink-500 mr-2">•</span>
+                              {feature}
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Video Specifications */}
+            {(campaign.video_duration_en || campaign.video_tempo_en || campaign.video_tone_en) && (
+              <Card className="border-blue-100">
+                <CardContent className="pt-4 pb-4">
+                  <h3 className="font-semibold mb-3 flex items-center text-blue-700 text-sm">
+                    🎥 Video Specifications
+                  </h3>
+                  <div className="grid grid-cols-3 gap-2">
+                    {campaign.video_duration_en && (
+                      <div className="bg-blue-50 p-2 rounded text-center">
+                        <div className="text-xs text-gray-500">Duration</div>
+                        <div className="text-xs font-medium">{campaign.video_duration_en}</div>
+                      </div>
+                    )}
+                    {campaign.video_tempo_en && (
+                      <div className="bg-blue-50 p-2 rounded text-center">
+                        <div className="text-xs text-gray-500">Tempo</div>
+                        <div className="text-xs font-medium">{campaign.video_tempo_en}</div>
+                      </div>
+                    )}
+                    {campaign.video_tone_en && (
+                      <div className="bg-blue-50 p-2 rounded text-center">
+                        <div className="text-xs text-gray-500">Tone</div>
+                        <div className="text-xs font-medium">{campaign.video_tone_en}</div>
+                      </div>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Creator Guide */}
+            {(campaign.required_dialogues_en?.length > 0 ||
+              campaign.required_scenes_en?.length > 0 ||
+              campaign.required_hashtags_en?.length > 0 ||
+              campaign.shooting_scenes_en?.length > 0) && (
+              <Card className="border-amber-100">
+                <CardContent className="pt-4 pb-4">
+                  <h3 className="font-semibold mb-3 flex items-center text-amber-700 text-sm">
+                    📋 Creator Guide
+                  </h3>
+                  <div className="space-y-3">
+                    {/* Required Lines */}
+                    {campaign.required_dialogues_en?.length > 0 && (
+                      <div>
+                        <h4 className="text-xs font-medium text-amber-800 mb-1">💬 Required Lines</h4>
+                        <ul className="space-y-1">
+                          {campaign.required_dialogues_en.map((line, idx) => (
+                            <li key={idx} className="text-xs bg-amber-50 p-1.5 rounded border border-amber-100 italic text-gray-700">
+                              "{line}"
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+
+                    {/* Required Scenes */}
+                    {campaign.required_scenes_en?.length > 0 && (
+                      <div>
+                        <h4 className="text-xs font-medium text-amber-800 mb-1">🎬 Required Scenes</h4>
+                        <ul className="space-y-0.5">
+                          {campaign.required_scenes_en.map((scene, idx) => (
+                            <li key={idx} className="text-xs text-gray-700 flex items-start">
+                              <span className="text-amber-500 mr-1">✓</span>
+                              {scene}
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+
+                    {/* Shooting Scenes */}
+                    {campaign.shooting_scenes_en?.length > 0 && (
+                      <div>
+                        <h4 className="text-xs font-medium text-amber-800 mb-1">📸 Shooting Scenes</h4>
+                        <ul className="space-y-0.5">
+                          {campaign.shooting_scenes_en.map((scene, idx) => (
+                            <li key={idx} className="text-xs text-gray-700 flex items-start">
+                              <span className="text-amber-500 mr-1">{idx + 1}.</span>
+                              {scene}
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+
+                    {/* Required Hashtags */}
+                    {campaign.required_hashtags_en?.length > 0 && (
+                      <div>
+                        <h4 className="text-xs font-medium text-amber-800 mb-1"># Required Hashtags</h4>
+                        <div className="flex flex-wrap gap-1">
+                          {campaign.required_hashtags_en.map((tag, idx) => (
+                            <span key={idx} className="text-xs bg-amber-50 px-1.5 py-0.5 rounded-full border border-amber-200 text-amber-700">
+                              #{tag}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Additional Details */}
+            {(campaign.additional_details_en || campaign.additional_shooting_requests_en) && (
+              <Card className="border-gray-200">
+                <CardContent className="pt-4 pb-4">
+                  <h3 className="font-semibold mb-2 flex items-center text-gray-700 text-sm">
+                    📝 Additional Notes
+                  </h3>
+                  {campaign.additional_details_en && (
+                    <p className="text-xs text-gray-700">{campaign.additional_details_en}</p>
+                  )}
+                  {campaign.additional_shooting_requests_en && (
+                    <div className="mt-2 pt-2 border-t border-gray-100">
+                      <span className="text-xs text-gray-500">Shooting Requests:</span>
+                      <p className="text-xs text-gray-700 mt-0.5">{campaign.additional_shooting_requests_en}</p>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Product Shipping Date */}
+            {campaign.product_shipping_date && (
+              <div className="text-xs text-gray-600 flex items-center bg-gray-50 p-2 rounded">
+                📦 Product shipping expected: <span className="font-medium ml-1">{formatDate(campaign.product_shipping_date)}</span>
+              </div>
+            )}
+          </div>
+        )}
+
         {/* Already Applied */}
         {existingApplication && (
           <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-5 flex items-center gap-2">

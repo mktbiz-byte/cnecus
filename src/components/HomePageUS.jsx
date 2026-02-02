@@ -736,13 +736,24 @@ const HomePageUS = () => {
                 </div>
               )}
 
-              {/* Campaign Type Badge */}
-              <div className="flex items-center gap-2">
+              {/* Campaign Type & Special Requirements Badges */}
+              <div className="flex items-center gap-2 flex-wrap">
                 <Badge variant="secondary" className={`text-sm px-3 py-1 border ${getCampaignTypeBadgeStyle(selectedCampaign.campaign_type)}`}>
                   {getCampaignTypeLabel(selectedCampaign.campaign_type)}
                 </Badge>
+                {selectedCampaign.requires_ad_code && (
+                  <Badge className="bg-amber-100 text-amber-700 border border-amber-200">
+                    📊 Meta Ad Code Required
+                  </Badge>
+                )}
+                {selectedCampaign.requires_clean_video && (
+                  <Badge className="bg-teal-100 text-teal-700 border border-teal-200">
+                    🎬 Clean Video Required
+                  </Badge>
+                )}
               </div>
 
+              {/* Reward & Spots */}
               <div className="grid grid-cols-2 gap-4">
                 <div className="bg-purple-50 p-4 rounded-lg">
                   <div className="text-sm text-gray-600 mb-1">Creator Reward</div>
@@ -754,6 +765,7 @@ const HomePageUS = () => {
                 </div>
               </div>
 
+              {/* Campaign Description */}
               <div>
                 <h3 className="font-semibold mb-2 flex items-center">
                   <Target className="h-5 w-5 mr-2 text-purple-600" />
@@ -762,6 +774,7 @@ const HomePageUS = () => {
                 <p className="text-gray-700 whitespace-pre-wrap">{selectedCampaign.description_en || selectedCampaign.description}</p>
               </div>
 
+              {/* Requirements */}
               {(selectedCampaign.requirements_en || selectedCampaign.requirements) && (
                 <div>
                   <h3 className="font-semibold mb-2 flex items-center">
@@ -772,11 +785,171 @@ const HomePageUS = () => {
                 </div>
               )}
 
+              {/* Target Platforms */}
               <div className="flex flex-wrap gap-2">
                 {getActivePlatforms(selectedCampaign.target_platforms).map((platform) => (
                   <span key={platform}>{getPlatformBadge(platform)}</span>
                 ))}
               </div>
+
+              {/* Product Information Section */}
+              {(selectedCampaign.brand_name_en || selectedCampaign.product_name_en || selectedCampaign.product_description_en) && (
+                <div className="bg-gradient-to-r from-pink-50 to-purple-50 p-4 rounded-lg border border-pink-100">
+                  <h3 className="font-semibold mb-3 flex items-center text-pink-700">
+                    🎁 Product Information
+                  </h3>
+                  <div className="space-y-2">
+                    {selectedCampaign.brand_name_en && (
+                      <div className="flex items-start">
+                        <span className="text-sm text-gray-500 w-20 flex-shrink-0">Brand:</span>
+                        <span className="text-sm font-medium text-gray-800">{selectedCampaign.brand_name_en}</span>
+                      </div>
+                    )}
+                    {selectedCampaign.product_name_en && (
+                      <div className="flex items-start">
+                        <span className="text-sm text-gray-500 w-20 flex-shrink-0">Product:</span>
+                        <span className="text-sm font-medium text-gray-800">{selectedCampaign.product_name_en}</span>
+                      </div>
+                    )}
+                    {selectedCampaign.product_description_en && (
+                      <div className="mt-2">
+                        <p className="text-sm text-gray-700">{selectedCampaign.product_description_en}</p>
+                      </div>
+                    )}
+                    {selectedCampaign.product_features_en?.length > 0 && (
+                      <div className="mt-3">
+                        <span className="text-sm text-gray-500">Key Features:</span>
+                        <ul className="mt-1 space-y-1">
+                          {selectedCampaign.product_features_en.map((feature, idx) => (
+                            <li key={idx} className="text-sm text-gray-700 flex items-start">
+                              <span className="text-pink-500 mr-2">•</span>
+                              {feature}
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* Video Specifications Section */}
+              {(selectedCampaign.video_duration_en || selectedCampaign.video_tempo_en || selectedCampaign.video_tone_en) && (
+                <div className="bg-blue-50 p-4 rounded-lg border border-blue-100">
+                  <h3 className="font-semibold mb-3 flex items-center text-blue-700">
+                    🎥 Video Specifications
+                  </h3>
+                  <div className="grid grid-cols-3 gap-3">
+                    {selectedCampaign.video_duration_en && (
+                      <div className="bg-white p-3 rounded-lg text-center">
+                        <div className="text-xs text-gray-500 mb-1">Duration</div>
+                        <div className="text-sm font-medium text-gray-800">{selectedCampaign.video_duration_en}</div>
+                      </div>
+                    )}
+                    {selectedCampaign.video_tempo_en && (
+                      <div className="bg-white p-3 rounded-lg text-center">
+                        <div className="text-xs text-gray-500 mb-1">Tempo</div>
+                        <div className="text-sm font-medium text-gray-800">{selectedCampaign.video_tempo_en}</div>
+                      </div>
+                    )}
+                    {selectedCampaign.video_tone_en && (
+                      <div className="bg-white p-3 rounded-lg text-center">
+                        <div className="text-xs text-gray-500 mb-1">Tone</div>
+                        <div className="text-sm font-medium text-gray-800">{selectedCampaign.video_tone_en}</div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* Creator Guide Section */}
+              {(selectedCampaign.required_dialogues_en?.length > 0 ||
+                selectedCampaign.required_scenes_en?.length > 0 ||
+                selectedCampaign.required_hashtags_en?.length > 0 ||
+                selectedCampaign.shooting_scenes_en?.length > 0) && (
+                <div className="bg-amber-50 p-4 rounded-lg border border-amber-200">
+                  <h3 className="font-semibold mb-3 flex items-center text-amber-700">
+                    📋 Creator Guide
+                  </h3>
+                  <div className="space-y-4">
+                    {/* Required Lines/Dialogues */}
+                    {selectedCampaign.required_dialogues_en?.length > 0 && (
+                      <div>
+                        <h4 className="text-sm font-medium text-amber-800 mb-2">💬 Required Lines</h4>
+                        <ul className="space-y-2">
+                          {selectedCampaign.required_dialogues_en.map((line, idx) => (
+                            <li key={idx} className="text-sm bg-white p-2 rounded border border-amber-100 italic text-gray-700">
+                              "{line}"
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+
+                    {/* Required Scenes */}
+                    {selectedCampaign.required_scenes_en?.length > 0 && (
+                      <div>
+                        <h4 className="text-sm font-medium text-amber-800 mb-2">🎬 Required Scenes</h4>
+                        <ul className="space-y-1">
+                          {selectedCampaign.required_scenes_en.map((scene, idx) => (
+                            <li key={idx} className="text-sm text-gray-700 flex items-start">
+                              <span className="text-amber-500 mr-2">✓</span>
+                              {scene}
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+
+                    {/* Shooting Scenes */}
+                    {selectedCampaign.shooting_scenes_en?.length > 0 && (
+                      <div>
+                        <h4 className="text-sm font-medium text-amber-800 mb-2">📸 Shooting Scenes</h4>
+                        <ul className="space-y-1">
+                          {selectedCampaign.shooting_scenes_en.map((scene, idx) => (
+                            <li key={idx} className="text-sm text-gray-700 flex items-start">
+                              <span className="text-amber-500 mr-2">{idx + 1}.</span>
+                              {scene}
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+
+                    {/* Required Hashtags */}
+                    {selectedCampaign.required_hashtags_en?.length > 0 && (
+                      <div>
+                        <h4 className="text-sm font-medium text-amber-800 mb-2"># Required Hashtags</h4>
+                        <div className="flex flex-wrap gap-2">
+                          {selectedCampaign.required_hashtags_en.map((tag, idx) => (
+                            <span key={idx} className="text-sm bg-white px-2 py-1 rounded-full border border-amber-200 text-amber-700">
+                              #{tag}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* Additional Details Section */}
+              {(selectedCampaign.additional_details_en || selectedCampaign.additional_shooting_requests_en) && (
+                <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
+                  <h3 className="font-semibold mb-3 flex items-center text-gray-700">
+                    📝 Additional Notes
+                  </h3>
+                  {selectedCampaign.additional_details_en && (
+                    <p className="text-sm text-gray-700 mb-2">{selectedCampaign.additional_details_en}</p>
+                  )}
+                  {selectedCampaign.additional_shooting_requests_en && (
+                    <div className="mt-2 pt-2 border-t border-gray-200">
+                      <span className="text-xs text-gray-500">Additional Shooting Requests:</span>
+                      <p className="text-sm text-gray-700 mt-1">{selectedCampaign.additional_shooting_requests_en}</p>
+                    </div>
+                  )}
+                </div>
+              )}
 
               {/* Deadlines Section */}
               <div className="bg-gray-50 p-4 rounded-lg space-y-2">
@@ -789,6 +962,14 @@ const HomePageUS = () => {
                   <span className="text-gray-600">Application Deadline:</span>
                   <span className="font-medium">{formatDate(selectedCampaign.application_deadline || selectedCampaign.deadline || selectedCampaign.end_date)}</span>
                 </div>
+
+                {/* Product Shipping Date */}
+                {selectedCampaign.product_shipping_date && (
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-gray-600">📦 Product Shipping:</span>
+                    <span className="font-medium">{formatDate(selectedCampaign.product_shipping_date)}</span>
+                  </div>
+                )}
 
                 {/* Regular Campaign Deadlines */}
                 {(selectedCampaign.campaign_type === 'regular' || !selectedCampaign.campaign_type) && (
@@ -811,32 +992,24 @@ const HomePageUS = () => {
                 {/* 4-Week Challenge Deadlines */}
                 {selectedCampaign.campaign_type === '4week_challenge' && (
                   <div className="mt-3 pt-3 border-t border-gray-200">
-                    <p className="text-xs text-gray-500 mb-2">Weekly Deadlines:</p>
+                    <p className="text-xs text-gray-500 mb-2 font-medium">Weekly Deadlines:</p>
                     <div className="grid grid-cols-2 gap-2 text-xs">
-                      {selectedCampaign.week1_deadline && (
-                        <div className="bg-white p-2 rounded border">
-                          <span className="font-medium text-orange-600">Week 1:</span>
-                          <span className="ml-1">{formatDate(selectedCampaign.week1_deadline)}</span>
-                        </div>
-                      )}
-                      {selectedCampaign.week2_deadline && (
-                        <div className="bg-white p-2 rounded border">
-                          <span className="font-medium text-orange-600">Week 2:</span>
-                          <span className="ml-1">{formatDate(selectedCampaign.week2_deadline)}</span>
-                        </div>
-                      )}
-                      {selectedCampaign.week3_deadline && (
-                        <div className="bg-white p-2 rounded border">
-                          <span className="font-medium text-orange-600">Week 3:</span>
-                          <span className="ml-1">{formatDate(selectedCampaign.week3_deadline)}</span>
-                        </div>
-                      )}
-                      {selectedCampaign.week4_deadline && (
-                        <div className="bg-white p-2 rounded border">
-                          <span className="font-medium text-orange-600">Week 4:</span>
-                          <span className="ml-1">{formatDate(selectedCampaign.week4_deadline)}</span>
-                        </div>
-                      )}
+                      {[1, 2, 3, 4].map(week => {
+                        const deadline = selectedCampaign[`week${week}_deadline`]
+                        const snsDeadline = selectedCampaign[`week${week}_sns_deadline`]
+                        if (!deadline && !snsDeadline) return null
+                        return (
+                          <div key={week} className="bg-white p-2 rounded border">
+                            <div className="font-medium text-orange-600 mb-1">Week {week}</div>
+                            {deadline && (
+                              <div className="text-gray-600">Video: {formatDate(deadline)}</div>
+                            )}
+                            {snsDeadline && (
+                              <div className="text-gray-600">SNS: {formatDate(snsDeadline)}</div>
+                            )}
+                          </div>
+                        )
+                      })}
                     </div>
                   </div>
                 )}
