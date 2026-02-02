@@ -82,6 +82,7 @@ const MyPageWithWithdrawal = () => {
   const [showVideoUploadModal, setShowVideoUploadModal] = useState(false)
   const [videoSubmissionUrl, setVideoSubmissionUrl] = useState('')
   const [uploadingVideo, setUploadingVideo] = useState(false)
+  const [selectedWeekNumber, setSelectedWeekNumber] = useState(1) // For 4-week challenge
 
   // 프로필 편집 관련 상태
   const [isEditing, setIsEditing] = useState(false)
@@ -922,19 +923,39 @@ const MyPageWithWithdrawal = () => {
       setUploadingVideo(true)
       setError('')
 
+      // Check if this is a 4-week challenge
+      const is4WeekChallenge = selectedApplication?.campaigns?.campaign_type === '4week_challenge'
+
+      let updateData = {
+        updated_at: new Date().toISOString()
+      }
+
+      if (is4WeekChallenge) {
+        // For 4-week challenge, save to the specific week's column
+        const weekVideoKey = `week${selectedWeekNumber}_video_url`
+        const weekVideoTimeKey = `week${selectedWeekNumber}_video_submitted_at`
+        updateData[weekVideoKey] = videoSubmissionUrl
+        updateData[weekVideoTimeKey] = new Date().toISOString()
+      } else {
+        // For standard campaign
+        updateData.video_submission_url = videoSubmissionUrl
+        updateData.video_submitted_at = new Date().toISOString()
+      }
+
       const { error: updateError } = await supabase
         .from('applications')
-        .update({
-          video_submission_url: videoSubmissionUrl,
-          video_submitted_at: new Date().toISOString(),
-          updated_at: new Date().toISOString()
-        })
+        .update(updateData)
         .eq('id', selectedApplication.id)
 
       if (updateError) throw updateError
 
-      setSuccess('Video submitted successfully!')
+      const successMessage = is4WeekChallenge
+        ? `Week ${selectedWeekNumber} video submitted successfully!`
+        : 'Video submitted successfully!'
+
+      setSuccess(successMessage)
       setShowVideoUploadModal(false)
+      setSelectedWeekNumber(1) // Reset week selection
       loadUserData()
 
       setTimeout(() => setSuccess(''), 3000)
@@ -1573,15 +1594,59 @@ const MyPageWithWithdrawal = () => {
                     <p>{t.noData}</p>
                   </div>
                 ) : (
-                  applications.map((application) => (
+                  applications.map((application) => {
+                    // Get campaign type
+                    const campaignType = application.campaigns?.campaign_type || 'regular'
+                    const is4WeekChallenge = campaignType === '4week_challenge'
+
+                    // Get effective deadlines (custom_deadlines override default)
+                    const getEffectiveDeadline = (weekNum, deadlineType) => {
+                      const customDeadlines = application.custom_deadlines || {}
+                      const customKey = `week${weekNum}_${deadlineType}`
+                      if (customDeadlines[customKey]) {
+                        return customDeadlines[customKey]
+                      }
+                      // Fall back to campaign default
+                      return application.campaigns?.[customKey]
+                    }
+
+                    // Check weekly submissions for 4-week challenge
+                    const getWeeklySubmissions = () => {
+                      if (!is4WeekChallenge) return []
+                      const submissions = []
+                      for (let i = 1; i <= 4; i++) {
+                        const videoKey = `week${i}_video_url`
+                        const snsKey = `week${i}_sns_url`
+                        submissions.push({
+                          week: i,
+                          videoUrl: application[videoKey] || null,
+                          snsUrl: application[snsKey] || null,
+                          deadline: getEffectiveDeadline(i, 'deadline'),
+                          snsDeadline: getEffectiveDeadline(i, 'sns_deadline')
+                        })
+                      }
+                      return submissions
+                    }
+
+                    const weeklySubmissions = getWeeklySubmissions()
+
+                    return (
                     <div key={application.id} className="border border-gray-200 rounded-lg overflow-hidden">
                       {/* Campaign Header */}
                       <div className="p-4 bg-gradient-to-r from-purple-50 to-blue-50 flex justify-between items-start">
                         <div>
-                          <h3 className="font-semibold text-gray-900">
-                            {application.campaigns?.title || application.campaign_title || 'Campaign'}
-                          </h3>
-                          <p className="text-sm text-purple-600">{application.campaigns?.brand}</p>
+                          <div className="flex items-center gap-2 mb-1">
+                            <h3 className="font-semibold text-gray-900">
+                              {application.campaigns?.title_en || application.campaigns?.title || application.campaign_title || 'Campaign'}
+                            </h3>
+                            {/* Campaign Type Badge */}
+                            <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${
+                              is4WeekChallenge ? 'bg-orange-100 text-orange-700' : 'bg-blue-100 text-blue-700'
+                            }`}>
+                              {is4WeekChallenge ? '4-Week Challenge' : 'Standard'}
+                            </span>
+                          </div>
+                          <p className="text-sm text-purple-600">{application.campaigns?.brand_en || application.campaigns?.brand}</p>
                           <p className="text-xs text-gray-500 mt-1">
                             Applied: {new Date(application.created_at).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })}
                           </p>
@@ -1612,6 +1677,62 @@ const MyPageWithWithdrawal = () => {
                             </div>
                           </div>
 
+                          {/* 4-Week Challenge Progress Section */}
+                          {is4WeekChallenge && (
+                            <div className="mb-4 p-4 bg-orange-50 border border-orange-200 rounded-lg">
+                              <h4 className="font-semibold text-orange-800 mb-3 flex items-center">
+                                📅 Weekly Submission Progress
+                              </h4>
+                              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                                {weeklySubmissions.map((week) => {
+                                  const isVideoSubmitted = !!week.videoUrl
+                                  const isSnsSubmitted = !!week.snsUrl
+                                  const deadlineDate = week.deadline ? new Date(week.deadline) : null
+                                  const isOverdue = deadlineDate && deadlineDate < new Date() && !isVideoSubmitted
+
+                                  return (
+                                    <div
+                                      key={week.week}
+                                      className={`p-3 rounded-lg border ${
+                                        isVideoSubmitted && isSnsSubmitted ? 'bg-green-50 border-green-200' :
+                                        isVideoSubmitted ? 'bg-blue-50 border-blue-200' :
+                                        isOverdue ? 'bg-red-50 border-red-200' :
+                                        'bg-white border-gray-200'
+                                      }`}
+                                    >
+                                      <div className="font-medium text-sm mb-1">Week {week.week}</div>
+
+                                      {/* Deadline */}
+                                      {week.deadline && (
+                                        <div className={`text-xs mb-2 ${isOverdue ? 'text-red-600 font-medium' : 'text-gray-500'}`}>
+                                          Due: {new Date(week.deadline).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                                          {isOverdue && ' (Overdue)'}
+                                        </div>
+                                      )}
+
+                                      {/* Status Icons */}
+                                      <div className="flex flex-col gap-1 text-xs">
+                                        <div className={`flex items-center ${isVideoSubmitted ? 'text-green-600' : 'text-gray-400'}`}>
+                                          {isVideoSubmitted ? '✅' : '⬜'} Video
+                                        </div>
+                                        <div className={`flex items-center ${isSnsSubmitted ? 'text-green-600' : 'text-gray-400'}`}>
+                                          {isSnsSubmitted ? '✅' : '⬜'} SNS
+                                        </div>
+                                      </div>
+                                    </div>
+                                  )
+                                })}
+                              </div>
+
+                              {/* Custom Deadlines Notice */}
+                              {application.custom_deadlines && Object.keys(application.custom_deadlines).length > 0 && (
+                                <div className="mt-3 text-xs text-orange-600 flex items-center">
+                                  ℹ️ You have personalized deadlines. Check each week's due date above.
+                                </div>
+                              )}
+                            </div>
+                          )}
+
                           {/* Action Buttons */}
                           <div className="flex flex-wrap gap-2 mb-4">
                             {hasShootingGuide(application) && (
@@ -1628,10 +1749,10 @@ const MyPageWithWithdrawal = () => {
                               onClick={() => openVideoUploadModal(application)}
                               className="inline-flex items-center px-3 py-2 rounded-md text-sm font-medium bg-blue-100 text-blue-800 hover:bg-blue-200 transition-colors"
                             >
-                              📹 {application.video_submission_url ? 'Update Video' : 'Submit Video'}
+                              📹 {is4WeekChallenge ? 'Submit Weekly Video' : (application.video_submission_url ? 'Update Video' : 'Submit Video')}
                             </button>
 
-                            {application.video_submission_url && (
+                            {application.video_submission_url && !is4WeekChallenge && (
                               <a
                                 href={application.video_submission_url}
                                 target="_blank"
@@ -1643,8 +1764,8 @@ const MyPageWithWithdrawal = () => {
                             )}
                           </div>
 
-                          {/* Video Submission Status */}
-                          {application.video_submission_url && (
+                          {/* Video Submission Status - Standard Campaign */}
+                          {application.video_submission_url && !is4WeekChallenge && (
                             <div className="flex items-center text-sm text-green-600 mb-4">
                               ✅ Video submitted on {new Date(application.video_submitted_at).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })}
                             </div>
@@ -1790,7 +1911,7 @@ const MyPageWithWithdrawal = () => {
                         </div>
                       )}
                     </div>
-                  ))
+                  )})
                 )}
               </div>
               
@@ -2203,9 +2324,14 @@ const MyPageWithWithdrawal = () => {
             <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
               <div className="mt-3">
                 <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-lg font-medium text-gray-900">📹 Submit Your Video</h3>
+                  <h3 className="text-lg font-medium text-gray-900">
+                    📹 {selectedApplication?.campaigns?.campaign_type === '4week_challenge' ? 'Submit Weekly Video' : 'Submit Your Video'}
+                  </h3>
                   <button
-                    onClick={() => setShowVideoUploadModal(false)}
+                    onClick={() => {
+                      setShowVideoUploadModal(false)
+                      setSelectedWeekNumber(1)
+                    }}
                     className="text-gray-400 hover:text-gray-600"
                   >
                     <X className="w-5 h-5" />
@@ -2225,6 +2351,38 @@ const MyPageWithWithdrawal = () => {
                 )}
 
                 <div className="space-y-4">
+                  {/* Week Selection for 4-Week Challenge */}
+                  {selectedApplication?.campaigns?.campaign_type === '4week_challenge' && (
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Select Week *
+                      </label>
+                      <select
+                        value={selectedWeekNumber}
+                        onChange={(e) => setSelectedWeekNumber(parseInt(e.target.value))}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
+                      >
+                        {[1, 2, 3, 4].map(week => {
+                          const existingVideo = selectedApplication[`week${week}_video_url`]
+                          const deadline = selectedApplication.custom_deadlines?.[`week${week}_deadline`] ||
+                                         selectedApplication.campaigns?.[`week${week}_deadline`]
+                          return (
+                            <option key={week} value={week}>
+                              Week {week}
+                              {existingVideo ? ' (Already submitted)' : ''}
+                              {deadline ? ` - Due: ${new Date(deadline).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}` : ''}
+                            </option>
+                          )
+                        })}
+                      </select>
+                      {selectedApplication[`week${selectedWeekNumber}_video_url`] && (
+                        <p className="mt-1 text-xs text-amber-600">
+                          ⚠️ Week {selectedWeekNumber} already has a submitted video. Submitting again will replace it.
+                        </p>
+                      )}
+                    </div>
+                  )}
+
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
                       Video URL *

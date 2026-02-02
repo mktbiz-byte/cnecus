@@ -104,6 +104,55 @@ const HomePageUS = () => {
     }).format(amount || 0)
   }
 
+  // Calculate creator reward based on package_type and campaign_type
+  // Creator receives 60% of package price, rounded to nearest $5
+  const calculateCreatorReward = (campaign) => {
+    // If reward_amount is set, use it directly
+    if (campaign.reward_amount) {
+      return campaign.reward_amount
+    }
+
+    // Calculate based on package_type and campaign_type
+    const rewardMap = {
+      'junior_regular': 130,
+      'junior_4week_challenge': 265,
+      'intermediate_regular': 175,
+      'intermediate_4week_challenge': 310,
+      'senior_regular': 220,
+      'senior_4week_challenge': 355,
+      'premium_regular': 265,
+      'premium_4week_challenge': 400
+    }
+
+    const packageType = campaign.package_type || 'junior'
+    const campaignType = campaign.campaign_type || 'regular'
+    const key = `${packageType}_${campaignType}`
+
+    return rewardMap[key] || 130 // Default to junior_regular
+  }
+
+  // Get campaign type display label
+  const getCampaignTypeLabel = (campaignType) => {
+    switch (campaignType) {
+      case '4week_challenge':
+        return '4-Week Challenge'
+      case 'regular':
+      default:
+        return 'Standard'
+    }
+  }
+
+  // Get campaign type badge style
+  const getCampaignTypeBadgeStyle = (campaignType) => {
+    switch (campaignType) {
+      case '4week_challenge':
+        return 'bg-orange-100 text-orange-700 border-orange-200'
+      case 'regular':
+      default:
+        return 'bg-blue-100 text-blue-700 border-blue-200'
+    }
+  }
+
   const formatDate = (date) => {
     return new Date(date).toLocaleDateString('en-US', {
       year: 'numeric',
@@ -400,19 +449,19 @@ const HomePageUS = () => {
                       {getUrgencyBadge(campaign.application_deadline || campaign.deadline || campaign.end_date)}
                     </div>
 
-                    {/* Reward Badge - Top Right */}
+                    {/* Creator Reward Badge - Top Right */}
                     <div className="absolute top-2 right-2">
                       <Badge className="bg-purple-600 text-white text-xs font-bold">
-                        {formatCurrency(campaign.reward_amount)}
+                        {formatCurrency(calculateCreatorReward(campaign))}
                       </Badge>
                     </div>
                   </div>
 
                   {/* Compact Content */}
                   <div className="p-3">
-                    <div className="flex items-center gap-1 mb-1">
-                      <Badge variant="secondary" className="bg-green-100 text-green-700 text-xs px-1.5 py-0">
-                        <Zap className="w-2.5 h-2.5" />
+                    <div className="flex items-center gap-1 mb-1 flex-wrap">
+                      <Badge variant="secondary" className={`text-xs px-1.5 py-0 border ${getCampaignTypeBadgeStyle(campaign.campaign_type)}`}>
+                        {getCampaignTypeLabel(campaign.campaign_type)}
                       </Badge>
                       <span className="text-xs text-purple-600 font-medium truncate">{campaign.brand}</span>
                     </div>
@@ -674,23 +723,30 @@ const HomePageUS = () => {
         <Dialog open={detailModal} onOpenChange={setDetailModal}>
           <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
-              <DialogTitle className="text-2xl">{selectedCampaign.title}</DialogTitle>
+              <DialogTitle className="text-2xl">{selectedCampaign.title_en || selectedCampaign.title}</DialogTitle>
               <DialogDescription className="text-purple-600 font-medium">
-                {selectedCampaign.brand}
+                {selectedCampaign.brand_en || selectedCampaign.brand}
               </DialogDescription>
             </DialogHeader>
 
             <div className="space-y-6">
               {selectedCampaign.image_url && (
                 <div className="w-full h-48 overflow-hidden rounded-lg bg-gray-100">
-                  <img src={selectedCampaign.image_url} alt={selectedCampaign.title} className="w-full h-full object-cover" />
+                  <img src={selectedCampaign.image_url} alt={selectedCampaign.title_en || selectedCampaign.title} className="w-full h-full object-cover" />
                 </div>
               )}
 
+              {/* Campaign Type Badge */}
+              <div className="flex items-center gap-2">
+                <Badge variant="secondary" className={`text-sm px-3 py-1 border ${getCampaignTypeBadgeStyle(selectedCampaign.campaign_type)}`}>
+                  {getCampaignTypeLabel(selectedCampaign.campaign_type)}
+                </Badge>
+              </div>
+
               <div className="grid grid-cols-2 gap-4">
                 <div className="bg-purple-50 p-4 rounded-lg">
-                  <div className="text-sm text-gray-600 mb-1">Reward</div>
-                  <div className="text-2xl font-bold text-purple-700">{formatCurrency(selectedCampaign.reward_amount)}</div>
+                  <div className="text-sm text-gray-600 mb-1">Creator Reward</div>
+                  <div className="text-2xl font-bold text-purple-700">{formatCurrency(calculateCreatorReward(selectedCampaign))}</div>
                 </div>
                 <div className="bg-blue-50 p-4 rounded-lg">
                   <div className="text-sm text-gray-600 mb-1">Spots Available</div>
@@ -703,16 +759,16 @@ const HomePageUS = () => {
                   <Target className="h-5 w-5 mr-2 text-purple-600" />
                   Campaign Description
                 </h3>
-                <p className="text-gray-700 whitespace-pre-wrap">{selectedCampaign.description}</p>
+                <p className="text-gray-700 whitespace-pre-wrap">{selectedCampaign.description_en || selectedCampaign.description}</p>
               </div>
 
-              {selectedCampaign.requirements && (
+              {(selectedCampaign.requirements_en || selectedCampaign.requirements) && (
                 <div>
                   <h3 className="font-semibold mb-2 flex items-center">
                     <CheckCircle className="h-5 w-5 mr-2 text-green-600" />
                     Requirements
                   </h3>
-                  <p className="text-gray-700 whitespace-pre-wrap">{selectedCampaign.requirements}</p>
+                  <p className="text-gray-700 whitespace-pre-wrap">{selectedCampaign.requirements_en || selectedCampaign.requirements}</p>
                 </div>
               )}
 
@@ -722,9 +778,68 @@ const HomePageUS = () => {
                 ))}
               </div>
 
-              <div className="flex items-center text-sm text-gray-600">
-                <Calendar className="h-4 w-4 mr-2" />
-                Application Deadline: {formatDate(selectedCampaign.application_deadline || selectedCampaign.deadline || selectedCampaign.end_date)}
+              {/* Deadlines Section */}
+              <div className="bg-gray-50 p-4 rounded-lg space-y-2">
+                <h3 className="font-semibold text-gray-800 flex items-center mb-3">
+                  <Calendar className="h-5 w-5 mr-2 text-purple-600" />
+                  Important Deadlines
+                </h3>
+
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-gray-600">Application Deadline:</span>
+                  <span className="font-medium">{formatDate(selectedCampaign.application_deadline || selectedCampaign.deadline || selectedCampaign.end_date)}</span>
+                </div>
+
+                {/* Regular Campaign Deadlines */}
+                {(selectedCampaign.campaign_type === 'regular' || !selectedCampaign.campaign_type) && (
+                  <>
+                    {selectedCampaign.video_deadline && (
+                      <div className="flex items-center justify-between text-sm">
+                        <span className="text-gray-600">Video Submission:</span>
+                        <span className="font-medium">{formatDate(selectedCampaign.video_deadline)}</span>
+                      </div>
+                    )}
+                    {selectedCampaign.sns_deadline && (
+                      <div className="flex items-center justify-between text-sm">
+                        <span className="text-gray-600">SNS Upload:</span>
+                        <span className="font-medium">{formatDate(selectedCampaign.sns_deadline)}</span>
+                      </div>
+                    )}
+                  </>
+                )}
+
+                {/* 4-Week Challenge Deadlines */}
+                {selectedCampaign.campaign_type === '4week_challenge' && (
+                  <div className="mt-3 pt-3 border-t border-gray-200">
+                    <p className="text-xs text-gray-500 mb-2">Weekly Deadlines:</p>
+                    <div className="grid grid-cols-2 gap-2 text-xs">
+                      {selectedCampaign.week1_deadline && (
+                        <div className="bg-white p-2 rounded border">
+                          <span className="font-medium text-orange-600">Week 1:</span>
+                          <span className="ml-1">{formatDate(selectedCampaign.week1_deadline)}</span>
+                        </div>
+                      )}
+                      {selectedCampaign.week2_deadline && (
+                        <div className="bg-white p-2 rounded border">
+                          <span className="font-medium text-orange-600">Week 2:</span>
+                          <span className="ml-1">{formatDate(selectedCampaign.week2_deadline)}</span>
+                        </div>
+                      )}
+                      {selectedCampaign.week3_deadline && (
+                        <div className="bg-white p-2 rounded border">
+                          <span className="font-medium text-orange-600">Week 3:</span>
+                          <span className="ml-1">{formatDate(selectedCampaign.week3_deadline)}</span>
+                        </div>
+                      )}
+                      {selectedCampaign.week4_deadline && (
+                        <div className="bg-white p-2 rounded border">
+                          <span className="font-medium text-orange-600">Week 4:</span>
+                          <span className="ml-1">{formatDate(selectedCampaign.week4_deadline)}</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
               </div>
 
               <Button

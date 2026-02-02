@@ -206,12 +206,59 @@ const CampaignApplicationUpdated = () => {
     if (!dateString) return ''
     return new Date(dateString).toLocaleDateString('en-US', {
       month: 'short',
-      day: 'numeric'
+      day: 'numeric',
+      year: 'numeric'
     })
   }
 
   const formatCurrency = (amount) => {
     return `$${(amount || 0).toLocaleString()}`
+  }
+
+  // Calculate creator reward based on package_type and campaign_type
+  const calculateCreatorReward = (campaign) => {
+    if (campaign?.reward_amount) {
+      return campaign.reward_amount
+    }
+
+    const rewardMap = {
+      'junior_regular': 130,
+      'junior_4week_challenge': 265,
+      'intermediate_regular': 175,
+      'intermediate_4week_challenge': 310,
+      'senior_regular': 220,
+      'senior_4week_challenge': 355,
+      'premium_regular': 265,
+      'premium_4week_challenge': 400
+    }
+
+    const packageType = campaign?.package_type || 'junior'
+    const campaignType = campaign?.campaign_type || 'regular'
+    const key = `${packageType}_${campaignType}`
+
+    return rewardMap[key] || 130
+  }
+
+  // Get campaign type display label
+  const getCampaignTypeLabel = (campaignType) => {
+    switch (campaignType) {
+      case '4week_challenge':
+        return '4-Week Challenge'
+      case 'regular':
+      default:
+        return 'Standard'
+    }
+  }
+
+  // Get campaign type badge style
+  const getCampaignTypeBadgeStyle = (campaignType) => {
+    switch (campaignType) {
+      case '4week_challenge':
+        return 'bg-orange-100 text-orange-700'
+      case 'regular':
+      default:
+        return 'bg-blue-100 text-blue-700'
+    }
   }
 
   const getActivePlatforms = (targetPlatforms) => {
@@ -330,7 +377,7 @@ const CampaignApplicationUpdated = () => {
               {campaign.image_url ? (
                 <img
                   src={campaign.image_url}
-                  alt={campaign.title}
+                  alt={campaign.title_en || campaign.title}
                   className="w-full h-full object-cover"
                 />
               ) : (
@@ -340,30 +387,84 @@ const CampaignApplicationUpdated = () => {
               )}
               <div className="absolute bottom-3 left-3">
                 <Badge className="bg-white text-purple-700 font-bold shadow-md">
-                  {formatCurrency(campaign.reward_amount)}
+                  {formatCurrency(calculateCreatorReward(campaign))}
+                </Badge>
+              </div>
+              {/* Campaign Type Badge */}
+              <div className="absolute top-3 left-3">
+                <Badge className={`${getCampaignTypeBadgeStyle(campaign.campaign_type)} font-medium shadow-md`}>
+                  {getCampaignTypeLabel(campaign.campaign_type)}
                 </Badge>
               </div>
             </div>
 
             <CardContent className="pt-4 pb-5">
               <div className="flex items-center gap-2 mb-2">
-                <span className="text-sm text-purple-600 font-medium">{campaign.brand}</span>
+                <span className="text-sm text-purple-600 font-medium">{campaign.brand_en || campaign.brand}</span>
                 <span className="text-gray-300">•</span>
                 <span className="text-xs text-gray-500">{campaign.max_participants} spots</span>
               </div>
               <h2 className="font-semibold text-gray-800 text-lg leading-snug mb-3">
-                {campaign.title}
+                {campaign.title_en || campaign.title}
               </h2>
-              <div className="flex items-center justify-between text-sm">
+
+              {/* Description Preview */}
+              {(campaign.description_en || campaign.description) && (
+                <p className="text-sm text-gray-600 mb-3 line-clamp-2">
+                  {campaign.description_en || campaign.description}
+                </p>
+              )}
+
+              <div className="flex items-center justify-between text-sm mb-3">
                 <div className="flex gap-1">
                   {getActivePlatforms(campaign.target_platforms).map(p => (
                     <Badge key={p} variant="outline" className="text-xs">{p}</Badge>
                   ))}
                 </div>
-                <span className="text-gray-500 flex items-center gap-1">
-                  <Calendar className="h-3.5 w-3.5" />
-                  Due {formatDate(campaign.application_deadline || campaign.deadline)}
-                </span>
+              </div>
+
+              {/* Deadlines Section */}
+              <div className="bg-gray-50 rounded-lg p-3 space-y-2">
+                <div className="flex items-center justify-between text-xs">
+                  <span className="text-gray-600">Application Due:</span>
+                  <span className="font-medium">{formatDate(campaign.application_deadline || campaign.deadline)}</span>
+                </div>
+
+                {/* Regular Campaign Deadlines */}
+                {(campaign.campaign_type === 'regular' || !campaign.campaign_type) && (
+                  <>
+                    {campaign.video_deadline && (
+                      <div className="flex items-center justify-between text-xs">
+                        <span className="text-gray-600">Video Submission:</span>
+                        <span className="font-medium">{formatDate(campaign.video_deadline)}</span>
+                      </div>
+                    )}
+                    {campaign.sns_deadline && (
+                      <div className="flex items-center justify-between text-xs">
+                        <span className="text-gray-600">SNS Upload:</span>
+                        <span className="font-medium">{formatDate(campaign.sns_deadline)}</span>
+                      </div>
+                    )}
+                  </>
+                )}
+
+                {/* 4-Week Challenge Deadlines */}
+                {campaign.campaign_type === '4week_challenge' && (
+                  <div className="pt-2 border-t border-gray-200">
+                    <p className="text-xs text-gray-500 mb-2 font-medium">Weekly Deadlines:</p>
+                    <div className="grid grid-cols-2 gap-1.5">
+                      {[1, 2, 3, 4].map(week => {
+                        const deadline = campaign[`week${week}_deadline`]
+                        return deadline ? (
+                          <div key={week} className="text-xs bg-white p-1.5 rounded border flex justify-between">
+                            <span className="text-orange-600 font-medium">W{week}:</span>
+                            <span>{formatDate(deadline)}</span>
+                          </div>
+                        ) : null
+                      })}
+                    </div>
+                  </div>
+                )}
               </div>
             </CardContent>
           </Card>
