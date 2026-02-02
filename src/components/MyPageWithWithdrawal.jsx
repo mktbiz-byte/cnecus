@@ -9,6 +9,15 @@ import {
   Camera, Loader2
 } from 'lucide-react'
 
+// Import new mypage components
+import {
+  CampaignProgressCard,
+  ShootingGuideModal,
+  RevisionRequestsModal,
+  VideoUploadModal,
+  SNSSubmitModal
+} from './mypage'
+
 // PayPal 정보 추출 헬퍼 함수
 const extractPayPalFromDescription = (description) => {
   if (!description) return ''
@@ -83,6 +92,12 @@ const MyPageWithWithdrawal = () => {
   const [videoSubmissionUrl, setVideoSubmissionUrl] = useState('')
   const [uploadingVideo, setUploadingVideo] = useState(false)
   const [selectedWeekNumber, setSelectedWeekNumber] = useState(1) // For 4-week challenge
+
+  // New mypage modal states
+  const [showShootingGuideModal, setShowShootingGuideModal] = useState(false)
+  const [showRevisionModal, setShowRevisionModal] = useState(false)
+  const [showSNSSubmitModal, setShowSNSSubmitModal] = useState(false)
+  const [selectedCampaign, setSelectedCampaign] = useState(null)
 
   // 프로필 편집 관련 상태
   const [isEditing, setIsEditing] = useState(false)
@@ -967,6 +982,114 @@ const MyPageWithWithdrawal = () => {
     }
   }
 
+  // New modal handlers for campaign progress
+  const handleViewGuide = (application, campaign) => {
+    setSelectedApplication(application)
+    setSelectedCampaign(campaign)
+    setShowShootingGuideModal(true)
+  }
+
+  const handleUploadVideo = (application, campaign) => {
+    setSelectedApplication(application)
+    setSelectedCampaign(campaign)
+    setShowVideoUploadModal(true)
+  }
+
+  const handleViewRevisions = (application) => {
+    setSelectedApplication(application)
+    setShowRevisionModal(true)
+  }
+
+  const handleSubmitSNS = (application, campaign) => {
+    setSelectedApplication(application)
+    setSelectedCampaign(campaign)
+    setShowSNSSubmitModal(true)
+  }
+
+  // Handle video submission from new modal
+  const handleNewVideoSubmit = async ({ applicationId, videoUrl, cleanVideoUrl, weekNumber, is4Week }) => {
+    try {
+      let updateData = {
+        updated_at: new Date().toISOString()
+      }
+
+      if (is4Week && weekNumber) {
+        updateData[`week${weekNumber}_video_url`] = videoUrl
+        updateData[`week${weekNumber}_video_submitted_at`] = new Date().toISOString()
+      } else {
+        updateData.video_url = videoUrl
+        updateData.video_submission_url = videoUrl
+        updateData.video_submitted_at = new Date().toISOString()
+        updateData.status = 'video_submitted'
+      }
+
+      if (cleanVideoUrl) {
+        updateData.clean_video_url = cleanVideoUrl
+      }
+
+      const { error: updateError } = await supabase
+        .from('applications')
+        .update(updateData)
+        .eq('id', applicationId)
+
+      if (updateError) throw updateError
+
+      const message = is4Week
+        ? `Week ${weekNumber} video submitted successfully!`
+        : 'Video submitted successfully!'
+
+      setSuccess(message)
+      loadUserData()
+      setTimeout(() => setSuccess(''), 3000)
+    } catch (error) {
+      console.error('Video submit error:', error)
+      throw error
+    }
+  }
+
+  // Handle SNS submission from new modal
+  const handleNewSNSSubmit = async ({ applicationId, snsUrl, partnershipCode, cleanVideoUrl, weekNumber, is4Week }) => {
+    try {
+      let updateData = {
+        updated_at: new Date().toISOString()
+      }
+
+      if (is4Week && weekNumber) {
+        updateData[`week${weekNumber}_sns_url`] = snsUrl
+        updateData[`week${weekNumber}_sns_submitted_at`] = new Date().toISOString()
+      } else {
+        updateData.sns_upload_url = snsUrl
+        updateData.status = 'sns_uploaded'
+      }
+
+      if (partnershipCode) {
+        updateData.partnership_code = partnershipCode
+      }
+
+      if (cleanVideoUrl) {
+        updateData.clean_video_url = cleanVideoUrl
+      }
+
+      const { error: updateError } = await supabase
+        .from('applications')
+        .update(updateData)
+        .eq('id', applicationId)
+
+      if (updateError) throw updateError
+
+      const message = is4Week
+        ? `Week ${weekNumber} SNS link submitted successfully!`
+        : 'SNS link submitted successfully!'
+
+      setSuccess(message)
+      loadUserData()
+      setTimeout(() => setSuccess(''), 3000)
+    } catch (error) {
+      console.error('SNS submit error:', error)
+      throw error
+    }
+  }
+
   const handleWithdrawalSubmit = async () => {
     if (!withdrawalReason) {
       setError(t.messages.reasonRequired)
@@ -1548,9 +1671,9 @@ const MyPageWithWithdrawal = () => {
           {activeTab === 'applications' && (
             <div className="p-6">
               <h2 className="text-xl font-semibold text-gray-900 mb-6">{t.campaignApplications}</h2>
-              
+
               {/* 신청 통계 */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
                 <div className="bg-blue-50 rounded-lg p-4">
                   <div className="flex items-center">
                     <Award className="h-8 w-8 text-blue-600" />
@@ -1560,7 +1683,19 @@ const MyPageWithWithdrawal = () => {
                     </div>
                   </div>
                 </div>
-                
+
+                <div className="bg-purple-50 rounded-lg p-4">
+                  <div className="flex items-center">
+                    <Calendar className="h-8 w-8 text-purple-600" />
+                    <div className="ml-4">
+                      <p className="text-sm font-medium text-gray-500">In Progress</p>
+                      <p className="text-2xl font-bold text-gray-900">
+                        {applications.filter(a => ['selected', 'filming', 'video_submitted', 'revision_requested', 'approved'].includes(a.status)).length}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
                 <div className="bg-green-50 rounded-lg p-4">
                   <div className="flex items-center">
                     <Shield className="h-8 w-8 text-green-600" />
@@ -1572,19 +1707,54 @@ const MyPageWithWithdrawal = () => {
                     </div>
                   </div>
                 </div>
-                
-                <div className="bg-purple-50 rounded-lg p-4">
+
+                <div className="bg-emerald-50 rounded-lg p-4">
                   <div className="flex items-center">
-                    <Download className="h-8 w-8 text-purple-600" />
+                    <Download className="h-8 w-8 text-emerald-600" />
                     <div className="ml-4">
                       <p className="text-sm font-medium text-gray-500">{t.completedCampaigns}</p>
                       <p className="text-2xl font-bold text-gray-900">
-                        {applications.filter(a => a.submission_status === 'submitted').length}
+                        {applications.filter(a => ['sns_uploaded', 'completed'].includes(a.status)).length}
                       </p>
                     </div>
                   </div>
                 </div>
               </div>
+
+              {/* Active Campaigns Section - Using New CampaignProgressCard */}
+              {applications.filter(a => ['selected', 'filming', 'video_submitted', 'revision_requested', 'approved', 'sns_uploaded', 'completed'].includes(a.status)).length > 0 && (
+                <div className="mb-8">
+                  <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+                    🎬 Active Campaigns
+                    <span className="ml-2 text-sm font-normal text-gray-500">
+                      ({applications.filter(a => ['selected', 'filming', 'video_submitted', 'revision_requested', 'approved', 'sns_uploaded', 'completed'].includes(a.status)).length})
+                    </span>
+                  </h3>
+                  <div className="space-y-4">
+                    {applications
+                      .filter(a => ['selected', 'filming', 'video_submitted', 'revision_requested', 'approved', 'sns_uploaded', 'completed'].includes(a.status))
+                      .map((application) => (
+                        <CampaignProgressCard
+                          key={application.id}
+                          application={application}
+                          campaign={application.campaigns}
+                          onViewGuide={handleViewGuide}
+                          onUploadVideo={handleUploadVideo}
+                          onSubmitSNS={handleSubmitSNS}
+                          onViewRevisions={handleViewRevisions}
+                        />
+                      ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Pending Applications Section */}
+              <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+                ⏳ Pending Applications
+                <span className="ml-2 text-sm font-normal text-gray-500">
+                  ({applications.filter(a => a.status === 'pending').length})
+                </span>
+              </h3>
               
               {/* Campaign Applications List - Card Format */}
               <div className="space-y-4">
@@ -2511,6 +2681,45 @@ const MyPageWithWithdrawal = () => {
             </div>
           </div>
         )}
+
+        {/* New Shooting Guide Modal */}
+        <ShootingGuideModal
+          isOpen={showShootingGuideModal}
+          onClose={() => setShowShootingGuideModal(false)}
+          campaign={selectedCampaign}
+        />
+
+        {/* New Revision Requests Modal */}
+        <RevisionRequestsModal
+          isOpen={showRevisionModal}
+          onClose={() => setShowRevisionModal(false)}
+          application={selectedApplication}
+          onReupload={() => {
+            setShowRevisionModal(false)
+            handleUploadVideo(selectedApplication, selectedCampaign)
+          }}
+        />
+
+        {/* New Video Upload Modal (from mypage components) */}
+        <VideoUploadModal
+          isOpen={showVideoUploadModal && selectedCampaign}
+          onClose={() => {
+            setShowVideoUploadModal(false)
+            setSelectedCampaign(null)
+          }}
+          application={selectedApplication}
+          campaign={selectedCampaign}
+          onSubmit={handleNewVideoSubmit}
+        />
+
+        {/* New SNS Submit Modal */}
+        <SNSSubmitModal
+          isOpen={showSNSSubmitModal}
+          onClose={() => setShowSNSSubmitModal(false)}
+          application={selectedApplication}
+          campaign={selectedCampaign}
+          onSubmit={handleNewSNSSubmit}
+        />
       </div>
     </div>
   )
