@@ -104,6 +104,55 @@ const HomePageUS = () => {
     }).format(amount || 0)
   }
 
+  // Calculate creator reward based on package_type and campaign_type
+  // Creator receives 60% of package price, rounded to nearest $5
+  const calculateCreatorReward = (campaign) => {
+    // If reward_amount is set, use it directly
+    if (campaign.reward_amount) {
+      return campaign.reward_amount
+    }
+
+    // Calculate based on package_type and campaign_type
+    const rewardMap = {
+      'junior_regular': 130,
+      'junior_4week_challenge': 265,
+      'intermediate_regular': 175,
+      'intermediate_4week_challenge': 310,
+      'senior_regular': 220,
+      'senior_4week_challenge': 355,
+      'premium_regular': 265,
+      'premium_4week_challenge': 400
+    }
+
+    const packageType = campaign.package_type || 'junior'
+    const campaignType = campaign.campaign_type || 'regular'
+    const key = `${packageType}_${campaignType}`
+
+    return rewardMap[key] || 130 // Default to junior_regular
+  }
+
+  // Get campaign type display label
+  const getCampaignTypeLabel = (campaignType) => {
+    switch (campaignType) {
+      case '4week_challenge':
+        return '4-Week Challenge'
+      case 'regular':
+      default:
+        return 'Standard'
+    }
+  }
+
+  // Get campaign type badge style
+  const getCampaignTypeBadgeStyle = (campaignType) => {
+    switch (campaignType) {
+      case '4week_challenge':
+        return 'bg-orange-100 text-orange-700 border-orange-200'
+      case 'regular':
+      default:
+        return 'bg-blue-100 text-blue-700 border-blue-200'
+    }
+  }
+
   const formatDate = (date) => {
     return new Date(date).toLocaleDateString('en-US', {
       year: 'numeric',
@@ -400,19 +449,19 @@ const HomePageUS = () => {
                       {getUrgencyBadge(campaign.application_deadline || campaign.deadline || campaign.end_date)}
                     </div>
 
-                    {/* Reward Badge - Top Right */}
+                    {/* Creator Reward Badge - Top Right */}
                     <div className="absolute top-2 right-2">
                       <Badge className="bg-purple-600 text-white text-xs font-bold">
-                        {formatCurrency(campaign.reward_amount)}
+                        {formatCurrency(calculateCreatorReward(campaign))}
                       </Badge>
                     </div>
                   </div>
 
                   {/* Compact Content */}
                   <div className="p-3">
-                    <div className="flex items-center gap-1 mb-1">
-                      <Badge variant="secondary" className="bg-green-100 text-green-700 text-xs px-1.5 py-0">
-                        <Zap className="w-2.5 h-2.5" />
+                    <div className="flex items-center gap-1 mb-1 flex-wrap">
+                      <Badge variant="secondary" className={`text-xs px-1.5 py-0 border ${getCampaignTypeBadgeStyle(campaign.campaign_type)}`}>
+                        {getCampaignTypeLabel(campaign.campaign_type)}
                       </Badge>
                       <span className="text-xs text-purple-600 font-medium truncate">{campaign.brand}</span>
                     </div>
@@ -674,23 +723,41 @@ const HomePageUS = () => {
         <Dialog open={detailModal} onOpenChange={setDetailModal}>
           <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
-              <DialogTitle className="text-2xl">{selectedCampaign.title}</DialogTitle>
+              <DialogTitle className="text-2xl">{selectedCampaign.title_en || selectedCampaign.title}</DialogTitle>
               <DialogDescription className="text-purple-600 font-medium">
-                {selectedCampaign.brand}
+                {selectedCampaign.brand_en || selectedCampaign.brand}
               </DialogDescription>
             </DialogHeader>
 
             <div className="space-y-6">
               {selectedCampaign.image_url && (
                 <div className="w-full h-48 overflow-hidden rounded-lg bg-gray-100">
-                  <img src={selectedCampaign.image_url} alt={selectedCampaign.title} className="w-full h-full object-cover" />
+                  <img src={selectedCampaign.image_url} alt={selectedCampaign.title_en || selectedCampaign.title} className="w-full h-full object-cover" />
                 </div>
               )}
 
+              {/* Campaign Type & Special Requirements Badges */}
+              <div className="flex items-center gap-2 flex-wrap">
+                <Badge variant="secondary" className={`text-sm px-3 py-1 border ${getCampaignTypeBadgeStyle(selectedCampaign.campaign_type)}`}>
+                  {getCampaignTypeLabel(selectedCampaign.campaign_type)}
+                </Badge>
+                {selectedCampaign.requires_ad_code && (
+                  <Badge className="bg-amber-100 text-amber-700 border border-amber-200">
+                    📊 Meta Ad Code Required
+                  </Badge>
+                )}
+                {selectedCampaign.requires_clean_video && (
+                  <Badge className="bg-teal-100 text-teal-700 border border-teal-200">
+                    🎬 Clean Video Required
+                  </Badge>
+                )}
+              </div>
+
+              {/* Reward & Spots */}
               <div className="grid grid-cols-2 gap-4">
                 <div className="bg-purple-50 p-4 rounded-lg">
-                  <div className="text-sm text-gray-600 mb-1">Reward</div>
-                  <div className="text-2xl font-bold text-purple-700">{formatCurrency(selectedCampaign.reward_amount)}</div>
+                  <div className="text-sm text-gray-600 mb-1">Creator Reward</div>
+                  <div className="text-2xl font-bold text-purple-700">{formatCurrency(calculateCreatorReward(selectedCampaign))}</div>
                 </div>
                 <div className="bg-blue-50 p-4 rounded-lg">
                   <div className="text-sm text-gray-600 mb-1">Spots Available</div>
@@ -698,33 +765,254 @@ const HomePageUS = () => {
                 </div>
               </div>
 
+              {/* Campaign Description */}
               <div>
                 <h3 className="font-semibold mb-2 flex items-center">
                   <Target className="h-5 w-5 mr-2 text-purple-600" />
                   Campaign Description
                 </h3>
-                <p className="text-gray-700 whitespace-pre-wrap">{selectedCampaign.description}</p>
+                <p className="text-gray-700 whitespace-pre-wrap">{selectedCampaign.description_en || selectedCampaign.description}</p>
               </div>
 
-              {selectedCampaign.requirements && (
+              {/* Requirements */}
+              {(selectedCampaign.requirements_en || selectedCampaign.requirements) && (
                 <div>
                   <h3 className="font-semibold mb-2 flex items-center">
                     <CheckCircle className="h-5 w-5 mr-2 text-green-600" />
                     Requirements
                   </h3>
-                  <p className="text-gray-700 whitespace-pre-wrap">{selectedCampaign.requirements}</p>
+                  <p className="text-gray-700 whitespace-pre-wrap">{selectedCampaign.requirements_en || selectedCampaign.requirements}</p>
                 </div>
               )}
 
+              {/* Target Platforms */}
               <div className="flex flex-wrap gap-2">
                 {getActivePlatforms(selectedCampaign.target_platforms).map((platform) => (
                   <span key={platform}>{getPlatformBadge(platform)}</span>
                 ))}
               </div>
 
-              <div className="flex items-center text-sm text-gray-600">
-                <Calendar className="h-4 w-4 mr-2" />
-                Application Deadline: {formatDate(selectedCampaign.application_deadline || selectedCampaign.deadline || selectedCampaign.end_date)}
+              {/* Product Information Section */}
+              {(selectedCampaign.brand_name_en || selectedCampaign.product_name_en || selectedCampaign.product_description_en) && (
+                <div className="bg-gradient-to-r from-pink-50 to-purple-50 p-4 rounded-lg border border-pink-100">
+                  <h3 className="font-semibold mb-3 flex items-center text-pink-700">
+                    🎁 Product Information
+                  </h3>
+                  <div className="space-y-2">
+                    {selectedCampaign.brand_name_en && (
+                      <div className="flex items-start">
+                        <span className="text-sm text-gray-500 w-20 flex-shrink-0">Brand:</span>
+                        <span className="text-sm font-medium text-gray-800">{selectedCampaign.brand_name_en}</span>
+                      </div>
+                    )}
+                    {selectedCampaign.product_name_en && (
+                      <div className="flex items-start">
+                        <span className="text-sm text-gray-500 w-20 flex-shrink-0">Product:</span>
+                        <span className="text-sm font-medium text-gray-800">{selectedCampaign.product_name_en}</span>
+                      </div>
+                    )}
+                    {selectedCampaign.product_description_en && (
+                      <div className="mt-2">
+                        <p className="text-sm text-gray-700">{selectedCampaign.product_description_en}</p>
+                      </div>
+                    )}
+                    {selectedCampaign.product_features_en?.length > 0 && (
+                      <div className="mt-3">
+                        <span className="text-sm text-gray-500">Key Features:</span>
+                        <ul className="mt-1 space-y-1">
+                          {selectedCampaign.product_features_en.map((feature, idx) => (
+                            <li key={idx} className="text-sm text-gray-700 flex items-start">
+                              <span className="text-pink-500 mr-2">•</span>
+                              {feature}
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* Video Specifications Section */}
+              {(selectedCampaign.video_duration_en || selectedCampaign.video_tempo_en || selectedCampaign.video_tone_en) && (
+                <div className="bg-blue-50 p-4 rounded-lg border border-blue-100">
+                  <h3 className="font-semibold mb-3 flex items-center text-blue-700">
+                    🎥 Video Specifications
+                  </h3>
+                  <div className="grid grid-cols-3 gap-3">
+                    {selectedCampaign.video_duration_en && (
+                      <div className="bg-white p-3 rounded-lg text-center">
+                        <div className="text-xs text-gray-500 mb-1">Duration</div>
+                        <div className="text-sm font-medium text-gray-800">{selectedCampaign.video_duration_en}</div>
+                      </div>
+                    )}
+                    {selectedCampaign.video_tempo_en && (
+                      <div className="bg-white p-3 rounded-lg text-center">
+                        <div className="text-xs text-gray-500 mb-1">Tempo</div>
+                        <div className="text-sm font-medium text-gray-800">{selectedCampaign.video_tempo_en}</div>
+                      </div>
+                    )}
+                    {selectedCampaign.video_tone_en && (
+                      <div className="bg-white p-3 rounded-lg text-center">
+                        <div className="text-xs text-gray-500 mb-1">Tone</div>
+                        <div className="text-sm font-medium text-gray-800">{selectedCampaign.video_tone_en}</div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* Creator Guide Section */}
+              {(selectedCampaign.required_dialogues_en?.length > 0 ||
+                selectedCampaign.required_scenes_en?.length > 0 ||
+                selectedCampaign.required_hashtags_en?.length > 0 ||
+                selectedCampaign.shooting_scenes_en?.length > 0) && (
+                <div className="bg-amber-50 p-4 rounded-lg border border-amber-200">
+                  <h3 className="font-semibold mb-3 flex items-center text-amber-700">
+                    📋 Creator Guide
+                  </h3>
+                  <div className="space-y-4">
+                    {/* Required Lines/Dialogues */}
+                    {selectedCampaign.required_dialogues_en?.length > 0 && (
+                      <div>
+                        <h4 className="text-sm font-medium text-amber-800 mb-2">💬 Required Lines</h4>
+                        <ul className="space-y-2">
+                          {selectedCampaign.required_dialogues_en.map((line, idx) => (
+                            <li key={idx} className="text-sm bg-white p-2 rounded border border-amber-100 italic text-gray-700">
+                              "{line}"
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+
+                    {/* Required Scenes */}
+                    {selectedCampaign.required_scenes_en?.length > 0 && (
+                      <div>
+                        <h4 className="text-sm font-medium text-amber-800 mb-2">🎬 Required Scenes</h4>
+                        <ul className="space-y-1">
+                          {selectedCampaign.required_scenes_en.map((scene, idx) => (
+                            <li key={idx} className="text-sm text-gray-700 flex items-start">
+                              <span className="text-amber-500 mr-2">✓</span>
+                              {scene}
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+
+                    {/* Shooting Scenes */}
+                    {selectedCampaign.shooting_scenes_en?.length > 0 && (
+                      <div>
+                        <h4 className="text-sm font-medium text-amber-800 mb-2">📸 Shooting Scenes</h4>
+                        <ul className="space-y-1">
+                          {selectedCampaign.shooting_scenes_en.map((scene, idx) => (
+                            <li key={idx} className="text-sm text-gray-700 flex items-start">
+                              <span className="text-amber-500 mr-2">{idx + 1}.</span>
+                              {scene}
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+
+                    {/* Required Hashtags */}
+                    {selectedCampaign.required_hashtags_en?.length > 0 && (
+                      <div>
+                        <h4 className="text-sm font-medium text-amber-800 mb-2"># Required Hashtags</h4>
+                        <div className="flex flex-wrap gap-2">
+                          {selectedCampaign.required_hashtags_en.map((tag, idx) => (
+                            <span key={idx} className="text-sm bg-white px-2 py-1 rounded-full border border-amber-200 text-amber-700">
+                              #{tag}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* Additional Details Section */}
+              {(selectedCampaign.additional_details_en || selectedCampaign.additional_shooting_requests_en) && (
+                <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
+                  <h3 className="font-semibold mb-3 flex items-center text-gray-700">
+                    📝 Additional Notes
+                  </h3>
+                  {selectedCampaign.additional_details_en && (
+                    <p className="text-sm text-gray-700 mb-2">{selectedCampaign.additional_details_en}</p>
+                  )}
+                  {selectedCampaign.additional_shooting_requests_en && (
+                    <div className="mt-2 pt-2 border-t border-gray-200">
+                      <span className="text-xs text-gray-500">Additional Shooting Requests:</span>
+                      <p className="text-sm text-gray-700 mt-1">{selectedCampaign.additional_shooting_requests_en}</p>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Deadlines Section */}
+              <div className="bg-gray-50 p-4 rounded-lg space-y-2">
+                <h3 className="font-semibold text-gray-800 flex items-center mb-3">
+                  <Calendar className="h-5 w-5 mr-2 text-purple-600" />
+                  Important Deadlines
+                </h3>
+
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-gray-600">Application Deadline:</span>
+                  <span className="font-medium">{formatDate(selectedCampaign.application_deadline || selectedCampaign.deadline || selectedCampaign.end_date)}</span>
+                </div>
+
+                {/* Product Shipping Date */}
+                {selectedCampaign.product_shipping_date && (
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-gray-600">📦 Product Shipping:</span>
+                    <span className="font-medium">{formatDate(selectedCampaign.product_shipping_date)}</span>
+                  </div>
+                )}
+
+                {/* Regular Campaign Deadlines */}
+                {(selectedCampaign.campaign_type === 'regular' || !selectedCampaign.campaign_type) && (
+                  <>
+                    {selectedCampaign.video_deadline && (
+                      <div className="flex items-center justify-between text-sm">
+                        <span className="text-gray-600">Video Submission:</span>
+                        <span className="font-medium">{formatDate(selectedCampaign.video_deadline)}</span>
+                      </div>
+                    )}
+                    {selectedCampaign.sns_deadline && (
+                      <div className="flex items-center justify-between text-sm">
+                        <span className="text-gray-600">SNS Upload:</span>
+                        <span className="font-medium">{formatDate(selectedCampaign.sns_deadline)}</span>
+                      </div>
+                    )}
+                  </>
+                )}
+
+                {/* 4-Week Challenge Deadlines */}
+                {selectedCampaign.campaign_type === '4week_challenge' && (
+                  <div className="mt-3 pt-3 border-t border-gray-200">
+                    <p className="text-xs text-gray-500 mb-2 font-medium">Weekly Deadlines:</p>
+                    <div className="grid grid-cols-2 gap-2 text-xs">
+                      {[1, 2, 3, 4].map(week => {
+                        const deadline = selectedCampaign[`week${week}_deadline`]
+                        const snsDeadline = selectedCampaign[`week${week}_sns_deadline`]
+                        if (!deadline && !snsDeadline) return null
+                        return (
+                          <div key={week} className="bg-white p-2 rounded border">
+                            <div className="font-medium text-orange-600 mb-1">Week {week}</div>
+                            {deadline && (
+                              <div className="text-gray-600">Video: {formatDate(deadline)}</div>
+                            )}
+                            {snsDeadline && (
+                              <div className="text-gray-600">SNS: {formatDate(snsDeadline)}</div>
+                            )}
+                          </div>
+                        )
+                      })}
+                    </div>
+                  </div>
+                )}
               </div>
 
               <Button
