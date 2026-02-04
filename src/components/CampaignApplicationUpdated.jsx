@@ -452,7 +452,7 @@ const CampaignApplicationUpdated = () => {
                 {campaign.campaign_type === '4week_challenge' && (
                   <div className="pt-2 border-t border-gray-200">
                     <p className="text-xs text-gray-500 mb-2 font-medium">Weekly Deadlines:</p>
-                    <div className="grid grid-cols-2 gap-1.5">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
                       {[1, 2, 3, 4].map(week => {
                         const deadline = campaign[`week${week}_deadline`]
                         return deadline ? (
@@ -537,7 +537,7 @@ const CampaignApplicationUpdated = () => {
                   <h3 className="font-semibold mb-3 flex items-center text-blue-700 text-sm">
                     🎥 Video Specifications
                   </h3>
-                  <div className="grid grid-cols-3 gap-2">
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
                     {campaign.video_duration_en && (
                       <div className="bg-blue-50 p-2 rounded text-center">
                         <div className="text-xs text-gray-500">Duration</div>
@@ -678,7 +678,7 @@ const CampaignApplicationUpdated = () => {
           <Card>
             <CardContent className="pt-5 pb-4">
               <h3 className="font-medium text-gray-800 mb-4">About You</h3>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <Label className="text-sm text-gray-600">Age Range *</Label>
                   <Select
@@ -730,7 +730,7 @@ const CampaignApplicationUpdated = () => {
                   <Instagram className="h-4 w-4" />
                   <span className="text-sm font-medium">Instagram</span>
                 </div>
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <Input
                     placeholder="@username or URL"
                     value={formData.instagram_url}
@@ -751,7 +751,7 @@ const CampaignApplicationUpdated = () => {
                   <Youtube className="h-4 w-4" />
                   <span className="text-sm font-medium">YouTube</span>
                 </div>
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <Input
                     placeholder="Channel URL"
                     value={formData.youtube_url}
@@ -772,7 +772,7 @@ const CampaignApplicationUpdated = () => {
                   <Hash className="h-4 w-4" />
                   <span className="text-sm font-medium">TikTok</span>
                 </div>
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <Input
                     placeholder="@username or URL"
                     value={formData.tiktok_url}

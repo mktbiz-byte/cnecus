@@ -1264,9 +1264,9 @@ const MyPageWithWithdrawal = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* 헤더 */}
         <div className="mb-8">
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div>
-              <h1 className="text-3xl font-bold text-gray-900">{t.title}</h1>
+              <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900">{t.title}</h1>
               <p className="mt-2 text-gray-600">
 {`${profile?.name || user?.email}'s Account Information`}
               </p>
@@ -1318,7 +1318,7 @@ const MyPageWithWithdrawal = () => {
         {/* 탭 네비게이션 */}
         <div className="bg-white rounded-lg shadow mb-6">
           <div className="border-b border-gray-200">
-            <nav className="-mb-px flex space-x-8 px-6">
+            <nav className="-mb-px flex space-x-4 sm:space-x-8 px-4 sm:px-6 overflow-x-auto">
               {[
                 { id: 'profile', label: t.profile, icon: User },
                 { id: 'applications', label: t.applications, icon: Award },
@@ -2364,7 +2364,7 @@ const MyPageWithWithdrawal = () => {
         {/* 출금 신청 모달 */}
         {showWithdrawModal && (
           <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-[9999]">
-            <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+            <div className="relative top-20 mx-4 sm:mx-auto p-5 border w-auto max-w-sm shadow-lg rounded-md bg-white">
               <div className="mt-3">
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="text-lg font-medium text-gray-900">{t.withdrawRequestTitle}</h3>
@@ -2484,7 +2484,7 @@ const MyPageWithWithdrawal = () => {
         {/* 회원 탈퇴 모달 */}
         {showWithdrawalModal && (
           <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
-            <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+            <div className="relative top-20 mx-4 sm:mx-auto p-5 border w-auto max-w-sm shadow-lg rounded-md bg-white">
               <div className="mt-3">
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="text-lg font-medium text-gray-900">{t.accountDeletion}</h3>
@@ -2565,7 +2565,7 @@ const MyPageWithWithdrawal = () => {
         {/* Video Upload Modal - Supabase Storage */}
         {showVideoUploadModal && (
           <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
-            <div className="relative top-10 mx-auto p-5 border w-full max-w-md shadow-lg rounded-xl bg-white">
+            <div className="relative top-10 mx-4 sm:mx-auto p-5 border w-auto max-w-md shadow-lg rounded-xl bg-white">
               <div className="flex items-center justify-between mb-4">
                 <div>
                   <h3 className="text-lg font-bold text-gray-900">
@@ -2602,7 +2602,7 @@ const MyPageWithWithdrawal = () => {
                     <label className="block text-sm font-medium text-gray-700 mb-2">
                       Select Week <span className="text-red-500">*</span>
                     </label>
-                    <div className="grid grid-cols-4 gap-2">
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                       {[1, 2, 3, 4].map(week => {
                         const existingVideo = selectedApplication?.[`week${week}_video_url`]
                         const deadline = selectedApplication?.custom_deadlines?.[`week${week}_deadline`] ||
@@ -2764,7 +2764,7 @@ const MyPageWithWithdrawal = () => {
         {/* SNS 업로드 및 포인트 신청 모달 */}
         {showSnsUploadModal && (
           <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
-            <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+            <div className="relative top-20 mx-4 sm:mx-auto p-5 border w-auto max-w-sm shadow-lg rounded-md bg-white">
               <div className="mt-3">
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="text-lg font-medium text-gray-900">{t.pointRequestTitle}</h3>

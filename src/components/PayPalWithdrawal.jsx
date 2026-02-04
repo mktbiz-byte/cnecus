@@ -321,7 +321,7 @@ const PayPalWithdrawal = () => {
                 <h3 className="text-lg font-semibold text-gray-900 mb-2">{t.currentPoints}</h3>
                 <div className="flex items-center">
                   <DollarSign className="h-8 w-8 text-blue-600 mr-2" />
-                  <span className="text-3xl font-bold text-blue-600">
+                  <span className="text-2xl sm:text-3xl font-bold text-blue-600">
                     {userPoints.toLocaleString()}P
                   </span>
                 </div>

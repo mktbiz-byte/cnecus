@@ -205,7 +205,7 @@ const CreatorContactForm = () => {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
             </svg>
           </div>
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Congratulations!</h1>
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">Congratulations!</h1>
           <p className="text-gray-600">You have been selected for the campaign!</p>
         </div>
 

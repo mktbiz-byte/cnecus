@@ -362,7 +362,7 @@ const ShootingGuideModal = ({ isOpen, onClose, campaign, application }) => {
                 </h3>
               </div>
               <div className="p-4">
-                <div className="grid grid-cols-3 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 sm:gap-3">
                   {campaign.video_duration_en && (
                     <div className="bg-indigo-50 p-4 rounded-xl text-center border border-indigo-200">
                       <Clock className="w-6 h-6 text-indigo-500 mx-auto mb-2" />

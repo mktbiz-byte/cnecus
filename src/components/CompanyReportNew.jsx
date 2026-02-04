@@ -266,7 +266,7 @@ const CompanyReportNew = () => {
           <div className="flex items-center space-x-4">
             <Building className="h-8 w-8 text-blue-600" />
             <div>
-              <h1 className="text-3xl font-bold text-gray-800">
+              <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-800">
                 {t.title}
               </h1>
               <p className="text-gray-600">
@@ -343,7 +343,7 @@ const CompanyReportNew = () => {
                         {/* SNS 주소 */}
                         <div className="mb-4">
                           <h4 className="font-medium text-gray-700 mb-2">{t.snsAddress}</h4>
-                          <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-2">
                             {application.instagram_url && (
                               <a 
                                 href={application.instagram_url}

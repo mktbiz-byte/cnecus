@@ -25,13 +25,13 @@ const PrivacyPage = () => {
       </header>
 
       {/* Content */}
-      <main className="container mx-auto px-4 py-12 max-w-4xl">
-        <div className="flex items-center mb-8">
-          <Shield className="h-10 w-10 text-green-600 mr-4" />
-          <h1 className="text-4xl font-bold text-gray-800">Privacy Policy</h1>
+      <main className="container mx-auto px-4 py-6 sm:py-12 max-w-4xl">
+        <div className="flex items-center mb-4 sm:mb-8">
+          <Shield className="h-8 w-8 sm:h-10 sm:w-10 text-green-600 mr-3 sm:mr-4" />
+          <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-800">Privacy Policy</h1>
         </div>
 
-        <div className="bg-white rounded-lg shadow-sm p-8 space-y-8">
+        <div className="bg-white rounded-lg shadow-sm p-4 sm:p-8 space-y-6 sm:space-y-8">
           <p className="text-gray-600">
             Last updated: January 1, 2025
           </p>
@@ -44,7 +44,7 @@ const PrivacyPage = () => {
           </div>
 
           <section>
-            <h2 className="text-2xl font-semibold text-gray-800 mb-4">1. Information We Collect</h2>
+            <h2 className="text-lg sm:text-xl md:text-2xl font-semibold text-gray-800 mb-3 sm:mb-4">1. Information We Collect</h2>
             <h3 className="text-lg font-medium text-gray-700 mb-2">Personal Information</h3>
             <ul className="list-disc list-inside text-gray-600 space-y-2 mb-4">
               <li>Name and email address</li>
@@ -63,7 +63,7 @@ const PrivacyPage = () => {
           </section>
 
           <section>
-            <h2 className="text-2xl font-semibold text-gray-800 mb-4">2. How We Use Your Information</h2>
+            <h2 className="text-lg sm:text-xl md:text-2xl font-semibold text-gray-800 mb-3 sm:mb-4">2. How We Use Your Information</h2>
             <ul className="list-disc list-inside text-gray-600 space-y-2">
               <li>To provide and improve our Service</li>
               <li>To match you with relevant brand campaigns</li>
@@ -75,7 +75,7 @@ const PrivacyPage = () => {
           </section>
 
           <section>
-            <h2 className="text-2xl font-semibold text-gray-800 mb-4">3. Information Sharing</h2>
+            <h2 className="text-lg sm:text-xl md:text-2xl font-semibold text-gray-800 mb-3 sm:mb-4">3. Information Sharing</h2>
             <p className="text-gray-600 leading-relaxed mb-4">
               We may share your information with:
             </p>
@@ -91,7 +91,7 @@ const PrivacyPage = () => {
           </section>
 
           <section>
-            <h2 className="text-2xl font-semibold text-gray-800 mb-4">4. Data Security</h2>
+            <h2 className="text-lg sm:text-xl md:text-2xl font-semibold text-gray-800 mb-3 sm:mb-4">4. Data Security</h2>
             <p className="text-gray-600 leading-relaxed">
               We implement industry-standard security measures to protect your personal information, including:
             </p>
@@ -104,7 +104,7 @@ const PrivacyPage = () => {
           </section>
 
           <section>
-            <h2 className="text-2xl font-semibold text-gray-800 mb-4">5. Your Rights (CCPA Compliance)</h2>
+            <h2 className="text-lg sm:text-xl md:text-2xl font-semibold text-gray-800 mb-3 sm:mb-4">5. Your Rights (CCPA Compliance)</h2>
             <p className="text-gray-600 leading-relaxed mb-4">
               California residents have the following rights under the California Consumer Privacy Act (CCPA):
             </p>
@@ -120,7 +120,7 @@ const PrivacyPage = () => {
           </section>
 
           <section>
-            <h2 className="text-2xl font-semibold text-gray-800 mb-4">6. Cookies and Tracking</h2>
+            <h2 className="text-lg sm:text-xl md:text-2xl font-semibold text-gray-800 mb-3 sm:mb-4">6. Cookies and Tracking</h2>
             <p className="text-gray-600 leading-relaxed">
               We use cookies and similar technologies to enhance your experience, analyze usage, and
               improve our Service. You can control cookie preferences through your browser settings.
@@ -128,7 +128,7 @@ const PrivacyPage = () => {
           </section>
 
           <section>
-            <h2 className="text-2xl font-semibold text-gray-800 mb-4">7. Data Retention</h2>
+            <h2 className="text-lg sm:text-xl md:text-2xl font-semibold text-gray-800 mb-3 sm:mb-4">7. Data Retention</h2>
             <p className="text-gray-600 leading-relaxed">
               We retain your personal information for as long as necessary to provide our Service and
               fulfill the purposes described in this policy. You may request deletion of your account
@@ -137,7 +137,7 @@ const PrivacyPage = () => {
           </section>
 
           <section>
-            <h2 className="text-2xl font-semibold text-gray-800 mb-4">8. International Data Transfers</h2>
+            <h2 className="text-lg sm:text-xl md:text-2xl font-semibold text-gray-800 mb-3 sm:mb-4">8. International Data Transfers</h2>
             <p className="text-gray-600 leading-relaxed">
               Your information may be transferred to and processed in countries other than your own.
               We ensure appropriate safeguards are in place for such transfers in compliance with
@@ -146,7 +146,7 @@ const PrivacyPage = () => {
           </section>
 
           <section>
-            <h2 className="text-2xl font-semibold text-gray-800 mb-4">9. Children's Privacy</h2>
+            <h2 className="text-lg sm:text-xl md:text-2xl font-semibold text-gray-800 mb-3 sm:mb-4">9. Children's Privacy</h2>
             <p className="text-gray-600 leading-relaxed">
               Our Service is not intended for users under 18 years of age. We do not knowingly collect
               personal information from children. If we learn that we have collected such information,
@@ -155,7 +155,7 @@ const PrivacyPage = () => {
           </section>
 
           <section>
-            <h2 className="text-2xl font-semibold text-gray-800 mb-4">10. Changes to This Policy</h2>
+            <h2 className="text-lg sm:text-xl md:text-2xl font-semibold text-gray-800 mb-3 sm:mb-4">10. Changes to This Policy</h2>
             <p className="text-gray-600 leading-relaxed">
               We may update this Privacy Policy from time to time. We will notify you of any material
               changes by posting the new policy on this page and updating the "Last updated" date.
@@ -163,7 +163,7 @@ const PrivacyPage = () => {
           </section>
 
           <section>
-            <h2 className="text-2xl font-semibold text-gray-800 mb-4">11. Contact Us</h2>
+            <h2 className="text-lg sm:text-xl md:text-2xl font-semibold text-gray-800 mb-3 sm:mb-4">11. Contact Us</h2>
             <p className="text-gray-600 leading-relaxed">
               For questions or concerns about this Privacy Policy, please contact us:
             </p>

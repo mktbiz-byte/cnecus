@@ -224,7 +224,7 @@ const ProfileSettings = () => {
             <ArrowLeft className="h-4 w-4 mr-2" />
             Back to Home
           </Link>
-          <h1 className="text-2xl font-bold text-gray-900">Profile Settings</h1>
+          <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Profile Settings</h1>
           <p className="text-gray-600 mt-1">Manage your account</p>
         </div>
 
