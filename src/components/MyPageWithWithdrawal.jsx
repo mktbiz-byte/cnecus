@@ -112,6 +112,7 @@ const MyPageWithWithdrawal = () => {
     age: '',
     region: '',
     skin_type: '',
+    address: '',
     profile_image_url: '',
     instagram_url: '',
     tiktok_url: '',
@@ -455,6 +456,7 @@ const MyPageWithWithdrawal = () => {
           age: profileData.age || '',
           region: profileData.region || '',
           skin_type: profileData.skin_type || '',
+          address: profileData.address || '',
           profile_image_url: profileData.profile_image_url || '',
           instagram_url: profileData.instagram_url || '',
           tiktok_url: profileData.tiktok_url || '',
@@ -650,6 +652,7 @@ const MyPageWithWithdrawal = () => {
       if (editForm.region !== undefined) updateData.region = editForm.region?.trim() || null
       if (editForm.skin_type !== undefined) updateData.skin_type = editForm.skin_type?.trim() || null
       if (editForm.age !== undefined) updateData.age = editForm.age ? parseInt(editForm.age) : null
+      if (editForm.address !== undefined) updateData.address = editForm.address?.trim() || null
       // 프로필 이미지 URL (profile_image_url 컬럼만 존재)
       if (editForm.profile_image_url !== undefined) {
         updateData.profile_image_url = editForm.profile_image_url || null
