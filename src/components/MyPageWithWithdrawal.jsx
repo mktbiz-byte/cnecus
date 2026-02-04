@@ -1349,9 +1349,9 @@ const MyPageWithWithdrawal = () => {
         {/* 탭 콘텐츠 */}
         <div className="bg-white rounded-lg shadow">
           {activeTab === 'profile' && (
-            <div className="p-6">
-              <div className="flex justify-between items-center mb-6">
-                <h2 className="text-xl font-semibold text-gray-900">{t.personalInfo}</h2>
+            <div className="p-4 sm:p-6">
+              <div className="flex justify-between items-center mb-4 sm:mb-6">
+                <h2 className="text-lg sm:text-xl font-semibold text-gray-900">{t.personalInfo}</h2>
                 <button
                   onClick={() => {
                     if (isEditing) {
@@ -1361,7 +1361,7 @@ const MyPageWithWithdrawal = () => {
                     }
                   }}
                   disabled={processing}
-                  className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50"
+                  className="px-3 py-1.5 sm:px-4 sm:py-2 text-sm bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50"
                 >
                   {processing ? t.processing : (isEditing ? t.save : t.edit)}
                 </button>
@@ -1380,9 +1380,9 @@ const MyPageWithWithdrawal = () => {
               )}
 
               {/* Profile Photo Section */}
-              <div className="mb-6 flex items-center gap-4">
+              <div className="mb-4 sm:mb-6 flex items-center gap-3 sm:gap-4">
                 <div className="relative">
-                  <div className="w-24 h-24 rounded-full bg-gradient-to-br from-purple-400 to-pink-400 flex items-center justify-center overflow-hidden border-4 border-white shadow-lg">
+                  <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-full bg-gradient-to-br from-purple-400 to-pink-400 flex items-center justify-center overflow-hidden border-4 border-white shadow-lg">
                     {(editForm.profile_image_url || profile?.profile_image_url) ? (
                       <img
                         src={editForm.profile_image_url || profile?.profile_image_url}
@@ -1390,7 +1390,7 @@ const MyPageWithWithdrawal = () => {
                         className="w-full h-full object-cover"
                       />
                     ) : (
-                      <span className="text-white text-3xl font-bold">
+                      <span className="text-white text-2xl sm:text-3xl font-bold">
                         {profile?.name?.charAt(0)?.toUpperCase() || 'U'}
                       </span>
                     )}
@@ -1417,7 +1417,7 @@ const MyPageWithWithdrawal = () => {
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
                 <div className="space-y-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700">{t.name}</label>
@@ -1589,7 +1589,7 @@ const MyPageWithWithdrawal = () => {
                 <h3 className="text-lg font-medium text-gray-900 mb-4">
                   {'SNS Information'}
                 </h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
                   <div>
                     <label className="block text-sm font-medium text-gray-700">Instagram</label>
                     {isEditing ? (
@@ -1683,7 +1683,7 @@ const MyPageWithWithdrawal = () => {
                 <h3 className="text-lg font-medium text-gray-900 mb-4">
                   {'SNS Followers'}
                 </h3>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6">
                   <div>
                     <label className="block text-sm font-medium text-gray-700">{t.instagramFollowers}</label>
                     {isEditing ? (
@@ -1743,51 +1743,51 @@ const MyPageWithWithdrawal = () => {
           )}
 
           {activeTab === 'applications' && (
-            <div className="p-6">
-              <h2 className="text-xl font-semibold text-gray-900 mb-6">{t.campaignApplications}</h2>
+            <div className="p-4 sm:p-6">
+              <h2 className="text-lg sm:text-xl font-semibold text-gray-900 mb-4 sm:mb-6">{t.campaignApplications}</h2>
 
               {/* 신청 통계 */}
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-                <div className="bg-blue-50 rounded-lg p-4">
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 mb-4 sm:mb-6">
+                <div className="bg-blue-50 rounded-lg p-3 sm:p-4">
                   <div className="flex items-center">
-                    <Award className="h-8 w-8 text-blue-600" />
-                    <div className="ml-4">
-                      <p className="text-sm font-medium text-gray-500">{t.totalApplications}</p>
-                      <p className="text-2xl font-bold text-gray-900">{applications.length}</p>
+                    <Award className="h-6 w-6 sm:h-8 sm:w-8 text-blue-600 flex-shrink-0" />
+                    <div className="ml-2 sm:ml-4 min-w-0">
+                      <p className="text-xs sm:text-sm font-medium text-gray-500 truncate">{t.totalApplications}</p>
+                      <p className="text-xl sm:text-2xl font-bold text-gray-900">{applications.length}</p>
                     </div>
                   </div>
                 </div>
 
-                <div className="bg-purple-50 rounded-lg p-4">
+                <div className="bg-purple-50 rounded-lg p-3 sm:p-4">
                   <div className="flex items-center">
-                    <Calendar className="h-8 w-8 text-purple-600" />
-                    <div className="ml-4">
-                      <p className="text-sm font-medium text-gray-500">In Progress</p>
-                      <p className="text-2xl font-bold text-gray-900">
+                    <Calendar className="h-6 w-6 sm:h-8 sm:w-8 text-purple-600 flex-shrink-0" />
+                    <div className="ml-2 sm:ml-4 min-w-0">
+                      <p className="text-xs sm:text-sm font-medium text-gray-500 truncate">In Progress</p>
+                      <p className="text-xl sm:text-2xl font-bold text-gray-900">
                         {applications.filter(a => ['selected', 'filming', 'video_submitted', 'revision_requested', 'approved'].includes(a.status)).length}
                       </p>
                     </div>
                   </div>
                 </div>
 
-                <div className="bg-green-50 rounded-lg p-4">
+                <div className="bg-green-50 rounded-lg p-3 sm:p-4">
                   <div className="flex items-center">
-                    <Shield className="h-8 w-8 text-green-600" />
-                    <div className="ml-4">
-                      <p className="text-sm font-medium text-gray-500">{t.approvedApplications}</p>
-                      <p className="text-2xl font-bold text-gray-900">
+                    <Shield className="h-6 w-6 sm:h-8 sm:w-8 text-green-600 flex-shrink-0" />
+                    <div className="ml-2 sm:ml-4 min-w-0">
+                      <p className="text-xs sm:text-sm font-medium text-gray-500 truncate">{t.approvedApplications}</p>
+                      <p className="text-xl sm:text-2xl font-bold text-gray-900">
                         {applications.filter(a => a.status === 'approved').length}
                       </p>
                     </div>
                   </div>
                 </div>
 
-                <div className="bg-emerald-50 rounded-lg p-4">
+                <div className="bg-emerald-50 rounded-lg p-3 sm:p-4">
                   <div className="flex items-center">
-                    <Download className="h-8 w-8 text-emerald-600" />
-                    <div className="ml-4">
-                      <p className="text-sm font-medium text-gray-500">{t.completedCampaigns}</p>
-                      <p className="text-2xl font-bold text-gray-900">
+                    <Download className="h-6 w-6 sm:h-8 sm:w-8 text-emerald-600 flex-shrink-0" />
+                    <div className="ml-2 sm:ml-4 min-w-0">
+                      <p className="text-xs sm:text-sm font-medium text-gray-500 truncate">{t.completedCampaigns}</p>
+                      <p className="text-xl sm:text-2xl font-bold text-gray-900">
                         {applications.filter(a => ['sns_uploaded', 'completed'].includes(a.status)).length}
                       </p>
                     </div>
@@ -2179,8 +2179,8 @@ const MyPageWithWithdrawal = () => {
           )}
 
           {activeTab === 'withdrawals' && (
-            <div className="p-6">
-              <h2 className="text-xl font-semibold text-gray-900 mb-6">{t.withdrawalHistory}</h2>
+            <div className="p-4 sm:p-6">
+              <h2 className="text-lg sm:text-xl font-semibold text-gray-900 mb-4 sm:mb-6">{t.withdrawalHistory}</h2>
               
               {withdrawals.length === 0 ? (
                 <div className="text-center py-12 text-gray-500">
@@ -2192,19 +2192,19 @@ const MyPageWithWithdrawal = () => {
                   <table className="min-w-full divide-y divide-gray-200">
                     <thead className="bg-gray-50">
                       <tr>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                           {'出金方法'}
                         </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                           {'金額'}
                         </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                           {'ステータス'}
                         </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                           {'申請日'}
                         </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                           {'処理日'}
                         </th>
                       </tr>
@@ -2212,13 +2212,13 @@ const MyPageWithWithdrawal = () => {
                     <tbody className="bg-white divide-y divide-gray-200">
                       {withdrawals.map((withdrawal) => (
                         <tr key={withdrawal.id}>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                          <td className="px-3 sm:px-6 py-3 sm:py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                             PayPal
                           </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                          <td className="px-3 sm:px-6 py-3 sm:py-4 whitespace-nowrap text-sm text-gray-900">
                             ${withdrawal.amount?.toLocaleString() || '0'}
                           </td>
-                          <td className="px-6 py-4 whitespace-nowrap">
+                          <td className="px-3 sm:px-6 py-3 sm:py-4 whitespace-nowrap">
                             <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
                               withdrawal.status === 'completed' ? 'bg-green-100 text-green-800' :
                               withdrawal.status === 'approved' ? 'bg-blue-100 text-blue-800' :
@@ -2231,10 +2231,10 @@ const MyPageWithWithdrawal = () => {
                                ('Pending')}
                             </span>
                           </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                          <td className="px-3 sm:px-6 py-3 sm:py-4 whitespace-nowrap text-sm text-gray-500">
                             {new Date(withdrawal.created_at).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })}
                           </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                          <td className="px-3 sm:px-6 py-3 sm:py-4 whitespace-nowrap text-sm text-gray-500">
                             {withdrawal.processed_at ?
                               new Date(withdrawal.processed_at).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' }) :
                               '-'
@@ -2250,23 +2250,23 @@ const MyPageWithWithdrawal = () => {
           )}
 
           {activeTab === 'points' && (
-            <div className="p-6">
-              <h2 className="text-xl font-semibold text-gray-900 mb-6">{t.pointHistory}</h2>
+            <div className="p-4 sm:p-6">
+              <h2 className="text-lg sm:text-xl font-semibold text-gray-900 mb-4 sm:mb-6">{t.pointHistory}</h2>
               
               <div className="overflow-x-auto">
                 <table className="min-w-full divide-y divide-gray-200">
                   <thead className="bg-gray-50">
                     <tr>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                         {t.transactionType}
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                         {t.amount}
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                         {t.description}
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                         {t.date}
                       </th>
                     </tr>
@@ -2281,24 +2281,24 @@ const MyPageWithWithdrawal = () => {
                     ) : (
                       pointTransactions.map((transaction) => (
                         <tr key={transaction.id}>
-                          <td className="px-6 py-4 whitespace-nowrap">
+                          <td className="px-3 sm:px-6 py-3 sm:py-4 whitespace-nowrap">
                             <span className={`text-sm font-medium ${getTransactionTypeColor(transaction.transaction_type)}`}>
                               {getTransactionTypeText(transaction.transaction_type)}
                             </span>
                           </td>
-                          <td className="px-6 py-4 whitespace-nowrap">
+                          <td className="px-3 sm:px-6 py-3 sm:py-4 whitespace-nowrap">
                             <span className={`text-sm font-medium ${
                               transaction.amount > 0 ? 'text-green-600' : 'text-red-600'
                             }`}>
                               {transaction.amount > 0 ? '+' : ''}{transaction.amount.toLocaleString()}P
                             </span>
                           </td>
-                          <td className="px-6 py-4">
+                          <td className="px-3 sm:px-6 py-3 sm:py-4">
                             <div className="text-sm text-gray-900 max-w-xs truncate">
                               {transaction.description || '-'}
                             </div>
                           </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                          <td className="px-3 sm:px-6 py-3 sm:py-4 whitespace-nowrap text-sm text-gray-500">
                             {new Date(transaction.created_at).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })}
                           </td>
                         </tr>
@@ -2328,12 +2328,12 @@ const MyPageWithWithdrawal = () => {
           )}
 
           {activeTab === 'settings' && (
-            <div className="p-6">
-              <h2 className="text-xl font-semibold text-gray-900 mb-6">{t.accountSettings}</h2>
-              
-              <div className="space-y-6">
+            <div className="p-4 sm:p-6">
+              <h2 className="text-lg sm:text-xl font-semibold text-gray-900 mb-4 sm:mb-6">{t.accountSettings}</h2>
+
+              <div className="space-y-4 sm:space-y-6">
                 {/* 계정 삭제 섹션 */}
-                <div className="border border-red-200 rounded-lg p-6 bg-red-50">
+                <div className="border border-red-200 rounded-lg p-4 sm:p-6 bg-red-50">
                   <div className="flex items-start">
                     <AlertTriangle className="h-6 w-6 text-red-600 mt-1" />
                     <div className="ml-4 flex-1">
@@ -2664,7 +2664,7 @@ const MyPageWithWithdrawal = () => {
                       type="button"
                       onClick={() => videoInputRef.current?.click()}
                       disabled={uploadingVideo}
-                      className="w-full border-2 border-dashed border-gray-300 rounded-xl p-8 hover:border-purple-400 hover:bg-purple-50 transition-all disabled:opacity-50"
+                      className="w-full border-2 border-dashed border-gray-300 rounded-xl p-4 sm:p-8 hover:border-purple-400 hover:bg-purple-50 transition-all disabled:opacity-50"
                     >
                       <div className="flex flex-col items-center">
                         <Camera className="w-12 h-12 text-gray-400 mb-3" />

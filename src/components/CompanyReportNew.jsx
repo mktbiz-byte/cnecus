@@ -328,9 +328,9 @@ const CompanyReportNew = () => {
                 <p className="text-gray-500">{t.noApplications}</p>
               </div>
             ) : (
-              <div className="space-y-6">
+              <div className="space-y-4 sm:space-y-6">
                 {applications.map((application) => (
-                  <div key={application.id} className="border rounded-lg p-6 bg-white">
+                  <div key={application.id} className="border rounded-lg p-4 sm:p-6 bg-white">
                     <div className="flex items-start justify-between mb-4">
                       <div className="flex-1">
                         <div className="flex items-center space-x-3 mb-2">

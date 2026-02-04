@@ -154,7 +154,7 @@ const CreatorContactForm = () => {
   if (error && !application) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-pink-50 to-purple-50 flex items-center justify-center p-4">
-        <div className="bg-white rounded-2xl shadow-xl p-8 max-w-md w-full text-center">
+        <div className="bg-white rounded-2xl shadow-xl p-5 sm:p-8 max-w-md w-full text-center">
           <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
             <svg className="w-8 h-8 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -170,7 +170,7 @@ const CreatorContactForm = () => {
   if (success) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-pink-50 to-purple-50 flex items-center justify-center p-4">
-        <div className="bg-white rounded-2xl shadow-xl p-8 max-w-md w-full text-center">
+        <div className="bg-white rounded-2xl shadow-xl p-5 sm:p-8 max-w-md w-full text-center">
           <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
             <svg className="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
@@ -211,7 +211,7 @@ const CreatorContactForm = () => {
 
         {/* 캠페인 정보 카드 */}
         {campaign && (
-          <div className="bg-white rounded-2xl shadow-lg p-6 mb-6">
+          <div className="bg-white rounded-2xl shadow-lg p-4 sm:p-6 mb-6">
             <h2 className="text-lg font-semibold text-gray-900 mb-3">Campaign Information</h2>
             <div className="space-y-2">
               <div className="flex justify-between">
@@ -233,7 +233,7 @@ const CreatorContactForm = () => {
         )}
 
         {/* 연락처 폼 */}
-        <div className="bg-white rounded-2xl shadow-lg p-6">
+        <div className="bg-white rounded-2xl shadow-lg p-4 sm:p-6">
           <h2 className="text-lg font-semibold text-gray-900 mb-4">
             {alreadySubmitted ? 'Your Contact Information' : 'Please Enter Your Contact Information'}
           </h2>

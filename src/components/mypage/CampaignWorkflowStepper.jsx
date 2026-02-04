@@ -269,49 +269,49 @@ const GuideCheckContent = ({ campaign, application, onViewGuide, onConfirm, isCo
 
   if (stepState === 'completed') {
     return (
-      <div className="flex items-center gap-2 py-2">
-        <CheckCircle2 className="w-5 h-5 text-green-500" />
-        <span className="text-sm text-green-700 font-medium">Guide reviewed and confirmed</span>
+      <div className="flex items-center gap-2 py-1.5 sm:py-2">
+        <CheckCircle2 className="w-4 h-4 sm:w-5 sm:h-5 text-green-500 flex-shrink-0" />
+        <span className="text-xs sm:text-sm text-green-700 font-medium">Guide reviewed and confirmed</span>
       </div>
     )
   }
 
   if (stepState === 'locked') {
     return (
-      <div className="flex items-center gap-2 py-2 opacity-50">
-        <Lock className="w-4 h-4 text-gray-400" />
-        <span className="text-sm text-gray-400">Complete previous steps first</span>
+      <div className="flex items-center gap-2 py-1.5 sm:py-2 opacity-50">
+        <Lock className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-gray-400 flex-shrink-0" />
+        <span className="text-xs sm:text-sm text-gray-400">Complete previous steps first</span>
       </div>
     )
   }
 
   return (
-    <div className="space-y-3">
-      <div className="bg-purple-50 border border-purple-200 rounded-lg p-3">
-        <p className="text-sm text-purple-800 font-medium mb-1">
+    <div className="space-y-2.5 sm:space-y-3">
+      <div className="bg-purple-50 border border-purple-200 rounded-lg p-2.5 sm:p-3">
+        <p className="text-xs sm:text-sm text-purple-800 font-medium mb-1">
           Please review the campaign guide thoroughly before proceeding.
         </p>
-        <p className="text-xs text-purple-600">
+        <p className="text-[10px] sm:text-xs text-purple-600">
           The guide contains shooting requirements, required scenes, hashtags, and deadlines.
         </p>
       </div>
 
       <button
         onClick={() => onViewGuide?.(application, campaign)}
-        className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-purple-100 text-purple-700 rounded-xl font-medium hover:bg-purple-200 transition-colors border border-purple-200"
+        className="w-full flex items-center justify-center gap-2 px-3 sm:px-4 py-2.5 sm:py-3 min-h-[2.75rem] bg-purple-100 text-purple-700 rounded-xl font-medium hover:bg-purple-200 transition-colors border border-purple-200 text-sm"
       >
-        <Eye className="w-5 h-5" />
-        Open Campaign Guide
-        <ExternalLink className="w-4 h-4" />
+        <Eye className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0" />
+        <span>Open Campaign Guide</span>
+        <ExternalLink className="w-3.5 h-3.5 sm:w-4 sm:h-4 flex-shrink-0" />
       </button>
 
       {/* Confirm button */}
       <button
         onClick={onConfirm}
-        className={`w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl font-medium transition-all ${colors.btn} shadow-sm`}
+        className={`w-full flex items-center justify-center gap-2 px-3 sm:px-4 py-2.5 sm:py-3 min-h-[2.75rem] rounded-xl font-medium transition-all text-xs sm:text-sm ${colors.btn} shadow-sm`}
       >
-        <CheckCircle2 className="w-5 h-5" />
-        I have reviewed the guide completely
+        <CheckCircle2 className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0" />
+        <span>I have reviewed the guide completely</span>
       </button>
     </div>
   )
@@ -323,18 +323,18 @@ const VideoGuideCheckContent = ({ campaign, application, onConfirm, stepState })
 
   if (stepState === 'completed') {
     return (
-      <div className="flex items-center gap-2 py-2">
-        <CheckCircle2 className="w-5 h-5 text-green-500" />
-        <span className="text-sm text-green-700 font-medium">Video guide watched and confirmed</span>
+      <div className="flex items-center gap-2 py-1.5 sm:py-2">
+        <CheckCircle2 className="w-4 h-4 sm:w-5 sm:h-5 text-green-500 flex-shrink-0" />
+        <span className="text-xs sm:text-sm text-green-700 font-medium">Video guide watched and confirmed</span>
       </div>
     )
   }
 
   if (stepState === 'locked') {
     return (
-      <div className="flex items-center gap-2 py-2 opacity-50">
-        <Lock className="w-4 h-4 text-gray-400" />
-        <span className="text-sm text-gray-400">Review the PDF guide first</span>
+      <div className="flex items-center gap-2 py-1.5 sm:py-2 opacity-50">
+        <Lock className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-gray-400 flex-shrink-0" />
+        <span className="text-xs sm:text-sm text-gray-400">Review the PDF guide first</span>
       </div>
     )
   }
@@ -342,12 +342,12 @@ const VideoGuideCheckContent = ({ campaign, application, onConfirm, stepState })
   const videoGuideUrl = campaign?.video_guide_url || campaign?.reference_video_url
 
   return (
-    <div className="space-y-3">
-      <div className="bg-indigo-50 border border-indigo-200 rounded-lg p-3">
-        <p className="text-sm text-indigo-800 font-medium mb-1">
+    <div className="space-y-2.5 sm:space-y-3">
+      <div className="bg-indigo-50 border border-indigo-200 rounded-lg p-2.5 sm:p-3">
+        <p className="text-xs sm:text-sm text-indigo-800 font-medium mb-1">
           Watch the video guide carefully before filming.
         </p>
-        <p className="text-xs text-indigo-600">
+        <p className="text-[10px] sm:text-xs text-indigo-600">
           This video shows you how to shoot your content for this campaign.
         </p>
       </div>
@@ -357,27 +357,27 @@ const VideoGuideCheckContent = ({ campaign, application, onConfirm, stepState })
           href={videoGuideUrl}
           target="_blank"
           rel="noopener noreferrer"
-          className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-indigo-100 text-indigo-700 rounded-xl font-medium hover:bg-indigo-200 transition-colors border border-indigo-200"
+          className="w-full flex items-center justify-center gap-2 px-3 sm:px-4 py-2.5 sm:py-3 min-h-[2.75rem] bg-indigo-100 text-indigo-700 rounded-xl font-medium hover:bg-indigo-200 transition-colors border border-indigo-200 text-sm"
         >
-          <Play className="w-5 h-5" />
-          Watch Video Guide
-          <ExternalLink className="w-4 h-4" />
+          <Play className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0" />
+          <span>Watch Video Guide</span>
+          <ExternalLink className="w-3.5 h-3.5 sm:w-4 sm:h-4 flex-shrink-0" />
         </a>
       ) : (
-        <div className="bg-gray-50 border border-gray-200 rounded-xl p-4 text-center">
-          <Video className="w-8 h-8 text-gray-400 mx-auto mb-2" />
-          <p className="text-sm text-gray-500">No video guide available for this campaign.</p>
-          <p className="text-xs text-gray-400 mt-1">You can proceed to filming.</p>
+        <div className="bg-gray-50 border border-gray-200 rounded-xl p-3 sm:p-4 text-center">
+          <Video className="w-6 h-6 sm:w-8 sm:h-8 text-gray-400 mx-auto mb-1.5 sm:mb-2" />
+          <p className="text-xs sm:text-sm text-gray-500">No video guide available for this campaign.</p>
+          <p className="text-[10px] sm:text-xs text-gray-400 mt-1">You can proceed to filming.</p>
         </div>
       )}
 
       {/* Confirm button */}
       <button
         onClick={onConfirm}
-        className={`w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl font-medium transition-all ${colors.btn} shadow-sm`}
+        className={`w-full flex items-center justify-center gap-2 px-3 sm:px-4 py-2.5 sm:py-3 min-h-[2.75rem] rounded-xl font-medium transition-all text-xs sm:text-sm ${colors.btn} shadow-sm`}
       >
-        <CheckCircle2 className="w-5 h-5" />
-        {videoGuideUrl ? 'I have watched the video guide' : 'Confirmed, proceed to upload'}
+        <CheckCircle2 className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0" />
+        <span>{videoGuideUrl ? 'I have watched the video guide' : 'Confirmed, proceed to upload'}</span>
       </button>
     </div>
   )
@@ -390,17 +390,17 @@ const VideoUploadContent = ({ campaign, application, onUploadVideo, stepState })
 
   if (stepState === 'completed') {
     return (
-      <div className="space-y-2">
-        <div className="flex items-center gap-2 py-2">
-          <CheckCircle2 className="w-5 h-5 text-green-500" />
-          <span className="text-sm text-green-700 font-medium">Video uploaded successfully</span>
+      <div className="space-y-1.5 sm:space-y-2">
+        <div className="flex items-center gap-2 py-1.5 sm:py-2">
+          <CheckCircle2 className="w-4 h-4 sm:w-5 sm:h-5 text-green-500 flex-shrink-0" />
+          <span className="text-xs sm:text-sm text-green-700 font-medium">Video uploaded successfully</span>
         </div>
         {application?.video_url && (
           <a
             href={application.video_url}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center gap-1 text-xs text-blue-600 hover:underline"
+            className="inline-flex items-center gap-1 text-[10px] sm:text-xs text-blue-600 hover:underline"
           >
             <ExternalLink className="w-3 h-3" />
             View uploaded video
@@ -412,33 +412,33 @@ const VideoUploadContent = ({ campaign, application, onUploadVideo, stepState })
 
   if (stepState === 'locked') {
     return (
-      <div className="flex items-center gap-2 py-2 opacity-50">
-        <Lock className="w-4 h-4 text-gray-400" />
-        <span className="text-sm text-gray-400">Complete the guide steps first</span>
+      <div className="flex items-center gap-2 py-1.5 sm:py-2 opacity-50">
+        <Lock className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-gray-400 flex-shrink-0" />
+        <span className="text-xs sm:text-sm text-gray-400">Complete the guide steps first</span>
       </div>
     )
   }
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-2.5 sm:space-y-3">
       {/* REVISION WARNING - Always visible above upload button */}
-      <div className="bg-red-50 border-2 border-red-300 rounded-xl p-4">
-        <div className="flex items-start gap-3">
-          <div className="flex-shrink-0 w-10 h-10 bg-red-100 rounded-full flex items-center justify-center">
-            <AlertTriangle className="w-6 h-6 text-red-600" />
+      <div className="bg-red-50 border-2 border-red-300 rounded-xl p-3 sm:p-4">
+        <div className="flex items-start gap-2 sm:gap-3">
+          <div className="flex-shrink-0 w-8 h-8 sm:w-10 sm:h-10 bg-red-100 rounded-full flex items-center justify-center">
+            <AlertTriangle className="w-4 h-4 sm:w-6 sm:h-6 text-red-600" />
           </div>
-          <div>
-            <p className="text-sm font-bold text-red-800">
+          <div className="min-w-0 flex-1">
+            <p className="text-xs sm:text-sm font-bold text-red-800">
               Revision Check Upload
             </p>
-            <p className="text-xs text-red-600 mt-1 leading-relaxed">
+            <p className="text-[10px] sm:text-xs text-red-600 mt-1 leading-relaxed">
               Do NOT upload a video ahead of time. After your video is reviewed,
               you may need to make revisions. Please upload your final version only
               after confirming all requirements in the guide.
             </p>
             {isRevisionReupload && hasRevisions && (
-              <div className="mt-2 p-2 bg-red-100 rounded-lg">
-                <p className="text-xs font-semibold text-red-800">
+              <div className="mt-1.5 sm:mt-2 p-1.5 sm:p-2 bg-red-100 rounded-lg">
+                <p className="text-[10px] sm:text-xs font-semibold text-red-800">
                   You have {application.revision_requests.length} revision request(s).
                   Please fix all issues before re-uploading.
                 </p>
@@ -450,8 +450,8 @@ const VideoUploadContent = ({ campaign, application, onUploadVideo, stepState })
 
       {/* Deadline info */}
       {campaign?.video_deadline && (
-        <div className="flex items-center gap-2 text-sm bg-blue-50 border border-blue-200 rounded-lg p-2">
-          <Calendar className="w-4 h-4 text-blue-600" />
+        <div className="flex items-center gap-1.5 sm:gap-2 text-xs sm:text-sm bg-blue-50 border border-blue-200 rounded-lg p-2">
+          <Calendar className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-blue-600 flex-shrink-0" />
           <span className="text-blue-700">
             Video Deadline: <strong>{formatDate(campaign.video_deadline)}</strong>
           </span>
@@ -461,14 +461,14 @@ const VideoUploadContent = ({ campaign, application, onUploadVideo, stepState })
       {/* Upload button */}
       <button
         onClick={() => onUploadVideo?.(application, campaign)}
-        className={`w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl font-medium transition-all shadow-sm ${
+        className={`w-full flex items-center justify-center gap-2 px-3 sm:px-4 py-2.5 sm:py-3 min-h-[2.75rem] rounded-xl font-medium transition-all shadow-sm text-sm ${
           isRevisionReupload
             ? 'bg-red-600 hover:bg-red-700 text-white'
             : 'bg-blue-600 hover:bg-blue-700 text-white'
         }`}
       >
-        <UploadCloud className="w-5 h-5" />
-        {isRevisionReupload ? 'Re-upload Revised Video' : 'Upload Video'}
+        <UploadCloud className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0" />
+        <span>{isRevisionReupload ? 'Re-upload Revised Video' : 'Upload Video'}</span>
       </button>
     </div>
   )
@@ -481,18 +481,18 @@ const RevisionCheckContent = ({ application, onViewRevisions, onUploadVideo, cam
 
   if (stepState === 'completed') {
     return (
-      <div className="flex items-center gap-2 py-2">
-        <CheckCircle2 className="w-5 h-5 text-green-500" />
-        <span className="text-sm text-green-700 font-medium">Video approved - No revisions needed</span>
+      <div className="flex items-center gap-2 py-1.5 sm:py-2">
+        <CheckCircle2 className="w-4 h-4 sm:w-5 sm:h-5 text-green-500 flex-shrink-0" />
+        <span className="text-xs sm:text-sm text-green-700 font-medium">Video approved - No revisions needed</span>
       </div>
     )
   }
 
   if (stepState === 'locked') {
     return (
-      <div className="flex items-center gap-2 py-2 opacity-50">
-        <Lock className="w-4 h-4 text-gray-400" />
-        <span className="text-sm text-gray-400">Upload your video first</span>
+      <div className="flex items-center gap-2 py-1.5 sm:py-2 opacity-50">
+        <Lock className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-gray-400 flex-shrink-0" />
+        <span className="text-xs sm:text-sm text-gray-400">Upload your video first</span>
       </div>
     )
   }
@@ -500,13 +500,13 @@ const RevisionCheckContent = ({ application, onViewRevisions, onUploadVideo, cam
   // Waiting state - video submitted, waiting for admin review
   if (stepState === 'waiting') {
     return (
-      <div className="space-y-3">
-        <div className="bg-yellow-50 border border-yellow-300 rounded-xl p-4 text-center">
-          <div className="w-12 h-12 bg-yellow-100 rounded-full flex items-center justify-center mx-auto mb-3">
-            <ClipboardCheck className="w-6 h-6 text-yellow-600 animate-pulse" />
+      <div className="space-y-2.5 sm:space-y-3">
+        <div className="bg-yellow-50 border border-yellow-300 rounded-xl p-3 sm:p-4 text-center">
+          <div className="w-10 h-10 sm:w-12 sm:h-12 bg-yellow-100 rounded-full flex items-center justify-center mx-auto mb-2 sm:mb-3">
+            <ClipboardCheck className="w-5 h-5 sm:w-6 sm:h-6 text-yellow-600 animate-pulse" />
           </div>
-          <p className="text-sm font-semibold text-yellow-800">Under Review</p>
-          <p className="text-xs text-yellow-600 mt-1">
+          <p className="text-xs sm:text-sm font-semibold text-yellow-800">Under Review</p>
+          <p className="text-[10px] sm:text-xs text-yellow-600 mt-1">
             Your video is being reviewed by the team. You'll be notified if revisions are needed.
           </p>
         </div>
@@ -516,18 +516,18 @@ const RevisionCheckContent = ({ application, onViewRevisions, onUploadVideo, cam
 
   // Active state - revision_requested
   return (
-    <div className="space-y-3">
+    <div className="space-y-2.5 sm:space-y-3">
       {isRevisionRequested && hasRevisions && (
-        <div className="bg-red-50 border-2 border-red-300 rounded-xl p-4">
-          <div className="flex items-start gap-3">
-            <div className="flex-shrink-0 w-10 h-10 bg-red-100 rounded-full flex items-center justify-center">
-              <AlertTriangle className="w-6 h-6 text-red-600 animate-bounce" />
+        <div className="bg-red-50 border-2 border-red-300 rounded-xl p-3 sm:p-4">
+          <div className="flex items-start gap-2 sm:gap-3">
+            <div className="flex-shrink-0 w-8 h-8 sm:w-10 sm:h-10 bg-red-100 rounded-full flex items-center justify-center">
+              <AlertTriangle className="w-4 h-4 sm:w-6 sm:h-6 text-red-600 animate-bounce" />
             </div>
-            <div>
-              <p className="text-sm font-bold text-red-800">
+            <div className="min-w-0 flex-1">
+              <p className="text-xs sm:text-sm font-bold text-red-800">
                 Revision Required ({application.revision_requests.length} issue{application.revision_requests.length > 1 ? 's' : ''})
               </p>
-              <p className="text-xs text-red-600 mt-1">
+              <p className="text-[10px] sm:text-xs text-red-600 mt-1">
                 Please review the feedback carefully and re-upload your video with corrections.
               </p>
             </div>
@@ -535,23 +535,23 @@ const RevisionCheckContent = ({ application, onViewRevisions, onUploadVideo, cam
         </div>
       )}
 
-      <div className="flex gap-2">
+      <div className="flex flex-col sm:flex-row gap-2">
         {hasRevisions && (
           <button
             onClick={() => onViewRevisions?.(application)}
-            className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-amber-600 hover:bg-amber-700 text-white rounded-xl font-medium transition-all shadow-sm"
+            className="flex-1 flex items-center justify-center gap-2 px-3 sm:px-4 py-2.5 sm:py-3 min-h-[2.75rem] bg-amber-600 hover:bg-amber-700 text-white rounded-xl font-medium transition-all shadow-sm text-xs sm:text-sm"
           >
-            <Eye className="w-5 h-5" />
-            View Revisions
+            <Eye className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0" />
+            <span>View Revisions</span>
           </button>
         )}
         {isRevisionRequested && (
           <button
             onClick={() => onUploadVideo?.(application, campaign)}
-            className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-red-600 hover:bg-red-700 text-white rounded-xl font-medium transition-all shadow-sm"
+            className="flex-1 flex items-center justify-center gap-2 px-3 sm:px-4 py-2.5 sm:py-3 min-h-[2.75rem] bg-red-600 hover:bg-red-700 text-white rounded-xl font-medium transition-all shadow-sm text-xs sm:text-sm"
           >
-            <RefreshCw className="w-5 h-5" />
-            Re-upload
+            <RefreshCw className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0" />
+            <span>Re-upload</span>
           </button>
         )}
       </div>
@@ -566,17 +566,17 @@ const FinalDeliveryContent = ({ campaign, application, onSubmitSNS, stepState })
 
   if (stepState === 'completed') {
     return (
-      <div className="space-y-2">
-        <div className="flex items-center gap-2 py-2">
-          <CheckCircle2 className="w-5 h-5 text-green-500" />
-          <span className="text-sm text-green-700 font-medium">All deliverables submitted!</span>
+      <div className="space-y-1.5 sm:space-y-2">
+        <div className="flex items-center gap-2 py-1.5 sm:py-2">
+          <CheckCircle2 className="w-4 h-4 sm:w-5 sm:h-5 text-green-500 flex-shrink-0" />
+          <span className="text-xs sm:text-sm text-green-700 font-medium">All deliverables submitted!</span>
         </div>
         {application?.sns_upload_url && (
           <a
             href={application.sns_upload_url}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center gap-1 text-xs text-blue-600 hover:underline"
+            className="inline-flex items-center gap-1 text-[10px] sm:text-xs text-blue-600 hover:underline"
           >
             <ExternalLink className="w-3 h-3" />
             View SNS Post
@@ -588,103 +588,103 @@ const FinalDeliveryContent = ({ campaign, application, onSubmitSNS, stepState })
 
   if (stepState === 'locked') {
     return (
-      <div className="flex items-center gap-2 py-2 opacity-50">
-        <Lock className="w-4 h-4 text-gray-400" />
-        <span className="text-sm text-gray-400">Video must be approved first</span>
+      <div className="flex items-center gap-2 py-1.5 sm:py-2 opacity-50">
+        <Lock className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-gray-400 flex-shrink-0" />
+        <span className="text-xs sm:text-sm text-gray-400">Video must be approved first</span>
       </div>
     )
   }
 
   return (
-    <div className="space-y-3">
-      <div className="bg-green-50 border border-green-200 rounded-lg p-3">
-        <p className="text-sm text-green-800 font-medium mb-1">
+    <div className="space-y-2.5 sm:space-y-3">
+      <div className="bg-green-50 border border-green-200 rounded-lg p-2.5 sm:p-3">
+        <p className="text-xs sm:text-sm text-green-800 font-medium mb-1">
           Submit all required deliverables at once
         </p>
-        <p className="text-xs text-green-600">
+        <p className="text-[10px] sm:text-xs text-green-600">
           Complete all three items below in a single submission.
         </p>
       </div>
 
       {/* Three deliverables visual */}
-      <div className="grid grid-cols-1 gap-2">
+      <div className="grid grid-cols-1 gap-1.5 sm:gap-2">
         {/* SNS Upload */}
-        <div className={`flex items-center gap-3 p-3 rounded-lg border-2 ${
+        <div className={`flex items-center gap-2 sm:gap-3 p-2.5 sm:p-3 rounded-lg border-2 ${
           application?.sns_upload_url
             ? 'border-green-300 bg-green-50'
             : 'border-green-200 bg-white'
         }`}>
-          <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0">
-            <Share2 className="w-5 h-5 text-green-600" />
+          <div className="w-8 h-8 sm:w-10 sm:h-10 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0">
+            <Share2 className="w-4 h-4 sm:w-5 sm:h-5 text-green-600" />
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-semibold text-gray-800">SNS Post URL</p>
-            <p className="text-xs text-gray-500">Instagram / TikTok / YouTube link</p>
+            <p className="text-xs sm:text-sm font-semibold text-gray-800">SNS Post URL</p>
+            <p className="text-[10px] sm:text-xs text-gray-500 truncate">Instagram / TikTok / YouTube link</p>
           </div>
           {application?.sns_upload_url ? (
-            <CheckCircle2 className="w-5 h-5 text-green-500 flex-shrink-0" />
+            <CheckCircle2 className="w-4 h-4 sm:w-5 sm:h-5 text-green-500 flex-shrink-0" />
           ) : (
-            <span className="text-xs font-medium text-red-500 bg-red-50 px-2 py-1 rounded flex-shrink-0">Required</span>
+            <span className="text-[10px] sm:text-xs font-medium text-red-500 bg-red-50 px-1.5 sm:px-2 py-0.5 sm:py-1 rounded flex-shrink-0">Required</span>
           )}
         </div>
 
         {/* Clean Video */}
-        <div className={`flex items-center gap-3 p-3 rounded-lg border-2 ${
+        <div className={`flex items-center gap-2 sm:gap-3 p-2.5 sm:p-3 rounded-lg border-2 ${
           !requiresCleanVideo
             ? 'border-gray-200 bg-gray-50 opacity-50'
             : application?.clean_video_url
               ? 'border-green-300 bg-green-50'
               : 'border-blue-200 bg-white'
         }`}>
-          <div className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 ${
+          <div className={`w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center flex-shrink-0 ${
             requiresCleanVideo ? 'bg-blue-100' : 'bg-gray-100'
           }`}>
-            <Video className={`w-5 h-5 ${requiresCleanVideo ? 'text-blue-600' : 'text-gray-400'}`} />
+            <Video className={`w-4 h-4 sm:w-5 sm:h-5 ${requiresCleanVideo ? 'text-blue-600' : 'text-gray-400'}`} />
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-semibold text-gray-800">Clean Video</p>
-            <p className="text-xs text-gray-500">No BGM, no subtitles version</p>
+            <p className="text-xs sm:text-sm font-semibold text-gray-800">Clean Video</p>
+            <p className="text-[10px] sm:text-xs text-gray-500 truncate">No BGM, no subtitles version</p>
           </div>
           {!requiresCleanVideo ? (
-            <span className="text-xs text-gray-400 bg-gray-100 px-2 py-1 rounded flex-shrink-0">N/A</span>
+            <span className="text-[10px] sm:text-xs text-gray-400 bg-gray-100 px-1.5 sm:px-2 py-0.5 sm:py-1 rounded flex-shrink-0">N/A</span>
           ) : application?.clean_video_url ? (
-            <CheckCircle2 className="w-5 h-5 text-green-500 flex-shrink-0" />
+            <CheckCircle2 className="w-4 h-4 sm:w-5 sm:h-5 text-green-500 flex-shrink-0" />
           ) : (
-            <span className="text-xs font-medium text-red-500 bg-red-50 px-2 py-1 rounded flex-shrink-0">Required</span>
+            <span className="text-[10px] sm:text-xs font-medium text-red-500 bg-red-50 px-1.5 sm:px-2 py-0.5 sm:py-1 rounded flex-shrink-0">Required</span>
           )}
         </div>
 
         {/* Ad Code */}
-        <div className={`flex items-center gap-3 p-3 rounded-lg border-2 ${
+        <div className={`flex items-center gap-2 sm:gap-3 p-2.5 sm:p-3 rounded-lg border-2 ${
           !requiresAdCode
             ? 'border-gray-200 bg-gray-50 opacity-50'
             : application?.partnership_code
               ? 'border-green-300 bg-green-50'
               : 'border-purple-200 bg-white'
         }`}>
-          <div className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 ${
+          <div className={`w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center flex-shrink-0 ${
             requiresAdCode ? 'bg-purple-100' : 'bg-gray-100'
           }`}>
-            <FileText className={`w-5 h-5 ${requiresAdCode ? 'text-purple-600' : 'text-gray-400'}`} />
+            <FileText className={`w-4 h-4 sm:w-5 sm:h-5 ${requiresAdCode ? 'text-purple-600' : 'text-gray-400'}`} />
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-semibold text-gray-800">Ad Code</p>
-            <p className="text-xs text-gray-500">Meta partnership ad code</p>
+            <p className="text-xs sm:text-sm font-semibold text-gray-800">Ad Code</p>
+            <p className="text-[10px] sm:text-xs text-gray-500 truncate">Meta partnership ad code</p>
           </div>
           {!requiresAdCode ? (
-            <span className="text-xs text-gray-400 bg-gray-100 px-2 py-1 rounded flex-shrink-0">N/A</span>
+            <span className="text-[10px] sm:text-xs text-gray-400 bg-gray-100 px-1.5 sm:px-2 py-0.5 sm:py-1 rounded flex-shrink-0">N/A</span>
           ) : application?.partnership_code ? (
-            <CheckCircle2 className="w-5 h-5 text-green-500 flex-shrink-0" />
+            <CheckCircle2 className="w-4 h-4 sm:w-5 sm:h-5 text-green-500 flex-shrink-0" />
           ) : (
-            <span className="text-xs font-medium text-red-500 bg-red-50 px-2 py-1 rounded flex-shrink-0">Required</span>
+            <span className="text-[10px] sm:text-xs font-medium text-red-500 bg-red-50 px-1.5 sm:px-2 py-0.5 sm:py-1 rounded flex-shrink-0">Required</span>
           )}
         </div>
       </div>
 
       {/* SNS Deadline */}
       {campaign?.sns_deadline && (
-        <div className="flex items-center gap-2 text-sm bg-green-50 border border-green-200 rounded-lg p-2">
-          <Calendar className="w-4 h-4 text-green-600" />
+        <div className="flex items-center gap-1.5 sm:gap-2 text-xs sm:text-sm bg-green-50 border border-green-200 rounded-lg p-2">
+          <Calendar className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-green-600 flex-shrink-0" />
           <span className="text-green-700">
             SNS Deadline: <strong>{formatDate(campaign.sns_deadline)}</strong>
           </span>
@@ -694,10 +694,10 @@ const FinalDeliveryContent = ({ campaign, application, onSubmitSNS, stepState })
       {/* Submit all button */}
       <button
         onClick={() => onSubmitSNS?.(application, campaign)}
-        className="w-full flex items-center justify-center gap-2 px-4 py-4 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white rounded-xl font-bold text-base transition-all shadow-lg"
+        className="w-full flex items-center justify-center gap-2 px-3 sm:px-4 py-3 sm:py-4 min-h-[2.75rem] bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white rounded-xl font-bold text-sm sm:text-base transition-all shadow-lg"
       >
-        <Send className="w-5 h-5" />
-        Submit All Deliverables
+        <Send className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0" />
+        <span>Submit All Deliverables</span>
       </button>
     </div>
   )
@@ -773,35 +773,35 @@ const CampaignWorkflowStepper = ({
   const progressPercent = Math.round((completedSteps / 5) * 100)
 
   return (
-    <div className="border border-gray-200 rounded-2xl overflow-hidden bg-white shadow-sm mb-4">
+    <div className="border border-gray-200 rounded-xl sm:rounded-2xl overflow-hidden overflow-x-hidden bg-white shadow-sm mb-3 sm:mb-4">
       {/* Header */}
       <div
-        className="p-4 bg-gradient-to-r from-purple-50 via-blue-50 to-green-50 cursor-pointer"
+        className="p-3 sm:p-4 bg-gradient-to-r from-purple-50 via-blue-50 to-green-50 cursor-pointer"
         onClick={() => setExpanded(!expanded)}
       >
-        <div className="flex items-start justify-between">
-          <div className="flex gap-3">
+        <div className="flex items-start justify-between gap-2">
+          <div className="flex gap-2 sm:gap-3 min-w-0 flex-1">
             {campaign?.image_url ? (
               <img
                 src={campaign.image_url}
                 alt={campaign.title}
-                className="w-16 h-16 rounded-xl object-cover shadow-sm"
+                className="w-12 h-12 sm:w-16 sm:h-16 rounded-lg sm:rounded-xl object-cover shadow-sm flex-shrink-0"
               />
             ) : (
-              <div className="w-16 h-16 rounded-xl bg-gradient-to-br from-purple-400 to-pink-400 flex items-center justify-center text-white text-2xl shadow-sm">
+              <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-lg sm:rounded-xl bg-gradient-to-br from-purple-400 to-pink-400 flex items-center justify-center text-white text-xl sm:text-2xl shadow-sm flex-shrink-0">
                 ✨
               </div>
             )}
-            <div>
-              <h3 className="font-bold text-gray-900 leading-tight">
+            <div className="min-w-0 flex-1">
+              <h3 className="font-bold text-gray-900 leading-tight text-sm sm:text-base truncate">
                 {campaign?.title_en || campaign?.title}
               </h3>
-              <p className="text-sm text-purple-600 font-medium">{campaign?.brand_en || campaign?.brand}</p>
-              <div className="flex items-center gap-2 mt-1">
-                <span className="text-sm font-bold text-green-600">
+              <p className="text-xs sm:text-sm text-purple-600 font-medium truncate">{campaign?.brand_en || campaign?.brand}</p>
+              <div className="flex items-center gap-1.5 sm:gap-2 mt-1 flex-wrap">
+                <span className="text-xs sm:text-sm font-bold text-green-600">
                   {formatCurrency(campaign?.reward_amount)}
                 </span>
-                <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${
+                <span className={`text-[10px] sm:text-xs px-1.5 sm:px-2 py-0.5 rounded-full font-medium ${
                   is4Week ? 'bg-orange-100 text-orange-700' : 'bg-blue-100 text-blue-700'
                 }`}>
                   {is4Week ? '4-Week' : 'Standard'}
@@ -809,21 +809,21 @@ const CampaignWorkflowStepper = ({
               </div>
             </div>
           </div>
-          <div className="flex flex-col items-end gap-2">
+          <div className="flex flex-col items-end gap-1.5 sm:gap-2 flex-shrink-0">
             {/* Progress badge */}
-            <div className="flex items-center gap-2">
-              <div className="w-20 h-2 bg-gray-200 rounded-full overflow-hidden">
+            <div className="flex items-center gap-1.5 sm:gap-2">
+              <div className="w-14 sm:w-20 h-1.5 sm:h-2 bg-gray-200 rounded-full overflow-hidden">
                 <div
                   className="h-full bg-gradient-to-r from-purple-500 via-blue-500 to-green-500 rounded-full transition-all duration-500"
                   style={{ width: `${progressPercent}%` }}
                 />
               </div>
-              <span className="text-xs font-bold text-gray-500">{progressPercent}%</span>
+              <span className="text-[10px] sm:text-xs font-bold text-gray-500">{progressPercent}%</span>
             </div>
             {expanded ? (
-              <ChevronUp className="w-5 h-5 text-gray-400" />
+              <ChevronUp className="w-4 h-4 sm:w-5 sm:h-5 text-gray-400" />
             ) : (
-              <ChevronDown className="w-5 h-5 text-gray-400" />
+              <ChevronDown className="w-4 h-4 sm:w-5 sm:h-5 text-gray-400" />
             )}
           </div>
         </div>
@@ -831,15 +831,15 @@ const CampaignWorkflowStepper = ({
 
       {/* Expanded Content - Workflow Steps */}
       {expanded && (
-        <div className="p-4 border-t border-gray-100">
+        <div className="p-3 sm:p-4 border-t border-gray-100">
           {/* Mini progress bar */}
-          <div className="flex items-center gap-1 mb-4">
+          <div className="flex items-center gap-0.5 sm:gap-1 mb-3 sm:mb-4">
             {WORKFLOW_STEPS.map((step, idx) => {
               const state = workflowState.steps[step.id]
               return (
                 <React.Fragment key={step.id}>
                   <div
-                    className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold transition-all cursor-pointer ${
+                    className={`w-6 h-6 sm:w-8 sm:h-8 rounded-full flex items-center justify-center text-[10px] sm:text-xs font-bold transition-all cursor-pointer flex-shrink-0 ${
                       state === 'completed'
                         ? 'bg-green-500 text-white shadow-sm'
                         : state === 'active'
@@ -857,7 +857,7 @@ const CampaignWorkflowStepper = ({
                     {state === 'completed' ? '✓' : step.number}
                   </div>
                   {idx < WORKFLOW_STEPS.length - 1 && (
-                    <div className={`flex-1 h-1 rounded ${
+                    <div className={`flex-1 h-0.5 sm:h-1 rounded min-w-1 ${
                       workflowState.steps[WORKFLOW_STEPS[idx + 1]?.id] === 'completed' || state === 'completed'
                         ? 'bg-green-400'
                         : 'bg-gray-200'
@@ -869,16 +869,16 @@ const CampaignWorkflowStepper = ({
           </div>
 
           {/* Step labels */}
-          <div className="flex items-center justify-between mb-4 px-1">
+          <div className="flex items-center justify-between mb-3 sm:mb-4 px-0 sm:px-1">
             {WORKFLOW_STEPS.map(step => {
               const state = workflowState.steps[step.id]
               return (
-                <span key={step.id} className={`text-[10px] font-medium text-center leading-tight ${
+                <span key={step.id} className={`text-[8px] sm:text-[10px] font-medium text-center leading-tight flex-1 ${
                   state === 'completed' ? 'text-green-600'
                   : state === 'active' ? 'text-blue-600 font-bold'
                   : state === 'waiting' ? 'text-yellow-600'
                   : 'text-gray-400'
-                }`} style={{ width: '20%' }}>
+                }`}>
                   {step.shortLabel}
                 </span>
               )
@@ -886,7 +886,7 @@ const CampaignWorkflowStepper = ({
           </div>
 
           {/* Step Detail Cards */}
-          <div className="space-y-2">
+          <div className="space-y-1.5 sm:space-y-2">
             {WORKFLOW_STEPS.map((step) => {
               const state = workflowState.steps[step.id]
               const colors = getStepColors(state, step.color)
@@ -896,44 +896,44 @@ const CampaignWorkflowStepper = ({
               return (
                 <div
                   key={step.id}
-                  className={`border-2 rounded-xl overflow-hidden transition-all ${colors.border}`}
+                  className={`border-2 rounded-lg sm:rounded-xl overflow-hidden transition-all ${colors.border}`}
                 >
                   {/* Step Header */}
                   <button
-                    className="w-full flex items-center gap-3 p-3 text-left"
+                    className="w-full flex items-center gap-2 sm:gap-3 p-2.5 sm:p-3 text-left min-h-[2.75rem]"
                     onClick={() => setExpandedStep(isExpanded ? null : step.id)}
                   >
-                    <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${colors.badge}`}>
+                    <div className={`w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center flex-shrink-0 ${colors.badge}`}>
                       {state === 'completed' ? (
-                        <CheckCircle2 className="w-4 h-4" />
+                        <CheckCircle2 className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                       ) : state === 'locked' ? (
-                        <Lock className="w-4 h-4" />
+                        <Lock className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                       ) : (
-                        <StepIcon className="w-4 h-4" />
+                        <StepIcon className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                       )}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2">
-                        <span className={`text-sm font-bold ${colors.text}`}>
+                      <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
+                        <span className={`text-xs sm:text-sm font-bold ${colors.text}`}>
                           Step {step.number}: {step.label}
                         </span>
                         {state === 'active' && (
-                          <span className="text-[10px] font-bold text-white bg-blue-500 px-2 py-0.5 rounded-full animate-pulse">
+                          <span className="text-[8px] sm:text-[10px] font-bold text-white bg-blue-500 px-1.5 sm:px-2 py-0.5 rounded-full animate-pulse">
                             CURRENT
                           </span>
                         )}
                         {state === 'waiting' && (
-                          <span className="text-[10px] font-bold text-white bg-yellow-500 px-2 py-0.5 rounded-full">
+                          <span className="text-[8px] sm:text-[10px] font-bold text-white bg-yellow-500 px-1.5 sm:px-2 py-0.5 rounded-full">
                             REVIEWING
                           </span>
                         )}
                         {state === 'completed' && (
-                          <span className="text-[10px] font-bold text-white bg-green-500 px-2 py-0.5 rounded-full">
+                          <span className="text-[8px] sm:text-[10px] font-bold text-white bg-green-500 px-1.5 sm:px-2 py-0.5 rounded-full">
                             DONE
                           </span>
                         )}
                       </div>
-                      <p className={`text-xs mt-0.5 ${state === 'locked' ? 'text-gray-400' : 'text-gray-500'}`}>
+                      <p className={`text-[10px] sm:text-xs mt-0.5 ${state === 'locked' ? 'text-gray-400' : 'text-gray-500'} hidden sm:block`}>
                         {step.description}
                       </p>
                     </div>
@@ -946,7 +946,7 @@ const CampaignWorkflowStepper = ({
 
                   {/* Step Content */}
                   {isExpanded && (
-                    <div className="px-3 pb-3 border-t border-gray-100 pt-3">
+                    <div className="px-2.5 pb-2.5 sm:px-3 sm:pb-3 border-t border-gray-100 pt-2.5 sm:pt-3">
                       {step.id === 'guide_check' && (
                         <GuideCheckContent
                           campaign={campaign}
@@ -999,12 +999,12 @@ const CampaignWorkflowStepper = ({
 
           {/* Deadlines Summary */}
           {!is4Week && (campaign?.video_deadline || campaign?.sns_deadline) && (
-            <div className="mt-4 bg-gray-50 rounded-xl p-3">
-              <h4 className="text-xs font-bold text-gray-600 mb-2 flex items-center gap-1">
+            <div className="mt-3 sm:mt-4 bg-gray-50 rounded-lg sm:rounded-xl p-2.5 sm:p-3">
+              <h4 className="text-[10px] sm:text-xs font-bold text-gray-600 mb-1.5 sm:mb-2 flex items-center gap-1">
                 <Calendar className="w-3 h-3" />
                 DEADLINES
               </h4>
-              <div className="flex gap-4 text-xs">
+              <div className="flex flex-col sm:flex-row gap-1 sm:gap-4 text-[10px] sm:text-xs">
                 {campaign?.video_deadline && (
                   <div>
                     <span className="text-gray-500">Video: </span>
@@ -1023,9 +1023,9 @@ const CampaignWorkflowStepper = ({
 
           {/* 4-Week Challenge - Weekly Status */}
           {is4Week && (
-            <div className="mt-4 bg-orange-50 border border-orange-200 rounded-xl p-3">
-              <h4 className="text-xs font-bold text-orange-700 mb-2">WEEKLY PROGRESS</h4>
-              <div className="grid grid-cols-4 gap-2">
+            <div className="mt-3 sm:mt-4 bg-orange-50 border border-orange-200 rounded-lg sm:rounded-xl p-2.5 sm:p-3">
+              <h4 className="text-[10px] sm:text-xs font-bold text-orange-700 mb-1.5 sm:mb-2">WEEKLY PROGRESS</h4>
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5 sm:gap-2">
                 {[1, 2, 3, 4].map(week => {
                   const videoSubmitted = !!application[`week${week}_video_url`]
                   const snsSubmitted = !!application[`week${week}_sns_url`]
@@ -1034,7 +1034,7 @@ const CampaignWorkflowStepper = ({
                   return (
                     <div
                       key={week}
-                      className={`p-2 rounded-lg text-center text-xs ${
+                      className={`p-1.5 sm:p-2 rounded-lg text-center text-[10px] sm:text-xs ${
                         isComplete
                           ? 'bg-green-100 border border-green-300'
                           : videoSubmitted
@@ -1042,7 +1042,7 @@ const CampaignWorkflowStepper = ({
                           : 'bg-white border border-gray-200'
                       }`}
                     >
-                      <div className="font-bold mb-1">W{week}</div>
+                      <div className="font-bold mb-0.5 sm:mb-1">W{week}</div>
                       <div className={videoSubmitted ? 'text-green-600' : 'text-gray-400'}>
                         {videoSubmitted ? '✓' : '○'} Vid
                       </div>

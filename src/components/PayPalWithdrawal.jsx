@@ -275,13 +275,13 @@ const PayPalWithdrawal = () => {
   }
 
   return (
-    <div className="max-w-4xl mx-auto p-6">
+    <div className="max-w-4xl mx-auto px-4 py-4 sm:p-6">
       <div className="bg-white rounded-lg shadow-sm border border-gray-200">
-        <div className="p-6 border-b border-gray-200">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center">
-              <CreditCard className="h-6 w-6 text-blue-600 mr-3" />
-              <h2 className="text-2xl font-bold text-gray-900">{t.title}</h2>
+        <div className="p-4 sm:p-6 border-b border-gray-200">
+          <div className="flex items-center justify-between gap-2">
+            <div className="flex items-center min-w-0">
+              <CreditCard className="h-5 w-5 sm:h-6 sm:w-6 text-blue-600 mr-2 sm:mr-3 flex-shrink-0" />
+              <h2 className="text-lg sm:text-2xl font-bold text-gray-900 truncate">{t.title}</h2>
             </div>
             <button
               onClick={loadData}
@@ -313,24 +313,24 @@ const PayPalWithdrawal = () => {
           </div>
         )}
 
-        <div className="p-6">
+        <div className="p-4 sm:p-6">
           {/* 현재 포인트 및 출금 신청 버튼 */}
-          <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg p-6 mb-6">
-            <div className="flex items-center justify-between">
+          <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg p-4 sm:p-6 mb-4 sm:mb-6">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
               <div>
-                <h3 className="text-lg font-semibold text-gray-900 mb-2">{t.currentPoints}</h3>
+                <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-2">{t.currentPoints}</h3>
                 <div className="flex items-center">
-                  <DollarSign className="h-8 w-8 text-blue-600 mr-2" />
+                  <DollarSign className="h-6 w-6 sm:h-8 sm:w-8 text-blue-600 mr-2" />
                   <span className="text-2xl sm:text-3xl font-bold text-blue-600">
                     {userPoints.toLocaleString()}P
                   </span>
                 </div>
-                <p className="text-sm text-gray-600 mt-2">{t.minimumWithdrawal}</p>
+                <p className="text-xs sm:text-sm text-gray-600 mt-2">{t.minimumWithdrawal}</p>
               </div>
               <button
                 onClick={() => setShowWithdrawalForm(true)}
                 disabled={userPoints < 1000}
-                className="flex items-center px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
+                className="flex items-center justify-center w-full sm:w-auto px-4 sm:px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors text-sm sm:text-base"
               >
                 <CreditCard className="h-5 w-5 mr-2" />
                 {t.requestWithdrawal}
@@ -340,7 +340,7 @@ const PayPalWithdrawal = () => {
 
           {/* 출금 신청 폼 */}
           {showWithdrawalForm && (
-            <div className="bg-gray-50 rounded-lg p-6 mb-6">
+            <div className="bg-gray-50 rounded-lg p-4 sm:p-6 mb-4 sm:mb-6">
               <h3 className="text-lg font-semibold text-gray-900 mb-4">{t.requestWithdrawal}</h3>
               <form onSubmit={handleWithdrawalSubmit} className="space-y-4">
                 <div>

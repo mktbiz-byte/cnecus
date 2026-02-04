@@ -59,16 +59,16 @@ const ShootingGuideModal = ({ isOpen, onClose, campaign, application }) => {
   const hasSpecialReqs = campaign.requires_ad_code || campaign.meta_ad_code_requested || campaign.requires_clean_video
 
   return (
-    <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 overflow-y-auto">
-      <div className="bg-white rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-hidden flex flex-col">
+    <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-2 sm:p-4 overflow-y-auto">
+      <div className="bg-white rounded-2xl max-w-2xl w-full max-h-[95vh] sm:max-h-[90vh] overflow-hidden flex flex-col">
         {/* Header */}
-        <div className="sticky top-0 bg-gradient-to-r from-purple-600 to-indigo-600 p-5 flex items-center justify-between z-10">
-          <div>
-            <h2 className="text-xl font-bold text-white flex items-center gap-2">
-              <FileText className="w-6 h-6" />
+        <div className="sticky top-0 bg-gradient-to-r from-purple-600 to-indigo-600 p-3 sm:p-5 flex items-center justify-between z-10">
+          <div className="min-w-0 flex-1">
+            <h2 className="text-base sm:text-xl font-bold text-white flex items-center gap-2">
+              <FileText className="w-5 h-5 sm:w-6 sm:h-6 flex-shrink-0" />
               Campaign Guide
             </h2>
-            <p className="text-sm text-purple-200 mt-1">{campaign.title_en || campaign.title}</p>
+            <p className="text-xs sm:text-sm text-purple-200 mt-1 truncate">{campaign.title_en || campaign.title}</p>
           </div>
           <button
             onClick={onClose}
@@ -98,7 +98,7 @@ const ShootingGuideModal = ({ isOpen, onClose, campaign, application }) => {
         </div>
 
         {/* Scrollable content */}
-        <div className="flex-1 overflow-y-auto p-5 space-y-5">
+        <div className="flex-1 overflow-y-auto p-3 sm:p-5 space-y-4 sm:space-y-5">
 
           {/* ========== GUIDE DOCUMENTS (PDF / SLIDES) ========== */}
           <div className={`rounded-xl p-5 border-2 ${
