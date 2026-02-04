@@ -2852,6 +2852,7 @@ const MyPageWithWithdrawal = () => {
           isOpen={showShootingGuideModal}
           onClose={() => setShowShootingGuideModal(false)}
           campaign={selectedCampaign}
+          application={selectedApplication}
         />
 
         {/* New Revision Requests Modal */}
