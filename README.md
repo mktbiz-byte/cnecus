@@ -1,66 +1,98 @@
-'''
-# CNEC K-Beauty 인플루언서 마케팅 플랫폼
+# CNEC-US K-Beauty Creator Marketing Platform
 
-이 프로젝트는 일본 시장을 타겟으로 하는 K-Beauty 인플루언서 마케팅 플랫폼입니다. React, Supabase, Tailwind CSS를 사용하여 제작되었으며, 사용자 등록부터 캠페인 지원, 포인트 관리, 최종 보고서 생성까지 완전한 워크플로우를 제공합니다.
+US market K-Beauty influencer marketing platform. Built with React 19, Supabase, Tailwind CSS v4.
 
-## ✨ 주요 기능
+## Tech Stack
 
-- **캠페인 관리**: 캠페인 생성, 수정, 질문 설정, 상태 관리
-- **사용자 시스템**: 이메일/Google 로그인, 프로필 관리, 관리자 승인
-- **신청 및 선정**: 맞춤 질문, 2단계 선정 프로세스 (가상 → 최종)
-- **포인트 시스템**: SNS 업로드 완료 시 포인트 지급 및 일본 은행 송금
-- **자동 이메일**: 7가지 주요 단계별 자동 이메일 발송
-- **관리자 대시보드**: 통계, 보고서, 이메일 템플릿 편집 등
-- **개인정보 보호**: 역할 기반 정보 접근 제어
+- **Frontend**: React 19 + Vite 6.3.5 + Tailwind CSS v4
+- **UI**: shadcn/ui (Radix UI) + Lucide React icons
+- **Backend**: Supabase (PostgreSQL, Auth, Storage, RLS)
+- **Routing**: React Router DOM v7
+- **Deploy**: Netlify
+- **Package Manager**: pnpm
 
-## 🛠️ 기술 스택
+## Creator Workflow
 
-- **Frontend**: React, Vite, Tailwind CSS, shadcn/ui
-- **Backend & DB**: Supabase (PostgreSQL, Auth, Storage)
-- **Deployment**: Netlify
-
-## 🚀 시작하기
-
-### 1. 프로젝트 클론
-
-```bash
-git clone https://github.com/your-username/cnec-campaign-platform.git
-cd cnec-campaign-platform
+```
+Selected → Video Submit → Revision Check → SNS/Clean/AdCode → Complete
 ```
 
-### 2. 종속성 설치
+### Steps
+
+| Step | Creator Action | DB Column |
+|------|---------------|-----------|
+| 1. Video Submit | Upload filmed video | `video_url`, `video_submission_url`, `video_submitted_at`, status → `video_submitted` |
+| 2. Revision Check | Admin reviews → approved or revision_requested | `revision_requests` (JSONB), `revision_notes` |
+| 3. SNS + Clean + Ad Code | Submit all 3 deliverables | `sns_upload_url`, `clean_video_url`, `partnership_code`, status → `sns_uploaded` |
+| 4. Complete | Admin confirms | status → `completed` |
+
+### 4-Week Challenge
+
+| Week | Video Column | SNS Column |
+|------|-------------|------------|
+| Week 1 | `week1_video_url` | `week1_sns_url` |
+| Week 2 | `week2_video_url` | `week2_sns_url` |
+| Week 3 | `week3_video_url` | `week3_sns_url` |
+| Week 4 | `week4_video_url` | `week4_sns_url` |
+
+## Database Tables
+
+| Table | Purpose |
+|-------|---------|
+| `user_profiles` | Creator profile, SNS URLs, followers |
+| `campaigns` | Campaign config, deadlines, requirements |
+| `applications` / `campaign_applications` | Creator applications + submission data |
+| `withdrawal_requests` | PayPal withdrawal requests |
+| `point_transactions` | Point credit/debit history |
+| `email_templates` | Email template storage |
+
+## Key Files
+
+### Pages (src/components/)
+| File | Description |
+|------|-------------|
+| `HomePageUS.jsx` | Landing page with campaign list |
+| `LoginPageUS.jsx` | Login (email + Google) |
+| `SignupPageUS.jsx` | Registration |
+| `CampaignApplicationUpdated.jsx` | Campaign application form |
+| `MyPageWithWithdrawal.jsx` | Creator dashboard (2900+ lines) |
+| `ProfileSettings.jsx` | Profile edit page |
+| `PayPalWithdrawal.jsx` | PayPal withdrawal page |
+| `CompanyReportNew.jsx` | Company report view |
+| `CreatorContactForm.jsx` | Contact/shipping info form |
+| `TermsPage.jsx` | Terms of service |
+| `PrivacyPage.jsx` | Privacy policy |
+
+### MyPage Components (src/components/mypage/)
+| File | Description |
+|------|-------------|
+| `CampaignWorkflowStepper.jsx` | 4-step workflow: Video → Revision → SNS/Clean/Code → Complete |
+| `ShootingGuideModal.jsx` | Campaign guide viewer (Standard + 4-Week) |
+| `VideoUploadModal.jsx` | Video file upload modal |
+| `SNSSubmitModal.jsx` | SNS URL + Clean Video + Ad Code submission |
+| `RevisionRequestsModal.jsx` | Revision request viewer |
+
+### Core (src/lib/)
+| File | Description |
+|------|-------------|
+| `supabase.js` | Supabase client + database helper functions |
+
+## Setup
 
 ```bash
-npm install
-```
-
-### 3. Supabase 설정
-
-자세한 내용은 `SUPABASE_SETUP.md` 파일을 참고하여 Supabase 프로젝트를 설정하세요.
-
-### 4. 환경변수 설정
-
-`.env.example` 파일을 복사하여 `.env` 파일을 생성하고, Supabase에서 발급받은 키를 입력하세요.
-
-```bash
+pnpm install
 cp .env.example .env
+# Set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY
+pnpm dev
 ```
 
-```.env
-VITE_SUPABASE_URL="YOUR_SUPABASE_URL"
-VITE_SUPABASE_ANON_KEY="YOUR_SUPABASE_ANON_KEY"
-```
+## Migrations
 
-### 5. 로컬 개발 서버 실행
+Run in Supabase SQL Editor:
 
-```bash
-npm run dev
-```
+1. `migrations/verify_schema_completeness.sql` — Check for missing columns (read-only)
+2. `migrations/fix_all_missing_columns.sql` — Add missing columns (safe, uses IF NOT EXISTS)
 
-이제 `http://localhost:5173`에서 개발 서버에 접속할 수 있습니다.
+## Deployment
 
-## 🌐 Netlify 배포
-
-자세한 내용은 `NETLIFY_DEPLOYMENT.md` 파일을 참고하여 GitHub와 연동된 자동 배포를 설정하세요.
-'''
-# Trigger Netlify deployment
+Netlify auto-deploy from GitHub. Build command: `pnpm build`
