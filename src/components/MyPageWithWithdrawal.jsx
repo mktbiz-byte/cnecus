@@ -12,6 +12,7 @@ import {
 // Import new mypage components
 import {
   CampaignProgressCard,
+  CampaignWorkflowStepper,
   ShootingGuideModal,
   RevisionRequestsModal,
   VideoUploadModal,
@@ -1791,7 +1792,7 @@ const MyPageWithWithdrawal = () => {
                 </div>
               </div>
 
-              {/* Active Campaigns Section - Using New CampaignProgressCard */}
+              {/* Active Campaigns Section - Using New CampaignWorkflowStepper */}
               {applications.filter(a => ['selected', 'filming', 'video_submitted', 'revision_requested', 'approved', 'sns_uploaded', 'completed'].includes(a.status)).length > 0 && (
                 <div className="mb-8">
                   <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center">
@@ -1804,7 +1805,7 @@ const MyPageWithWithdrawal = () => {
                     {applications
                       .filter(a => ['selected', 'filming', 'video_submitted', 'revision_requested', 'approved', 'sns_uploaded', 'completed'].includes(a.status))
                       .map((application) => (
-                        <CampaignProgressCard
+                        <CampaignWorkflowStepper
                           key={application.id}
                           application={application}
                           campaign={application.campaigns}
