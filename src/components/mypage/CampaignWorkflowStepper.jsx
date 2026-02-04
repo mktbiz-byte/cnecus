@@ -3,706 +3,74 @@ import {
   FileText, Video, Upload, ClipboardCheck, Send,
   ChevronDown, ChevronUp, Lock, CheckCircle2, Circle,
   AlertTriangle, Eye, ExternalLink, Calendar, ArrowRight,
-  BookOpen, Play, UploadCloud, RefreshCw, Share2
+  BookOpen, Play, UploadCloud, RefreshCw, Share2, Award,
+  Clock, AlertCircle, Tv
 } from 'lucide-react'
 
 /**
- * CampaignWorkflowStepper
+ * CampaignWorkflowStepper (US Version)
  *
- * Strict sequential workflow:
- *   Step 1: PDF / AI Guide 확인
- *   Step 2: 영상 가이드 확인
- *   Step 3: 영상 업로드  (수정사항 경고 포함)
- *   Step 4: 수정사항 체크
- *   Step 5: SNS 업로드 + 클린본 + 광고코드 전달 (3개 동시)
+ * 4-step workflow:
+ *   Step 1: Video Submit (영상 제출)
+ *   Step 2: Revision Check (수정사항 확인)
+ *   Step 3: SNS Upload + Clean Video URL + Ad Code (3개 동시 제출)
+ *   Step 4: Complete (최종 완료)
+ *
+ * + Shooting Guide: Always accessible banner (가이드는 언제든 확인 가능)
+ * + Deadline display: Video deadline + SNS deadline prominently shown
  */
 
-// Workflow step definitions
-const WORKFLOW_STEPS = [
-  {
-    id: 'guide_check',
-    number: 1,
-    label: 'PDF / AI Guide',
-    shortLabel: 'Guide',
-    icon: BookOpen,
-    color: 'purple',
-    description: 'Review the campaign shooting guide carefully'
-  },
-  {
-    id: 'video_guide_check',
-    number: 2,
-    label: 'Video Guide',
-    shortLabel: 'V-Guide',
-    icon: Play,
-    color: 'indigo',
-    description: 'Watch the video guide for shooting instructions'
-  },
-  {
-    id: 'video_upload',
-    number: 3,
-    label: 'Video Upload',
-    shortLabel: 'Upload',
-    icon: UploadCloud,
-    color: 'blue',
-    description: 'Upload your filmed content'
-  },
-  {
-    id: 'revision_check',
-    number: 4,
-    label: 'Revision Check',
-    shortLabel: 'Revision',
-    icon: RefreshCw,
-    color: 'amber',
-    description: 'Review any modification requests'
-  },
-  {
-    id: 'final_delivery',
-    number: 5,
-    label: 'Final Delivery',
-    shortLabel: 'Deliver',
-    icon: Share2,
-    color: 'green',
-    description: 'SNS Upload + Clean Video + Ad Code'
-  }
+const STEPS = [
+  { id: 'video_submit', number: 1, label: 'Video Submit', icon: UploadCloud },
+  { id: 'revision_check', number: 2, label: 'Revision Check', icon: ClipboardCheck },
+  { id: 'sns_delivery', number: 3, label: 'SNS / Clean / Code', icon: Share2 },
+  { id: 'complete', number: 4, label: 'Points', icon: Award },
 ]
 
-// Compute the current workflow step from application status and local confirmations
-const computeWorkflowState = (application, campaign, localState) => {
+// Compute step states from application status
+const computeStepStates = (application) => {
   const status = application?.status || 'pending'
-  const {
-    guideConfirmed = false,
-    videoGuideConfirmed = false
-  } = localState || {}
 
-  // If completed or sns_uploaded, everything is done
-  if (['completed', 'sns_uploaded'].includes(status)) {
-    return {
-      currentStep: 6, // all done
-      steps: {
-        guide_check: 'completed',
-        video_guide_check: 'completed',
-        video_upload: 'completed',
-        revision_check: 'completed',
-        final_delivery: status === 'completed' ? 'completed' : 'in_progress'
-      }
-    }
+  // Complete
+  if (status === 'completed') {
+    return { video_submit: 'done', revision_check: 'done', sns_delivery: 'done', complete: 'done', current: 5 }
   }
-
-  // If approved -> step 5 (final delivery)
+  // SNS uploaded - waiting for final completion
+  if (status === 'sns_uploaded') {
+    return { video_submit: 'done', revision_check: 'done', sns_delivery: 'done', complete: 'active', current: 4 }
+  }
+  // Approved - ready for SNS/Clean/Code delivery
   if (status === 'approved') {
-    return {
-      currentStep: 5,
-      steps: {
-        guide_check: 'completed',
-        video_guide_check: 'completed',
-        video_upload: 'completed',
-        revision_check: 'completed',
-        final_delivery: 'active'
-      }
-    }
+    return { video_submit: 'done', revision_check: 'done', sns_delivery: 'active', complete: 'locked', current: 3 }
   }
-
-  // If revision_requested -> step 4 (revision check)
+  // Revision requested - need to fix and reupload
   if (status === 'revision_requested') {
-    return {
-      currentStep: 4,
-      steps: {
-        guide_check: 'completed',
-        video_guide_check: 'completed',
-        video_upload: 'completed',
-        revision_check: 'active',
-        final_delivery: 'locked'
-      }
-    }
+    return { video_submit: 'done', revision_check: 'revision', sns_delivery: 'locked', complete: 'locked', current: 2 }
   }
-
-  // If video_submitted -> step 4 (waiting for review - revision check shows waiting)
+  // Video submitted - under review
   if (status === 'video_submitted') {
-    return {
-      currentStep: 4,
-      steps: {
-        guide_check: 'completed',
-        video_guide_check: 'completed',
-        video_upload: 'completed',
-        revision_check: 'waiting',
-        final_delivery: 'locked'
-      }
-    }
+    return { video_submit: 'done', revision_check: 'reviewing', sns_delivery: 'locked', complete: 'locked', current: 2 }
   }
-
-  // If filming or selected -> step 1-3 depending on local confirmations
+  // Selected / Filming - need to upload video
   if (['filming', 'selected'].includes(status)) {
-    if (!guideConfirmed) {
-      return {
-        currentStep: 1,
-        steps: {
-          guide_check: 'active',
-          video_guide_check: 'locked',
-          video_upload: 'locked',
-          revision_check: 'locked',
-          final_delivery: 'locked'
-        }
-      }
-    }
-    if (!videoGuideConfirmed) {
-      return {
-        currentStep: 2,
-        steps: {
-          guide_check: 'completed',
-          video_guide_check: 'active',
-          video_upload: 'locked',
-          revision_check: 'locked',
-          final_delivery: 'locked'
-        }
-      }
-    }
-    return {
-      currentStep: 3,
-      steps: {
-        guide_check: 'completed',
-        video_guide_check: 'completed',
-        video_upload: 'active',
-        revision_check: 'locked',
-        final_delivery: 'locked'
-      }
-    }
+    return { video_submit: 'active', revision_check: 'locked', sns_delivery: 'locked', complete: 'locked', current: 1 }
   }
-
-  // Default: all locked
-  return {
-    currentStep: 0,
-    steps: {
-      guide_check: 'locked',
-      video_guide_check: 'locked',
-      video_upload: 'locked',
-      revision_check: 'locked',
-      final_delivery: 'locked'
-    }
-  }
-}
-
-// Color utility
-const getStepColors = (stepState, colorName) => {
-  const colorMap = {
-    purple: {
-      active: 'border-purple-500 bg-purple-50',
-      activeBadge: 'bg-purple-600 text-white',
-      activeText: 'text-purple-700',
-      activeBtn: 'bg-purple-600 hover:bg-purple-700 text-white',
-    },
-    indigo: {
-      active: 'border-indigo-500 bg-indigo-50',
-      activeBadge: 'bg-indigo-600 text-white',
-      activeText: 'text-indigo-700',
-      activeBtn: 'bg-indigo-600 hover:bg-indigo-700 text-white',
-    },
-    blue: {
-      active: 'border-blue-500 bg-blue-50',
-      activeBadge: 'bg-blue-600 text-white',
-      activeText: 'text-blue-700',
-      activeBtn: 'bg-blue-600 hover:bg-blue-700 text-white',
-    },
-    amber: {
-      active: 'border-amber-500 bg-amber-50',
-      activeBadge: 'bg-amber-600 text-white',
-      activeText: 'text-amber-700',
-      activeBtn: 'bg-amber-600 hover:bg-amber-700 text-white',
-    },
-    green: {
-      active: 'border-green-500 bg-green-50',
-      activeBadge: 'bg-green-600 text-white',
-      activeText: 'text-green-700',
-      activeBtn: 'bg-green-600 hover:bg-green-700 text-white',
-    }
-  }
-
-  if (stepState === 'completed') {
-    return {
-      border: 'border-green-300 bg-green-50/50',
-      badge: 'bg-green-500 text-white',
-      text: 'text-green-700',
-      btn: 'bg-green-100 text-green-700'
-    }
-  }
-  if (stepState === 'active') {
-    const c = colorMap[colorName] || colorMap.blue
-    return {
-      border: c.active,
-      badge: c.activeBadge,
-      text: c.activeText,
-      btn: c.activeBtn
-    }
-  }
-  if (stepState === 'waiting') {
-    return {
-      border: 'border-yellow-300 bg-yellow-50/50',
-      badge: 'bg-yellow-500 text-white',
-      text: 'text-yellow-700',
-      btn: 'bg-yellow-100 text-yellow-700'
-    }
-  }
-  // locked
-  return {
-    border: 'border-gray-200 bg-gray-50/50',
-    badge: 'bg-gray-300 text-gray-500',
-    text: 'text-gray-400',
-    btn: 'bg-gray-200 text-gray-400 cursor-not-allowed'
-  }
+  // Default
+  return { video_submit: 'locked', revision_check: 'locked', sns_delivery: 'locked', complete: 'locked', current: 0 }
 }
 
 const formatDate = (dateString) => {
   if (!dateString) return '-'
-  return new Date(dateString).toLocaleDateString('en-US', {
-    month: 'short',
-    day: 'numeric',
-    year: 'numeric'
-  })
+  return new Date(dateString).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+}
+
+const getDaysLeft = (dateString) => {
+  if (!dateString) return null
+  const diff = Math.ceil((new Date(dateString) - new Date()) / (1000 * 60 * 60 * 24))
+  return diff
 }
 
 const formatCurrency = (amount) => `$${(amount || 0).toLocaleString()}`
-
-// ==================== STEP CONTENT COMPONENTS ====================
-
-// Step 1: PDF / AI Guide Check
-const GuideCheckContent = ({ campaign, application, onViewGuide, onConfirm, isConfirmed, stepState }) => {
-  const colors = getStepColors(stepState, 'purple')
-
-  if (stepState === 'completed') {
-    return (
-      <div className="flex items-center gap-2 py-1.5 sm:py-2">
-        <CheckCircle2 className="w-4 h-4 sm:w-5 sm:h-5 text-green-500 flex-shrink-0" />
-        <span className="text-xs sm:text-sm text-green-700 font-medium">Guide reviewed and confirmed</span>
-      </div>
-    )
-  }
-
-  if (stepState === 'locked') {
-    return (
-      <div className="flex items-center gap-2 py-1.5 sm:py-2 opacity-50">
-        <Lock className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-gray-400 flex-shrink-0" />
-        <span className="text-xs sm:text-sm text-gray-400">Complete previous steps first</span>
-      </div>
-    )
-  }
-
-  return (
-    <div className="space-y-2.5 sm:space-y-3">
-      <div className="bg-purple-50 border border-purple-200 rounded-lg p-2.5 sm:p-3">
-        <p className="text-xs sm:text-sm text-purple-800 font-medium mb-1">
-          Please review the campaign guide thoroughly before proceeding.
-        </p>
-        <p className="text-[10px] sm:text-xs text-purple-600">
-          The guide contains shooting requirements, required scenes, hashtags, and deadlines.
-        </p>
-      </div>
-
-      <button
-        onClick={() => onViewGuide?.(application, campaign)}
-        className="w-full flex items-center justify-center gap-2 px-3 sm:px-4 py-2.5 sm:py-3 min-h-[2.75rem] bg-purple-100 text-purple-700 rounded-xl font-medium hover:bg-purple-200 transition-colors border border-purple-200 text-sm"
-      >
-        <Eye className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0" />
-        <span>Open Campaign Guide</span>
-        <ExternalLink className="w-3.5 h-3.5 sm:w-4 sm:h-4 flex-shrink-0" />
-      </button>
-
-      {/* Confirm button */}
-      <button
-        onClick={onConfirm}
-        className={`w-full flex items-center justify-center gap-2 px-3 sm:px-4 py-2.5 sm:py-3 min-h-[2.75rem] rounded-xl font-medium transition-all text-xs sm:text-sm ${colors.btn} shadow-sm`}
-      >
-        <CheckCircle2 className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0" />
-        <span>I have reviewed the guide completely</span>
-      </button>
-    </div>
-  )
-}
-
-// Step 2: Video Guide Check
-const VideoGuideCheckContent = ({ campaign, application, onConfirm, stepState }) => {
-  const colors = getStepColors(stepState, 'indigo')
-
-  if (stepState === 'completed') {
-    return (
-      <div className="flex items-center gap-2 py-1.5 sm:py-2">
-        <CheckCircle2 className="w-4 h-4 sm:w-5 sm:h-5 text-green-500 flex-shrink-0" />
-        <span className="text-xs sm:text-sm text-green-700 font-medium">Video guide watched and confirmed</span>
-      </div>
-    )
-  }
-
-  if (stepState === 'locked') {
-    return (
-      <div className="flex items-center gap-2 py-1.5 sm:py-2 opacity-50">
-        <Lock className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-gray-400 flex-shrink-0" />
-        <span className="text-xs sm:text-sm text-gray-400">Review the PDF guide first</span>
-      </div>
-    )
-  }
-
-  const videoGuideUrl = campaign?.video_guide_url || campaign?.reference_video_url
-
-  return (
-    <div className="space-y-2.5 sm:space-y-3">
-      <div className="bg-indigo-50 border border-indigo-200 rounded-lg p-2.5 sm:p-3">
-        <p className="text-xs sm:text-sm text-indigo-800 font-medium mb-1">
-          Watch the video guide carefully before filming.
-        </p>
-        <p className="text-[10px] sm:text-xs text-indigo-600">
-          This video shows you how to shoot your content for this campaign.
-        </p>
-      </div>
-
-      {videoGuideUrl ? (
-        <a
-          href={videoGuideUrl}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="w-full flex items-center justify-center gap-2 px-3 sm:px-4 py-2.5 sm:py-3 min-h-[2.75rem] bg-indigo-100 text-indigo-700 rounded-xl font-medium hover:bg-indigo-200 transition-colors border border-indigo-200 text-sm"
-        >
-          <Play className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0" />
-          <span>Watch Video Guide</span>
-          <ExternalLink className="w-3.5 h-3.5 sm:w-4 sm:h-4 flex-shrink-0" />
-        </a>
-      ) : (
-        <div className="bg-gray-50 border border-gray-200 rounded-xl p-3 sm:p-4 text-center">
-          <Video className="w-6 h-6 sm:w-8 sm:h-8 text-gray-400 mx-auto mb-1.5 sm:mb-2" />
-          <p className="text-xs sm:text-sm text-gray-500">No video guide available for this campaign.</p>
-          <p className="text-[10px] sm:text-xs text-gray-400 mt-1">You can proceed to filming.</p>
-        </div>
-      )}
-
-      {/* Confirm button */}
-      <button
-        onClick={onConfirm}
-        className={`w-full flex items-center justify-center gap-2 px-3 sm:px-4 py-2.5 sm:py-3 min-h-[2.75rem] rounded-xl font-medium transition-all text-xs sm:text-sm ${colors.btn} shadow-sm`}
-      >
-        <CheckCircle2 className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0" />
-        <span>{videoGuideUrl ? 'I have watched the video guide' : 'Confirmed, proceed to upload'}</span>
-      </button>
-    </div>
-  )
-}
-
-// Step 3: Video Upload
-const VideoUploadContent = ({ campaign, application, onUploadVideo, stepState }) => {
-  const hasRevisions = application?.revision_requests?.length > 0
-  const isRevisionReupload = application?.status === 'revision_requested'
-
-  if (stepState === 'completed') {
-    return (
-      <div className="space-y-1.5 sm:space-y-2">
-        <div className="flex items-center gap-2 py-1.5 sm:py-2">
-          <CheckCircle2 className="w-4 h-4 sm:w-5 sm:h-5 text-green-500 flex-shrink-0" />
-          <span className="text-xs sm:text-sm text-green-700 font-medium">Video uploaded successfully</span>
-        </div>
-        {application?.video_url && (
-          <a
-            href={application.video_url}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center gap-1 text-[10px] sm:text-xs text-blue-600 hover:underline"
-          >
-            <ExternalLink className="w-3 h-3" />
-            View uploaded video
-          </a>
-        )}
-      </div>
-    )
-  }
-
-  if (stepState === 'locked') {
-    return (
-      <div className="flex items-center gap-2 py-1.5 sm:py-2 opacity-50">
-        <Lock className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-gray-400 flex-shrink-0" />
-        <span className="text-xs sm:text-sm text-gray-400">Complete the guide steps first</span>
-      </div>
-    )
-  }
-
-  return (
-    <div className="space-y-2.5 sm:space-y-3">
-      {/* REVISION WARNING - Always visible above upload button */}
-      <div className="bg-red-50 border-2 border-red-300 rounded-xl p-3 sm:p-4">
-        <div className="flex items-start gap-2 sm:gap-3">
-          <div className="flex-shrink-0 w-8 h-8 sm:w-10 sm:h-10 bg-red-100 rounded-full flex items-center justify-center">
-            <AlertTriangle className="w-4 h-4 sm:w-6 sm:h-6 text-red-600" />
-          </div>
-          <div className="min-w-0 flex-1">
-            <p className="text-xs sm:text-sm font-bold text-red-800">
-              Revision Check Upload
-            </p>
-            <p className="text-[10px] sm:text-xs text-red-600 mt-1 leading-relaxed">
-              Do NOT upload a video ahead of time. After your video is reviewed,
-              you may need to make revisions. Please upload your final version only
-              after confirming all requirements in the guide.
-            </p>
-            {isRevisionReupload && hasRevisions && (
-              <div className="mt-1.5 sm:mt-2 p-1.5 sm:p-2 bg-red-100 rounded-lg">
-                <p className="text-[10px] sm:text-xs font-semibold text-red-800">
-                  You have {application.revision_requests.length} revision request(s).
-                  Please fix all issues before re-uploading.
-                </p>
-              </div>
-            )}
-          </div>
-        </div>
-      </div>
-
-      {/* Deadline info */}
-      {campaign?.video_deadline && (
-        <div className="flex items-center gap-1.5 sm:gap-2 text-xs sm:text-sm bg-blue-50 border border-blue-200 rounded-lg p-2">
-          <Calendar className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-blue-600 flex-shrink-0" />
-          <span className="text-blue-700">
-            Video Deadline: <strong>{formatDate(campaign.video_deadline)}</strong>
-          </span>
-        </div>
-      )}
-
-      {/* Upload button */}
-      <button
-        onClick={() => onUploadVideo?.(application, campaign)}
-        className={`w-full flex items-center justify-center gap-2 px-3 sm:px-4 py-2.5 sm:py-3 min-h-[2.75rem] rounded-xl font-medium transition-all shadow-sm text-sm ${
-          isRevisionReupload
-            ? 'bg-red-600 hover:bg-red-700 text-white'
-            : 'bg-blue-600 hover:bg-blue-700 text-white'
-        }`}
-      >
-        <UploadCloud className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0" />
-        <span>{isRevisionReupload ? 'Re-upload Revised Video' : 'Upload Video'}</span>
-      </button>
-    </div>
-  )
-}
-
-// Step 4: Revision Check
-const RevisionCheckContent = ({ application, onViewRevisions, onUploadVideo, campaign, stepState }) => {
-  const hasRevisions = application?.revision_requests?.length > 0
-  const isRevisionRequested = application?.status === 'revision_requested'
-
-  if (stepState === 'completed') {
-    return (
-      <div className="flex items-center gap-2 py-1.5 sm:py-2">
-        <CheckCircle2 className="w-4 h-4 sm:w-5 sm:h-5 text-green-500 flex-shrink-0" />
-        <span className="text-xs sm:text-sm text-green-700 font-medium">Video approved - No revisions needed</span>
-      </div>
-    )
-  }
-
-  if (stepState === 'locked') {
-    return (
-      <div className="flex items-center gap-2 py-1.5 sm:py-2 opacity-50">
-        <Lock className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-gray-400 flex-shrink-0" />
-        <span className="text-xs sm:text-sm text-gray-400">Upload your video first</span>
-      </div>
-    )
-  }
-
-  // Waiting state - video submitted, waiting for admin review
-  if (stepState === 'waiting') {
-    return (
-      <div className="space-y-2.5 sm:space-y-3">
-        <div className="bg-yellow-50 border border-yellow-300 rounded-xl p-3 sm:p-4 text-center">
-          <div className="w-10 h-10 sm:w-12 sm:h-12 bg-yellow-100 rounded-full flex items-center justify-center mx-auto mb-2 sm:mb-3">
-            <ClipboardCheck className="w-5 h-5 sm:w-6 sm:h-6 text-yellow-600 animate-pulse" />
-          </div>
-          <p className="text-xs sm:text-sm font-semibold text-yellow-800">Under Review</p>
-          <p className="text-[10px] sm:text-xs text-yellow-600 mt-1">
-            Your video is being reviewed by the team. You'll be notified if revisions are needed.
-          </p>
-        </div>
-      </div>
-    )
-  }
-
-  // Active state - revision_requested
-  return (
-    <div className="space-y-2.5 sm:space-y-3">
-      {isRevisionRequested && hasRevisions && (
-        <div className="bg-red-50 border-2 border-red-300 rounded-xl p-3 sm:p-4">
-          <div className="flex items-start gap-2 sm:gap-3">
-            <div className="flex-shrink-0 w-8 h-8 sm:w-10 sm:h-10 bg-red-100 rounded-full flex items-center justify-center">
-              <AlertTriangle className="w-4 h-4 sm:w-6 sm:h-6 text-red-600 animate-bounce" />
-            </div>
-            <div className="min-w-0 flex-1">
-              <p className="text-xs sm:text-sm font-bold text-red-800">
-                Revision Required ({application.revision_requests.length} issue{application.revision_requests.length > 1 ? 's' : ''})
-              </p>
-              <p className="text-[10px] sm:text-xs text-red-600 mt-1">
-                Please review the feedback carefully and re-upload your video with corrections.
-              </p>
-            </div>
-          </div>
-        </div>
-      )}
-
-      <div className="flex flex-col sm:flex-row gap-2">
-        {hasRevisions && (
-          <button
-            onClick={() => onViewRevisions?.(application)}
-            className="flex-1 flex items-center justify-center gap-2 px-3 sm:px-4 py-2.5 sm:py-3 min-h-[2.75rem] bg-amber-600 hover:bg-amber-700 text-white rounded-xl font-medium transition-all shadow-sm text-xs sm:text-sm"
-          >
-            <Eye className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0" />
-            <span>View Revisions</span>
-          </button>
-        )}
-        {isRevisionRequested && (
-          <button
-            onClick={() => onUploadVideo?.(application, campaign)}
-            className="flex-1 flex items-center justify-center gap-2 px-3 sm:px-4 py-2.5 sm:py-3 min-h-[2.75rem] bg-red-600 hover:bg-red-700 text-white rounded-xl font-medium transition-all shadow-sm text-xs sm:text-sm"
-          >
-            <RefreshCw className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0" />
-            <span>Re-upload</span>
-          </button>
-        )}
-      </div>
-    </div>
-  )
-}
-
-// Step 5: Final Delivery (3 simultaneous)
-const FinalDeliveryContent = ({ campaign, application, onSubmitSNS, stepState }) => {
-  const requiresAdCode = campaign?.requires_ad_code || campaign?.meta_ad_code_requested
-  const requiresCleanVideo = campaign?.requires_clean_video
-
-  if (stepState === 'completed') {
-    return (
-      <div className="space-y-1.5 sm:space-y-2">
-        <div className="flex items-center gap-2 py-1.5 sm:py-2">
-          <CheckCircle2 className="w-4 h-4 sm:w-5 sm:h-5 text-green-500 flex-shrink-0" />
-          <span className="text-xs sm:text-sm text-green-700 font-medium">All deliverables submitted!</span>
-        </div>
-        {application?.sns_upload_url && (
-          <a
-            href={application.sns_upload_url}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center gap-1 text-[10px] sm:text-xs text-blue-600 hover:underline"
-          >
-            <ExternalLink className="w-3 h-3" />
-            View SNS Post
-          </a>
-        )}
-      </div>
-    )
-  }
-
-  if (stepState === 'locked') {
-    return (
-      <div className="flex items-center gap-2 py-1.5 sm:py-2 opacity-50">
-        <Lock className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-gray-400 flex-shrink-0" />
-        <span className="text-xs sm:text-sm text-gray-400">Video must be approved first</span>
-      </div>
-    )
-  }
-
-  return (
-    <div className="space-y-2.5 sm:space-y-3">
-      <div className="bg-green-50 border border-green-200 rounded-lg p-2.5 sm:p-3">
-        <p className="text-xs sm:text-sm text-green-800 font-medium mb-1">
-          Submit all required deliverables at once
-        </p>
-        <p className="text-[10px] sm:text-xs text-green-600">
-          Complete all three items below in a single submission.
-        </p>
-      </div>
-
-      {/* Three deliverables visual */}
-      <div className="grid grid-cols-1 gap-1.5 sm:gap-2">
-        {/* SNS Upload */}
-        <div className={`flex items-center gap-2 sm:gap-3 p-2.5 sm:p-3 rounded-lg border-2 ${
-          application?.sns_upload_url
-            ? 'border-green-300 bg-green-50'
-            : 'border-green-200 bg-white'
-        }`}>
-          <div className="w-8 h-8 sm:w-10 sm:h-10 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0">
-            <Share2 className="w-4 h-4 sm:w-5 sm:h-5 text-green-600" />
-          </div>
-          <div className="flex-1 min-w-0">
-            <p className="text-xs sm:text-sm font-semibold text-gray-800">SNS Post URL</p>
-            <p className="text-[10px] sm:text-xs text-gray-500 truncate">Instagram / TikTok / YouTube link</p>
-          </div>
-          {application?.sns_upload_url ? (
-            <CheckCircle2 className="w-4 h-4 sm:w-5 sm:h-5 text-green-500 flex-shrink-0" />
-          ) : (
-            <span className="text-[10px] sm:text-xs font-medium text-red-500 bg-red-50 px-1.5 sm:px-2 py-0.5 sm:py-1 rounded flex-shrink-0">Required</span>
-          )}
-        </div>
-
-        {/* Clean Video */}
-        <div className={`flex items-center gap-2 sm:gap-3 p-2.5 sm:p-3 rounded-lg border-2 ${
-          !requiresCleanVideo
-            ? 'border-gray-200 bg-gray-50 opacity-50'
-            : application?.clean_video_url
-              ? 'border-green-300 bg-green-50'
-              : 'border-blue-200 bg-white'
-        }`}>
-          <div className={`w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center flex-shrink-0 ${
-            requiresCleanVideo ? 'bg-blue-100' : 'bg-gray-100'
-          }`}>
-            <Video className={`w-4 h-4 sm:w-5 sm:h-5 ${requiresCleanVideo ? 'text-blue-600' : 'text-gray-400'}`} />
-          </div>
-          <div className="flex-1 min-w-0">
-            <p className="text-xs sm:text-sm font-semibold text-gray-800">Clean Video</p>
-            <p className="text-[10px] sm:text-xs text-gray-500 truncate">No BGM, no subtitles version</p>
-          </div>
-          {!requiresCleanVideo ? (
-            <span className="text-[10px] sm:text-xs text-gray-400 bg-gray-100 px-1.5 sm:px-2 py-0.5 sm:py-1 rounded flex-shrink-0">N/A</span>
-          ) : application?.clean_video_url ? (
-            <CheckCircle2 className="w-4 h-4 sm:w-5 sm:h-5 text-green-500 flex-shrink-0" />
-          ) : (
-            <span className="text-[10px] sm:text-xs font-medium text-red-500 bg-red-50 px-1.5 sm:px-2 py-0.5 sm:py-1 rounded flex-shrink-0">Required</span>
-          )}
-        </div>
-
-        {/* Ad Code */}
-        <div className={`flex items-center gap-2 sm:gap-3 p-2.5 sm:p-3 rounded-lg border-2 ${
-          !requiresAdCode
-            ? 'border-gray-200 bg-gray-50 opacity-50'
-            : application?.partnership_code
-              ? 'border-green-300 bg-green-50'
-              : 'border-purple-200 bg-white'
-        }`}>
-          <div className={`w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center flex-shrink-0 ${
-            requiresAdCode ? 'bg-purple-100' : 'bg-gray-100'
-          }`}>
-            <FileText className={`w-4 h-4 sm:w-5 sm:h-5 ${requiresAdCode ? 'text-purple-600' : 'text-gray-400'}`} />
-          </div>
-          <div className="flex-1 min-w-0">
-            <p className="text-xs sm:text-sm font-semibold text-gray-800">Ad Code</p>
-            <p className="text-[10px] sm:text-xs text-gray-500 truncate">Meta partnership ad code</p>
-          </div>
-          {!requiresAdCode ? (
-            <span className="text-[10px] sm:text-xs text-gray-400 bg-gray-100 px-1.5 sm:px-2 py-0.5 sm:py-1 rounded flex-shrink-0">N/A</span>
-          ) : application?.partnership_code ? (
-            <CheckCircle2 className="w-4 h-4 sm:w-5 sm:h-5 text-green-500 flex-shrink-0" />
-          ) : (
-            <span className="text-[10px] sm:text-xs font-medium text-red-500 bg-red-50 px-1.5 sm:px-2 py-0.5 sm:py-1 rounded flex-shrink-0">Required</span>
-          )}
-        </div>
-      </div>
-
-      {/* SNS Deadline */}
-      {campaign?.sns_deadline && (
-        <div className="flex items-center gap-1.5 sm:gap-2 text-xs sm:text-sm bg-green-50 border border-green-200 rounded-lg p-2">
-          <Calendar className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-green-600 flex-shrink-0" />
-          <span className="text-green-700">
-            SNS Deadline: <strong>{formatDate(campaign.sns_deadline)}</strong>
-          </span>
-        </div>
-      )}
-
-      {/* Submit all button */}
-      <button
-        onClick={() => onSubmitSNS?.(application, campaign)}
-        className="w-full flex items-center justify-center gap-2 px-3 sm:px-4 py-3 sm:py-4 min-h-[2.75rem] bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white rounded-xl font-bold text-sm sm:text-base transition-all shadow-lg"
-      >
-        <Send className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0" />
-        <span>Submit All Deliverables</span>
-      </button>
-    </div>
-  )
-}
-
 
 // ==================== MAIN COMPONENT ====================
 
@@ -715,346 +83,429 @@ const CampaignWorkflowStepper = ({
   onViewRevisions
 }) => {
   const [expanded, setExpanded] = useState(true)
-  const [expandedStep, setExpandedStep] = useState(null)
-
-  // Local confirmation states (persisted in localStorage per application)
-  const storageKey = `workflow_${application?.id}`
-  const [guideConfirmed, setGuideConfirmed] = useState(false)
-  const [videoGuideConfirmed, setVideoGuideConfirmed] = useState(false)
-
-  // Load persisted state
-  useEffect(() => {
-    if (!application?.id) return
-    try {
-      const saved = JSON.parse(localStorage.getItem(storageKey) || '{}')
-      setGuideConfirmed(saved.guideConfirmed || false)
-      setVideoGuideConfirmed(saved.videoGuideConfirmed || false)
-    } catch (e) {
-      // ignore
-    }
-  }, [application?.id])
-
-  // Save state
-  const persist = (updates) => {
-    const current = { guideConfirmed, videoGuideConfirmed, ...updates }
-    localStorage.setItem(storageKey, JSON.stringify(current))
-  }
-
-  const handleGuideConfirm = () => {
-    setGuideConfirmed(true)
-    persist({ guideConfirmed: true })
-  }
-
-  const handleVideoGuideConfirm = () => {
-    setVideoGuideConfirmed(true)
-    persist({ videoGuideConfirmed: true })
-  }
-
   const status = application?.status || 'pending'
   const is4Week = campaign?.campaign_type === '4week_challenge'
-
-  const workflowState = computeWorkflowState(application, campaign, {
-    guideConfirmed,
-    videoGuideConfirmed
-  })
-
-  // Auto-expand the current active step
-  useEffect(() => {
-    const activeStep = WORKFLOW_STEPS.find(s => workflowState.steps[s.id] === 'active')
-    const waitingStep = WORKFLOW_STEPS.find(s => workflowState.steps[s.id] === 'waiting')
-    setExpandedStep(activeStep?.id || waitingStep?.id || null)
-  }, [workflowState.currentStep])
+  const stepStates = computeStepStates(application)
 
   const isActive = ['selected', 'filming', 'video_submitted', 'revision_requested', 'approved', 'sns_uploaded', 'completed'].includes(status)
   if (!isActive) return null
 
-  // Calculate progress percentage
-  const completedSteps = Object.values(workflowState.steps).filter(s => s === 'completed').length
-  const progressPercent = Math.round((completedSteps / 5) * 100)
+  const completedCount = Object.values(stepStates).filter(s => s === 'done').length
+  const progressPercent = status === 'completed' ? 100 : Math.round((completedCount / 4) * 100)
+
+  const videoDaysLeft = getDaysLeft(campaign?.video_deadline)
+  const snsDaysLeft = getDaysLeft(campaign?.sns_deadline)
 
   return (
-    <div className="border border-gray-200 rounded-xl sm:rounded-2xl overflow-hidden overflow-x-hidden bg-white shadow-sm mb-3 sm:mb-4">
-      {/* Header */}
+    <div className="bg-white border border-gray-200 rounded-2xl overflow-hidden shadow-sm mb-4">
+      {/* ====== HEADER - Campaign Info + Progress ====== */}
       <div
-        className="p-3 sm:p-4 bg-gradient-to-r from-purple-50 via-blue-50 to-green-50 cursor-pointer"
+        className="px-4 py-3 sm:px-5 sm:py-4 cursor-pointer hover:bg-gray-50/50 transition-colors"
         onClick={() => setExpanded(!expanded)}
       >
-        <div className="flex items-start justify-between gap-2">
-          <div className="flex gap-2 sm:gap-3 min-w-0 flex-1">
-            {campaign?.image_url ? (
-              <img
-                src={campaign.image_url}
-                alt={campaign.title}
-                className="w-12 h-12 sm:w-16 sm:h-16 rounded-lg sm:rounded-xl object-cover shadow-sm flex-shrink-0"
-              />
-            ) : (
-              <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-lg sm:rounded-xl bg-gradient-to-br from-purple-400 to-pink-400 flex items-center justify-center text-white text-xl sm:text-2xl shadow-sm flex-shrink-0">
-                ✨
-              </div>
-            )}
-            <div className="min-w-0 flex-1">
-              <h3 className="font-bold text-gray-900 leading-tight text-sm sm:text-base truncate">
-                {campaign?.title_en || campaign?.title}
-              </h3>
-              <p className="text-xs sm:text-sm text-purple-600 font-medium truncate">{campaign?.brand_en || campaign?.brand}</p>
-              <div className="flex items-center gap-1.5 sm:gap-2 mt-1 flex-wrap">
-                <span className="text-xs sm:text-sm font-bold text-green-600">
-                  {formatCurrency(campaign?.reward_amount)}
-                </span>
-                <span className={`text-[10px] sm:text-xs px-1.5 sm:px-2 py-0.5 rounded-full font-medium ${
-                  is4Week ? 'bg-orange-100 text-orange-700' : 'bg-blue-100 text-blue-700'
-                }`}>
-                  {is4Week ? '4-Week' : 'Standard'}
-                </span>
-              </div>
+        <div className="flex items-center gap-3">
+          {/* Thumbnail */}
+          {campaign?.image_url ? (
+            <img src={campaign.image_url} alt="" className="w-12 h-12 sm:w-14 sm:h-14 rounded-xl object-cover flex-shrink-0" />
+          ) : (
+            <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-xl bg-gradient-to-br from-violet-500 to-pink-500 flex items-center justify-center text-white text-lg flex-shrink-0">
+              C
             </div>
+          )}
+
+          {/* Title area */}
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2 mb-0.5">
+              <span className={`text-[10px] px-1.5 py-0.5 rounded font-semibold ${
+                is4Week ? 'bg-orange-100 text-orange-700' : 'bg-violet-100 text-violet-700'
+              }`}>
+                {is4Week ? '4-WEEK' : 'STANDARD'}
+              </span>
+            </div>
+            <h3 className="font-bold text-gray-900 text-sm sm:text-base leading-tight truncate">
+              {campaign?.title_en || campaign?.title}
+            </h3>
+            <p className="text-xs text-gray-500 truncate">{campaign?.brand_en || campaign?.brand}</p>
           </div>
-          <div className="flex flex-col items-end gap-1.5 sm:gap-2 flex-shrink-0">
-            {/* Progress badge */}
-            <div className="flex items-center gap-1.5 sm:gap-2">
-              <div className="w-14 sm:w-20 h-1.5 sm:h-2 bg-gray-200 rounded-full overflow-hidden">
-                <div
-                  className="h-full bg-gradient-to-r from-purple-500 via-blue-500 to-green-500 rounded-full transition-all duration-500"
-                  style={{ width: `${progressPercent}%` }}
-                />
-              </div>
-              <span className="text-[10px] sm:text-xs font-bold text-gray-500">{progressPercent}%</span>
-            </div>
-            {expanded ? (
-              <ChevronUp className="w-4 h-4 sm:w-5 sm:h-5 text-gray-400" />
-            ) : (
-              <ChevronDown className="w-4 h-4 sm:w-5 sm:h-5 text-gray-400" />
-            )}
+
+          {/* Progress */}
+          <div className="flex flex-col items-end flex-shrink-0">
+            <span className="text-lg sm:text-xl font-black text-violet-600">{progressPercent}%</span>
+            {expanded ? <ChevronUp className="w-4 h-4 text-gray-400 mt-0.5" /> : <ChevronDown className="w-4 h-4 text-gray-400 mt-0.5" />}
           </div>
         </div>
       </div>
 
-      {/* Expanded Content - Workflow Steps */}
       {expanded && (
-        <div className="p-3 sm:p-4 border-t border-gray-100">
-          {/* Mini progress bar */}
-          <div className="flex items-center gap-0.5 sm:gap-1 mb-3 sm:mb-4">
-            {WORKFLOW_STEPS.map((step, idx) => {
-              const state = workflowState.steps[step.id]
-              return (
-                <React.Fragment key={step.id}>
-                  <div
-                    className={`w-6 h-6 sm:w-8 sm:h-8 rounded-full flex items-center justify-center text-[10px] sm:text-xs font-bold transition-all cursor-pointer flex-shrink-0 ${
-                      state === 'completed'
-                        ? 'bg-green-500 text-white shadow-sm'
-                        : state === 'active'
-                        ? 'bg-blue-500 text-white shadow-md animate-pulse'
-                        : state === 'waiting'
-                        ? 'bg-yellow-400 text-white shadow-sm'
-                        : 'bg-gray-200 text-gray-400'
-                    }`}
-                    title={step.label}
-                    onClick={(e) => {
-                      e.stopPropagation()
-                      setExpandedStep(expandedStep === step.id ? null : step.id)
-                    }}
-                  >
-                    {state === 'completed' ? '✓' : step.number}
-                  </div>
-                  {idx < WORKFLOW_STEPS.length - 1 && (
-                    <div className={`flex-1 h-0.5 sm:h-1 rounded min-w-1 ${
-                      workflowState.steps[WORKFLOW_STEPS[idx + 1]?.id] === 'completed' || state === 'completed'
-                        ? 'bg-green-400'
-                        : 'bg-gray-200'
-                    }`} />
-                  )}
-                </React.Fragment>
-              )
-            })}
-          </div>
-
-          {/* Step labels */}
-          <div className="flex items-center justify-between mb-3 sm:mb-4 px-0 sm:px-1">
-            {WORKFLOW_STEPS.map(step => {
-              const state = workflowState.steps[step.id]
-              return (
-                <span key={step.id} className={`text-[8px] sm:text-[10px] font-medium text-center leading-tight flex-1 ${
-                  state === 'completed' ? 'text-green-600'
-                  : state === 'active' ? 'text-blue-600 font-bold'
-                  : state === 'waiting' ? 'text-yellow-600'
-                  : 'text-gray-400'
+        <div className="border-t border-gray-100">
+          {/* ====== DEADLINES BAR ====== */}
+          <div className="px-4 py-2.5 sm:px-5 sm:py-3 bg-gray-50 flex gap-3 sm:gap-6 overflow-x-auto">
+            <div className="flex items-center gap-2 flex-shrink-0">
+              <div className="w-7 h-7 rounded-lg bg-blue-100 flex items-center justify-center">
+                <Video className="w-3.5 h-3.5 text-blue-600" />
+              </div>
+              <div>
+                <p className="text-[10px] text-gray-500 font-medium leading-none">Video Due</p>
+                <p className="text-xs sm:text-sm font-bold text-gray-900 leading-tight">
+                  {formatDate(campaign?.video_deadline)}
+                </p>
+              </div>
+              {videoDaysLeft !== null && videoDaysLeft >= 0 && (
+                <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${
+                  videoDaysLeft <= 3 ? 'bg-red-100 text-red-700' : videoDaysLeft <= 7 ? 'bg-amber-100 text-amber-700' : 'bg-green-100 text-green-700'
                 }`}>
-                  {step.shortLabel}
+                  D-{videoDaysLeft}
                 </span>
-              )
-            })}
+              )}
+            </div>
+            <div className="w-px bg-gray-200" />
+            <div className="flex items-center gap-2 flex-shrink-0">
+              <div className="w-7 h-7 rounded-lg bg-emerald-100 flex items-center justify-center">
+                <Share2 className="w-3.5 h-3.5 text-emerald-600" />
+              </div>
+              <div>
+                <p className="text-[10px] text-gray-500 font-medium leading-none">SNS Due</p>
+                <p className="text-xs sm:text-sm font-bold text-gray-900 leading-tight">
+                  {formatDate(campaign?.sns_deadline)}
+                </p>
+              </div>
+              {snsDaysLeft !== null && snsDaysLeft >= 0 && (
+                <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${
+                  snsDaysLeft <= 3 ? 'bg-red-100 text-red-700' : snsDaysLeft <= 7 ? 'bg-amber-100 text-amber-700' : 'bg-green-100 text-green-700'
+                }`}>
+                  D-{snsDaysLeft}
+                </span>
+              )}
+            </div>
           </div>
 
-          {/* Step Detail Cards */}
-          <div className="space-y-1.5 sm:space-y-2">
-            {WORKFLOW_STEPS.map((step) => {
-              const state = workflowState.steps[step.id]
-              const colors = getStepColors(state, step.color)
-              const StepIcon = step.icon
-              const isExpanded = expandedStep === step.id
+          {/* ====== HORIZONTAL STEP INDICATOR ====== */}
+          <div className="px-4 pt-4 pb-2 sm:px-5">
+            <div className="flex items-center">
+              {STEPS.map((step, idx) => {
+                const state = stepStates[step.id]
+                const StepIcon = step.icon
+                const isDone = state === 'done'
+                const isActiveStep = state === 'active' || state === 'revision' || state === 'reviewing'
 
-              return (
-                <div
-                  key={step.id}
-                  className={`border-2 rounded-lg sm:rounded-xl overflow-hidden transition-all ${colors.border}`}
-                >
-                  {/* Step Header */}
-                  <button
-                    className="w-full flex items-center gap-2 sm:gap-3 p-2.5 sm:p-3 text-left min-h-[2.75rem]"
-                    onClick={() => setExpandedStep(isExpanded ? null : step.id)}
-                  >
-                    <div className={`w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center flex-shrink-0 ${colors.badge}`}>
-                      {state === 'completed' ? (
-                        <CheckCircle2 className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-                      ) : state === 'locked' ? (
-                        <Lock className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-                      ) : (
-                        <StepIcon className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-                      )}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
-                        <span className={`text-xs sm:text-sm font-bold ${colors.text}`}>
-                          Step {step.number}: {step.label}
-                        </span>
-                        {state === 'active' && (
-                          <span className="text-[8px] sm:text-[10px] font-bold text-white bg-blue-500 px-1.5 sm:px-2 py-0.5 rounded-full animate-pulse">
-                            CURRENT
-                          </span>
-                        )}
-                        {state === 'waiting' && (
-                          <span className="text-[8px] sm:text-[10px] font-bold text-white bg-yellow-500 px-1.5 sm:px-2 py-0.5 rounded-full">
-                            REVIEWING
-                          </span>
-                        )}
-                        {state === 'completed' && (
-                          <span className="text-[8px] sm:text-[10px] font-bold text-white bg-green-500 px-1.5 sm:px-2 py-0.5 rounded-full">
-                            DONE
-                          </span>
+                return (
+                  <React.Fragment key={step.id}>
+                    {/* Step circle */}
+                    <div className="flex flex-col items-center flex-shrink-0" style={{ width: idx === 0 || idx === STEPS.length - 1 ? 'auto' : undefined }}>
+                      <div className={`w-9 h-9 sm:w-10 sm:h-10 rounded-full flex items-center justify-center transition-all ${
+                        isDone
+                          ? 'bg-emerald-500 text-white shadow-sm'
+                          : isActiveStep
+                          ? 'bg-violet-600 text-white shadow-md ring-4 ring-violet-100'
+                          : 'bg-gray-100 text-gray-400'
+                      }`}>
+                        {isDone ? (
+                          <CheckCircle2 className="w-5 h-5" />
+                        ) : (
+                          <StepIcon className="w-4 h-4 sm:w-5 sm:h-5" />
                         )}
                       </div>
-                      <p className={`text-[10px] sm:text-xs mt-0.5 ${state === 'locked' ? 'text-gray-400' : 'text-gray-500'} hidden sm:block`}>
-                        {step.description}
-                      </p>
+                      <span className={`text-[9px] sm:text-[10px] mt-1 font-semibold text-center leading-tight ${
+                        isDone ? 'text-emerald-600' : isActiveStep ? 'text-violet-600' : 'text-gray-400'
+                      }`}>
+                        {step.label}
+                      </span>
                     </div>
-                    {isExpanded ? (
-                      <ChevronUp className={`w-4 h-4 flex-shrink-0 ${colors.text}`} />
-                    ) : (
-                      <ChevronDown className={`w-4 h-4 flex-shrink-0 ${colors.text}`} />
+                    {/* Connector line */}
+                    {idx < STEPS.length - 1 && (
+                      <div className={`flex-1 h-0.5 mx-1 sm:mx-2 rounded-full ${
+                        stepStates[STEPS[idx + 1].id] === 'done' || isDone && (stepStates[STEPS[idx + 1].id] !== 'locked')
+                          ? 'bg-emerald-400'
+                          : 'bg-gray-200'
+                      }`} />
                     )}
-                  </button>
-
-                  {/* Step Content */}
-                  {isExpanded && (
-                    <div className="px-2.5 pb-2.5 sm:px-3 sm:pb-3 border-t border-gray-100 pt-2.5 sm:pt-3">
-                      {step.id === 'guide_check' && (
-                        <GuideCheckContent
-                          campaign={campaign}
-                          application={application}
-                          onViewGuide={onViewGuide}
-                          onConfirm={handleGuideConfirm}
-                          isConfirmed={guideConfirmed}
-                          stepState={state}
-                        />
-                      )}
-                      {step.id === 'video_guide_check' && (
-                        <VideoGuideCheckContent
-                          campaign={campaign}
-                          application={application}
-                          onConfirm={handleVideoGuideConfirm}
-                          stepState={state}
-                        />
-                      )}
-                      {step.id === 'video_upload' && (
-                        <VideoUploadContent
-                          campaign={campaign}
-                          application={application}
-                          onUploadVideo={onUploadVideo}
-                          stepState={state}
-                        />
-                      )}
-                      {step.id === 'revision_check' && (
-                        <RevisionCheckContent
-                          application={application}
-                          campaign={campaign}
-                          onViewRevisions={onViewRevisions}
-                          onUploadVideo={onUploadVideo}
-                          stepState={state}
-                        />
-                      )}
-                      {step.id === 'final_delivery' && (
-                        <FinalDeliveryContent
-                          campaign={campaign}
-                          application={application}
-                          onSubmitSNS={onSubmitSNS}
-                          stepState={state}
-                        />
-                      )}
-                    </div>
-                  )}
-                </div>
-              )
-            })}
+                  </React.Fragment>
+                )
+              })}
+            </div>
           </div>
 
-          {/* Deadlines Summary */}
-          {!is4Week && (campaign?.video_deadline || campaign?.sns_deadline) && (
-            <div className="mt-3 sm:mt-4 bg-gray-50 rounded-lg sm:rounded-xl p-2.5 sm:p-3">
-              <h4 className="text-[10px] sm:text-xs font-bold text-gray-600 mb-1.5 sm:mb-2 flex items-center gap-1">
-                <Calendar className="w-3 h-3" />
-                DEADLINES
-              </h4>
-              <div className="flex flex-col sm:flex-row gap-1 sm:gap-4 text-[10px] sm:text-xs">
-                {campaign?.video_deadline && (
-                  <div>
-                    <span className="text-gray-500">Video: </span>
-                    <span className="font-semibold text-gray-700">{formatDate(campaign.video_deadline)}</span>
-                  </div>
-                )}
-                {campaign?.sns_deadline && (
-                  <div>
-                    <span className="text-gray-500">SNS: </span>
-                    <span className="font-semibold text-gray-700">{formatDate(campaign.sns_deadline)}</span>
-                  </div>
-                )}
+          {/* ====== SNS WARNING BANNER ====== */}
+          {['selected', 'filming', 'video_submitted', 'revision_requested'].includes(status) && (
+            <div className="mx-4 sm:mx-5 mt-2 mb-1 bg-red-50 border border-red-200 rounded-xl p-3 flex items-start gap-2.5">
+              <div className="w-7 h-7 rounded-full bg-red-100 flex items-center justify-center flex-shrink-0">
+                <AlertTriangle className="w-4 h-4 text-red-600" />
               </div>
+              <p className="text-xs text-red-700 leading-relaxed">
+                <span className="font-bold">Do NOT post on SNS</span> until your video is approved. Upload to SNS only after passing the revision check.
+              </p>
             </div>
           )}
 
-          {/* 4-Week Challenge - Weekly Status */}
-          {is4Week && (
-            <div className="mt-3 sm:mt-4 bg-orange-50 border border-orange-200 rounded-lg sm:rounded-xl p-2.5 sm:p-3">
-              <h4 className="text-[10px] sm:text-xs font-bold text-orange-700 mb-1.5 sm:mb-2">WEEKLY PROGRESS</h4>
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5 sm:gap-2">
-                {[1, 2, 3, 4].map(week => {
-                  const videoSubmitted = !!application[`week${week}_video_url`]
-                  const snsSubmitted = !!application[`week${week}_sns_url`]
-                  const isComplete = videoSubmitted && snsSubmitted
+          {/* ====== ACTIVE STEP CONTENT ====== */}
+          <div className="px-4 py-3 sm:px-5 sm:py-4">
 
-                  return (
-                    <div
-                      key={week}
-                      className={`p-1.5 sm:p-2 rounded-lg text-center text-[10px] sm:text-xs ${
-                        isComplete
-                          ? 'bg-green-100 border border-green-300'
-                          : videoSubmitted
-                          ? 'bg-blue-100 border border-blue-300'
-                          : 'bg-white border border-gray-200'
-                      }`}
+            {/* === STEP 1: Video Submit === */}
+            {stepStates.video_submit === 'active' && (
+              <div className="space-y-3">
+                <div className="flex items-center gap-2">
+                  <div className="w-6 h-6 rounded-full bg-violet-600 text-white flex items-center justify-center text-xs font-bold">1</div>
+                  <h4 className="text-sm font-bold text-gray-900">Upload Your Video</h4>
+                </div>
+                <p className="text-xs text-gray-500 ml-8">
+                  Review the shooting guide, film your content, then upload. Make sure to follow all requirements before submitting.
+                </p>
+
+                {/* Video already uploaded info */}
+                {application?.video_url && (
+                  <div className="ml-8 bg-blue-50 border border-blue-200 rounded-lg p-2.5 flex items-center gap-2">
+                    <Video className="w-4 h-4 text-blue-600 flex-shrink-0" />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs font-medium text-blue-800">Previous video uploaded</p>
+                      <a href={application.video_url} target="_blank" rel="noopener noreferrer" className="text-[10px] text-blue-600 hover:underline truncate block">{application.video_url}</a>
+                    </div>
+                  </div>
+                )}
+
+                <button
+                  onClick={() => onUploadVideo?.(application, campaign)}
+                  className="ml-8 w-auto inline-flex items-center gap-2 px-5 py-2.5 bg-violet-600 hover:bg-violet-700 text-white rounded-xl font-semibold text-sm transition-colors shadow-sm"
+                >
+                  <UploadCloud className="w-4 h-4" />
+                  Upload Video
+                </button>
+              </div>
+            )}
+
+            {/* === STEP 2: Reviewing === */}
+            {stepStates.revision_check === 'reviewing' && (
+              <div className="space-y-3">
+                <div className="flex items-center gap-2">
+                  <div className="w-6 h-6 rounded-full bg-amber-500 text-white flex items-center justify-center text-xs font-bold">2</div>
+                  <h4 className="text-sm font-bold text-gray-900">Under Review</h4>
+                  <span className="text-[10px] font-bold bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full">REVIEWING</span>
+                </div>
+                <div className="ml-8 bg-amber-50 border border-amber-200 rounded-xl p-4 text-center">
+                  <ClipboardCheck className="w-8 h-8 text-amber-500 mx-auto mb-2 animate-pulse" />
+                  <p className="text-sm font-semibold text-amber-800">Your video is being reviewed</p>
+                  <p className="text-xs text-amber-600 mt-1">You'll be notified once the review is complete.</p>
+                </div>
+
+                {/* Submitted video info */}
+                {application?.video_url && (
+                  <div className="ml-8 bg-gray-50 border border-gray-200 rounded-lg p-2.5 flex items-center gap-2">
+                    <Video className="w-4 h-4 text-gray-500 flex-shrink-0" />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-[10px] text-gray-500">Submitted video:</p>
+                      <p className="text-xs font-medium text-gray-700 truncate">{application.video_url?.split('/').pop() || 'video'}</p>
+                    </div>
+                    <span className="text-[10px] font-semibold bg-gray-200 text-gray-600 px-1.5 py-0.5 rounded">v{application.revision_requests?.length ? application.revision_requests.length + 1 : 1}</span>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* === STEP 2: Revision Required === */}
+            {stepStates.revision_check === 'revision' && (
+              <div className="space-y-3">
+                <div className="flex items-center gap-2">
+                  <div className="w-6 h-6 rounded-full bg-red-500 text-white flex items-center justify-center text-xs font-bold">2</div>
+                  <h4 className="text-sm font-bold text-gray-900">Revision Required</h4>
+                  <span className="text-[10px] font-bold bg-red-100 text-red-700 px-2 py-0.5 rounded-full">
+                    {application?.revision_requests?.length || 0} issue{(application?.revision_requests?.length || 0) !== 1 ? 's' : ''}
+                  </span>
+                </div>
+
+                <div className="ml-8 bg-red-50 border-2 border-red-200 rounded-xl p-3">
+                  <p className="text-xs text-red-700 font-medium leading-relaxed">
+                    Please review the feedback below and re-upload your video with all corrections applied.
+                  </p>
+                </div>
+
+                <div className="ml-8 flex gap-2">
+                  {application?.revision_requests?.length > 0 && (
+                    <button
+                      onClick={() => onViewRevisions?.(application)}
+                      className="flex items-center gap-2 px-4 py-2.5 bg-amber-500 hover:bg-amber-600 text-white rounded-xl font-semibold text-sm transition-colors"
                     >
-                      <div className="font-bold mb-0.5 sm:mb-1">W{week}</div>
-                      <div className={videoSubmitted ? 'text-green-600' : 'text-gray-400'}>
-                        {videoSubmitted ? '✓' : '○'} Vid
-                      </div>
-                      <div className={snsSubmitted ? 'text-green-600' : 'text-gray-400'}>
-                        {snsSubmitted ? '✓' : '○'} SNS
-                      </div>
+                      <Eye className="w-4 h-4" />
+                      View Details
+                    </button>
+                  )}
+                  <button
+                    onClick={() => onUploadVideo?.(application, campaign)}
+                    className="flex items-center gap-2 px-4 py-2.5 bg-red-600 hover:bg-red-700 text-white rounded-xl font-semibold text-sm transition-colors"
+                  >
+                    <RefreshCw className="w-4 h-4" />
+                    Re-upload Video
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* === STEP 3: SNS / Clean / Ad Code === */}
+            {stepStates.sns_delivery === 'active' && (
+              <div className="space-y-3">
+                <div className="flex items-center gap-2">
+                  <div className="w-6 h-6 rounded-full bg-emerald-500 text-white flex items-center justify-center text-xs font-bold">3</div>
+                  <h4 className="text-sm font-bold text-gray-900">Final Submission</h4>
+                  <span className="text-[10px] font-bold bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded-full">APPROVED</span>
+                </div>
+
+                <p className="text-xs text-gray-500 ml-8">
+                  Your video was approved! Now submit all deliverables below.
+                </p>
+
+                {/* 3 deliverable cards */}
+                <div className="ml-8 space-y-2">
+                  {/* SNS Post URL */}
+                  <div className={`flex items-center gap-3 p-3 rounded-xl border-2 transition-all ${
+                    application?.sns_upload_url ? 'border-emerald-300 bg-emerald-50' : 'border-gray-200 bg-white hover:border-violet-200'
+                  }`}>
+                    <div className="w-9 h-9 bg-pink-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                      <Share2 className="w-4 h-4 text-pink-600" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs font-bold text-gray-800">SNS Post URL</p>
+                      <p className="text-[10px] text-gray-500">Instagram / TikTok / YouTube post link</p>
+                    </div>
+                    {application?.sns_upload_url ? (
+                      <CheckCircle2 className="w-5 h-5 text-emerald-500 flex-shrink-0" />
+                    ) : (
+                      <span className="text-[10px] font-bold text-red-600 bg-red-50 px-2 py-0.5 rounded flex-shrink-0">Required</span>
+                    )}
+                  </div>
+
+                  {/* Clean Video */}
+                  <div className={`flex items-center gap-3 p-3 rounded-xl border-2 transition-all ${
+                    !campaign?.requires_clean_video
+                      ? 'border-gray-100 bg-gray-50 opacity-50'
+                      : application?.clean_video_url
+                        ? 'border-emerald-300 bg-emerald-50'
+                        : 'border-gray-200 bg-white hover:border-violet-200'
+                  }`}>
+                    <div className="w-9 h-9 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                      <Video className="w-4 h-4 text-blue-600" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs font-bold text-gray-800">Clean Video URL</p>
+                      <p className="text-[10px] text-gray-500">No BGM, no subtitles version</p>
+                    </div>
+                    {!campaign?.requires_clean_video ? (
+                      <span className="text-[10px] text-gray-400 bg-gray-100 px-2 py-0.5 rounded flex-shrink-0">N/A</span>
+                    ) : application?.clean_video_url ? (
+                      <CheckCircle2 className="w-5 h-5 text-emerald-500 flex-shrink-0" />
+                    ) : (
+                      <span className="text-[10px] font-bold text-red-600 bg-red-50 px-2 py-0.5 rounded flex-shrink-0">Required</span>
+                    )}
+                  </div>
+
+                  {/* Ad Code */}
+                  <div className={`flex items-center gap-3 p-3 rounded-xl border-2 transition-all ${
+                    !(campaign?.requires_ad_code || campaign?.meta_ad_code_requested)
+                      ? 'border-gray-100 bg-gray-50 opacity-50'
+                      : application?.partnership_code
+                        ? 'border-emerald-300 bg-emerald-50'
+                        : 'border-gray-200 bg-white hover:border-violet-200'
+                  }`}>
+                    <div className="w-9 h-9 bg-purple-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                      <Tv className="w-4 h-4 text-purple-600" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs font-bold text-gray-800">Ad Partnership Code</p>
+                      <p className="text-[10px] text-gray-500">Meta / YouTube / TikTok ad code</p>
+                    </div>
+                    {!(campaign?.requires_ad_code || campaign?.meta_ad_code_requested) ? (
+                      <span className="text-[10px] text-gray-400 bg-gray-100 px-2 py-0.5 rounded flex-shrink-0">N/A</span>
+                    ) : application?.partnership_code ? (
+                      <CheckCircle2 className="w-5 h-5 text-emerald-500 flex-shrink-0" />
+                    ) : (
+                      <span className="text-[10px] font-bold text-red-600 bg-red-50 px-2 py-0.5 rounded flex-shrink-0">Required</span>
+                    )}
+                  </div>
+                </div>
+
+                <button
+                  onClick={() => onSubmitSNS?.(application, campaign)}
+                  className="ml-8 w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white rounded-xl font-bold text-sm transition-all shadow-md"
+                >
+                  <Send className="w-4 h-4" />
+                  Submit All Deliverables
+                </button>
+              </div>
+            )}
+
+            {/* === STEP 4: Complete === */}
+            {stepStates.complete === 'active' && (
+              <div className="text-center py-4">
+                <div className="w-14 h-14 rounded-full bg-emerald-100 flex items-center justify-center mx-auto mb-3">
+                  <Award className="w-7 h-7 text-emerald-600" />
+                </div>
+                <h4 className="text-base font-bold text-gray-900 mb-1">All Submitted!</h4>
+                <p className="text-xs text-gray-500">Points will be awarded once everything is confirmed.</p>
+              </div>
+            )}
+
+            {stepStates.complete === 'done' && (
+              <div className="text-center py-4">
+                <div className="w-14 h-14 rounded-full bg-emerald-500 flex items-center justify-center mx-auto mb-3 shadow-lg">
+                  <CheckCircle2 className="w-7 h-7 text-white" />
+                </div>
+                <h4 className="text-base font-bold text-emerald-700 mb-1">Campaign Complete!</h4>
+                <p className="text-xs text-gray-500">Thank you for your work. Points have been awarded.</p>
+              </div>
+            )}
+
+            {/* === Locked state message === */}
+            {stepStates.video_submit === 'locked' && (
+              <div className="text-center py-6 text-gray-400">
+                <Lock className="w-6 h-6 mx-auto mb-2" />
+                <p className="text-xs">Waiting for campaign selection...</p>
+              </div>
+            )}
+
+            {stepStates.video_submit === 'done' && stepStates.revision_check === 'locked' && (
+              <div className="text-center py-4 text-gray-400">
+                <Clock className="w-6 h-6 mx-auto mb-2" />
+                <p className="text-xs">Processing...</p>
+              </div>
+            )}
+          </div>
+
+          {/* ====== 4-WEEK CHALLENGE WEEKLY PROGRESS ====== */}
+          {is4Week && (
+            <div className="mx-4 sm:mx-5 mb-3 bg-orange-50 border border-orange-200 rounded-xl p-3">
+              <h4 className="text-[10px] font-bold text-orange-700 mb-2 uppercase tracking-wide">Weekly Progress</h4>
+              <div className="grid grid-cols-4 gap-2">
+                {[1, 2, 3, 4].map(week => {
+                  const vid = !!application?.[`week${week}_video_url`]
+                  const sns = !!application?.[`week${week}_sns_url`]
+                  const done = vid && sns
+                  return (
+                    <div key={week} className={`p-2 rounded-lg text-center text-[10px] border ${
+                      done ? 'bg-emerald-100 border-emerald-300' : vid ? 'bg-blue-50 border-blue-200' : 'bg-white border-gray-200'
+                    }`}>
+                      <div className="font-bold text-xs mb-0.5">W{week}</div>
+                      <div className={vid ? 'text-emerald-600' : 'text-gray-300'}>{vid ? '✓' : '○'} Vid</div>
+                      <div className={sns ? 'text-emerald-600' : 'text-gray-300'}>{sns ? '✓' : '○'} SNS</div>
                     </div>
                   )
                 })}
               </div>
             </div>
           )}
+
+          {/* ====== SHOOTING GUIDE BANNER - Always visible ====== */}
+          <div className="px-4 pb-3 sm:px-5 sm:pb-4">
+            <button
+              onClick={() => onViewGuide?.(application, campaign)}
+              className="w-full flex items-center gap-3 px-4 py-3 bg-gradient-to-r from-violet-50 to-purple-50 border-2 border-violet-200 rounded-xl hover:border-violet-400 hover:from-violet-100 hover:to-purple-100 transition-all group"
+            >
+              <div className="w-9 h-9 rounded-lg bg-violet-100 group-hover:bg-violet-200 flex items-center justify-center flex-shrink-0 transition-colors">
+                <BookOpen className="w-5 h-5 text-violet-600" />
+              </div>
+              <div className="flex-1 text-left min-w-0">
+                <p className="text-sm font-bold text-violet-800">View Shooting Guide</p>
+                <p className="text-[10px] text-violet-500">Requirements, scenes, hashtags & deadlines</p>
+              </div>
+              <ArrowRight className="w-4 h-4 text-violet-400 group-hover:text-violet-600 group-hover:translate-x-0.5 transition-all flex-shrink-0" />
+            </button>
+          </div>
         </div>
       )}
     </div>
