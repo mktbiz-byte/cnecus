@@ -426,8 +426,31 @@ const MyPageWithWithdrawal = () => {
           campaigns (
             id,
             title,
+            title_en,
             brand,
-            reward_amount
+            brand_en,
+            image_url,
+            campaign_type,
+            reward_amount,
+            video_deadline,
+            sns_deadline,
+            application_deadline,
+            week1_deadline,
+            week2_deadline,
+            week3_deadline,
+            week4_deadline,
+            week1_sns_deadline,
+            week2_sns_deadline,
+            week3_sns_deadline,
+            week4_sns_deadline,
+            requires_ad_code,
+            meta_ad_code_requested,
+            requires_clean_video,
+            video_guide_url,
+            reference_video_url,
+            shooting_guide,
+            google_drive_url,
+            google_slides_url
           )
         `)
         .eq('user_id', user.id)

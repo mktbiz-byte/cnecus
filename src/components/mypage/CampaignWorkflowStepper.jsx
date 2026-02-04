@@ -125,7 +125,14 @@ const CampaignWorkflowStepper = ({
             <h3 className="font-bold text-gray-900 text-sm sm:text-base leading-tight truncate">
               {campaign?.title_en || campaign?.title}
             </h3>
-            <p className="text-xs text-gray-500 truncate">{campaign?.brand_en || campaign?.brand}</p>
+            <div className="flex items-center gap-2 mt-0.5">
+              <p className="text-xs text-gray-500 truncate">{campaign?.brand_en || campaign?.brand}</p>
+              {campaign?.reward_amount > 0 && (
+                <span className="text-xs font-bold text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded flex-shrink-0">
+                  {formatCurrency(campaign.reward_amount)}
+                </span>
+              )}
+            </div>
           </div>
 
           {/* Progress */}
