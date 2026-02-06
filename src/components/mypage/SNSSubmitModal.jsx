@@ -18,7 +18,12 @@ const SNSSubmitModal = ({
 
   const is4Week = campaign?.campaign_type === '4week_challenge'
   const requiresAdCode = campaign?.requires_ad_code || campaign?.meta_ad_code_requested
-  const requiresCleanVideo = campaign?.requires_clean_video && !application?.clean_video_url
+  // For 4-week, check per-week clean video; for standard, check single clean_video_url
+  const requiresCleanVideo = campaign?.requires_clean_video && (
+    is4Week
+      ? !application?.[`week${selectedWeek}_clean_video_url`]
+      : !application?.clean_video_url
+  )
 
   // Reset form when modal opens
   useEffect(() => {
@@ -164,6 +169,9 @@ const SNSSubmitModal = ({
                       )}
                       {hasSns && (
                         <div className="text-[10px] sm:text-xs text-green-600 mt-1">✓ Done</div>
+                      )}
+                      {hasVideo && !hasSns && application?.[`week${week}_clean_video_url`] && (
+                        <div className="text-[10px] sm:text-xs text-blue-600 mt-1">Clean ✓</div>
                       )}
                       {!hasVideo && !hasSns && (
                         <div className="text-[10px] sm:text-xs text-gray-400 mt-1">No video</div>

@@ -1121,7 +1121,12 @@ const MyPageWithWithdrawal = () => {
       }
 
       if (cleanVideoUrl) {
-        updateData.clean_video_url = cleanVideoUrl
+        // For 4-week, save clean video per-week; for standard, save to single field
+        if (is4Week && weekNumber) {
+          updateData[`week${weekNumber}_clean_video_url`] = cleanVideoUrl
+        } else {
+          updateData.clean_video_url = cleanVideoUrl
+        }
       }
 
       const { error: updateError } = await supabase
@@ -1160,11 +1165,21 @@ const MyPageWithWithdrawal = () => {
       }
 
       if (partnershipCode) {
-        updateData.partnership_code = partnershipCode
+        // For 4-week, save partnership code per-week; for standard, save to single field
+        if (is4Week && weekNumber) {
+          updateData[`week${weekNumber}_partnership_code`] = partnershipCode
+        } else {
+          updateData.partnership_code = partnershipCode
+        }
       }
 
       if (cleanVideoUrl) {
-        updateData.clean_video_url = cleanVideoUrl
+        // For 4-week, save clean video per-week; for standard, save to single field
+        if (is4Week && weekNumber) {
+          updateData[`week${weekNumber}_clean_video_url`] = cleanVideoUrl
+        } else {
+          updateData.clean_video_url = cleanVideoUrl
+        }
       }
 
       const { error: updateError } = await supabase

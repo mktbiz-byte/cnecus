@@ -142,13 +142,19 @@ const DeadlinesSection = ({ campaign, application }) => {
 const WeeklySubmissionStatus = ({ application, campaign }) => {
   if (campaign?.campaign_type !== '4week_challenge') return null
 
+  const requiresCleanVideo = campaign?.requires_clean_video
+  const requiresAdCode = campaign?.requires_ad_code || campaign?.meta_ad_code_requested
+
   return (
     <div className="bg-orange-50 border border-orange-200 rounded-lg p-3 mt-3">
       <h4 className="text-sm font-semibold text-orange-700 mb-2">📅 Weekly Progress</h4>
       <div className="grid grid-cols-4 gap-2">
         {[1, 2, 3, 4].map(week => {
+          const hasGuide = !!(application[`week${week}_guide_drive_url`] || application[`week${week}_guide_slides_url`])
           const videoSubmitted = !!application[`week${week}_video_url`]
+          const cleanVideoSubmitted = !!application[`week${week}_clean_video_url`]
           const snsSubmitted = !!application[`week${week}_sns_url`]
+          const hasPartnershipCode = !!application[`week${week}_partnership_code`]
           const isComplete = videoSubmitted && snsSubmitted
 
           return (
@@ -163,12 +169,25 @@ const WeeklySubmissionStatus = ({ application, campaign }) => {
               } border`}
             >
               <div className="font-medium mb-1">W{week}</div>
+              <div className={hasGuide ? 'text-purple-600' : 'text-gray-400'}>
+                {hasGuide ? '📋' : '⬜'} Guide
+              </div>
               <div className={videoSubmitted ? 'text-green-600' : 'text-gray-400'}>
                 {videoSubmitted ? '✅' : '⬜'} Vid
               </div>
+              {requiresCleanVideo && (
+                <div className={cleanVideoSubmitted ? 'text-blue-600' : 'text-gray-400'}>
+                  {cleanVideoSubmitted ? '✅' : '⬜'} Clean
+                </div>
+              )}
               <div className={snsSubmitted ? 'text-green-600' : 'text-gray-400'}>
                 {snsSubmitted ? '✅' : '⬜'} SNS
               </div>
+              {requiresAdCode && (
+                <div className={hasPartnershipCode ? 'text-purple-600' : 'text-gray-400'}>
+                  {hasPartnershipCode ? '✅' : '⬜'} Code
+                </div>
+              )}
             </div>
           )
         })}

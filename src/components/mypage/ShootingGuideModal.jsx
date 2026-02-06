@@ -11,11 +11,28 @@ const ShootingGuideModal = ({ isOpen, onClose, campaign, application }) => {
 
   const is4Week = campaign.campaign_type === '4week_challenge'
   const [expandedWeek, setExpandedWeek] = useState(1)
+  const [selectedGuideWeek, setSelectedGuideWeek] = useState(1)
 
-  // Guide document URLs from application (admin sets these)
-  const driveUrl = application?.google_drive_url
-  const slidesUrl = application?.google_slides_url
+  // Guide document URLs - per-week for 4-week, single for standard
+  const getWeekGuideUrls = (week) => {
+    const driveUrl = application?.[`week${week}_guide_drive_url`]
+    const slidesUrl = application?.[`week${week}_guide_slides_url`]
+    return { driveUrl, slidesUrl, hasLinks: !!(driveUrl || slidesUrl) }
+  }
+
+  // For standard campaigns, use the original single guide
+  const driveUrl = is4Week
+    ? getWeekGuideUrls(selectedGuideWeek).driveUrl
+    : application?.google_drive_url
+  const slidesUrl = is4Week
+    ? getWeekGuideUrls(selectedGuideWeek).slidesUrl
+    : application?.google_slides_url
   const hasGuideLinks = driveUrl || slidesUrl
+
+  // Check if any week has guides (for 4-week)
+  const anyWeekHasGuide = is4Week
+    ? [1, 2, 3, 4].some(w => getWeekGuideUrls(w).hasLinks)
+    : hasGuideLinks
 
   const formatDate = (dateString) => {
     if (!dateString) return '-'
@@ -102,7 +119,7 @@ const ShootingGuideModal = ({ isOpen, onClose, campaign, application }) => {
 
           {/* ========== GUIDE DOCUMENTS (PDF / SLIDES) ========== */}
           <div className={`rounded-xl p-5 border-2 ${
-            hasGuideLinks
+            anyWeekHasGuide
               ? 'bg-gradient-to-br from-purple-50 to-indigo-50 border-purple-300'
               : 'bg-gray-50 border-gray-200'
           }`}>
@@ -111,8 +128,45 @@ const ShootingGuideModal = ({ isOpen, onClose, campaign, application }) => {
               Guide Documents
             </h3>
 
+            {/* Week selector tabs for 4-week campaigns */}
+            {is4Week && (
+              <div className="grid grid-cols-4 gap-2 mb-4">
+                {[1, 2, 3, 4].map(week => {
+                  const weekGuide = getWeekGuideUrls(week)
+                  const isSelected = selectedGuideWeek === week
+                  return (
+                    <button
+                      key={week}
+                      onClick={() => setSelectedGuideWeek(week)}
+                      className={`p-2.5 rounded-lg border-2 text-center transition-all ${
+                        isSelected
+                          ? 'border-purple-500 bg-purple-100 shadow-sm'
+                          : weekGuide.hasLinks
+                          ? 'border-green-300 bg-green-50 hover:border-green-400'
+                          : 'border-gray-200 bg-white hover:border-gray-300'
+                      }`}
+                    >
+                      <div className={`font-bold text-xs ${isSelected ? 'text-purple-700' : 'text-gray-700'}`}>
+                        Week {week}
+                      </div>
+                      {weekGuide.hasLinks ? (
+                        <div className="text-[10px] text-green-600 mt-0.5 font-medium">Guide Ready</div>
+                      ) : (
+                        <div className="text-[10px] text-gray-400 mt-0.5">No guide</div>
+                      )}
+                    </button>
+                  )
+                })}
+              </div>
+            )}
+
             {hasGuideLinks ? (
               <div className="space-y-3">
+                {is4Week && (
+                  <div className="text-xs text-purple-600 font-medium bg-purple-100 px-3 py-1.5 rounded-lg mb-2">
+                    Showing: Week {selectedGuideWeek} Guide
+                  </div>
+                )}
                 {driveUrl && (
                   <a
                     href={driveUrl}
@@ -124,7 +178,9 @@ const ShootingGuideModal = ({ isOpen, onClose, campaign, application }) => {
                       <FileText className="w-7 h-7 text-purple-600" />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="font-bold text-purple-800 text-sm">PDF Guide (Google Drive)</p>
+                      <p className="font-bold text-purple-800 text-sm">
+                        {is4Week ? `Week ${selectedGuideWeek} PDF Guide` : 'PDF Guide (Google Drive)'}
+                      </p>
                       <p className="text-xs text-gray-500 mt-0.5 truncate">{driveUrl}</p>
                     </div>
                     <div className="flex-shrink-0 bg-purple-600 text-white px-4 py-2 rounded-lg text-sm font-medium group-hover:bg-purple-700 transition-colors flex items-center gap-1">
@@ -145,7 +201,9 @@ const ShootingGuideModal = ({ isOpen, onClose, campaign, application }) => {
                       <Layers className="w-7 h-7 text-indigo-600" />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="font-bold text-indigo-800 text-sm">AI Guide (Google Slides)</p>
+                      <p className="font-bold text-indigo-800 text-sm">
+                        {is4Week ? `Week ${selectedGuideWeek} AI Guide` : 'AI Guide (Google Slides)'}
+                      </p>
                       <p className="text-xs text-gray-500 mt-0.5 truncate">{slidesUrl}</p>
                     </div>
                     <div className="flex-shrink-0 bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm font-medium group-hover:bg-indigo-700 transition-colors flex items-center gap-1">
@@ -158,7 +216,12 @@ const ShootingGuideModal = ({ isOpen, onClose, campaign, application }) => {
             ) : (
               <div className="text-center py-6">
                 <FileText className="w-10 h-10 text-gray-300 mx-auto mb-2" />
-                <p className="text-sm text-gray-500">No guide documents uploaded yet.</p>
+                <p className="text-sm text-gray-500">
+                  {is4Week
+                    ? `No guide documents for Week ${selectedGuideWeek} yet.`
+                    : 'No guide documents uploaded yet.'
+                  }
+                </p>
                 <p className="text-xs text-gray-400 mt-1">The team will provide your guide documents soon.</p>
               </div>
             )}
