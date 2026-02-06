@@ -246,6 +246,11 @@ const VideoUploadModal = ({
                   ⚠️ Week {selectedWeek} already has a video. Uploading will replace it.
                 </p>
               )}
+              {requiresCleanVideo && application?.[`week${selectedWeek}_clean_video_url`] && (
+                <p className="text-xs text-blue-600 mt-1">
+                  Week {selectedWeek} clean video already uploaded.
+                </p>
+              )}
             </div>
           )}
 
