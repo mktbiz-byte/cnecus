@@ -429,6 +429,10 @@ const MyPageWithWithdrawal = () => {
             title_en,
             brand,
             brand_en,
+            brand_name_en,
+            product_name_en,
+            product_description_en,
+            product_features_en,
             image_url,
             campaign_type,
             reward_amount,
@@ -450,7 +454,27 @@ const MyPageWithWithdrawal = () => {
             reference_video_url,
             shooting_guide,
             google_drive_url,
-            google_slides_url
+            google_slides_url,
+            required_dialogues_en,
+            required_scenes_en,
+            required_hashtags_en,
+            shooting_scenes_en,
+            video_duration_en,
+            video_tempo_en,
+            video_tone_en,
+            additional_details_en,
+            additional_shooting_requests_en,
+            shooting_scenes_ba_photo,
+            shooting_scenes_no_makeup,
+            shooting_scenes_closeup,
+            shooting_scenes_product_closeup,
+            shooting_scenes_product_texture,
+            shooting_scenes_outdoor,
+            shooting_scenes_couple,
+            shooting_scenes_child,
+            shooting_scenes_troubled_skin,
+            shooting_scenes_wrinkles,
+            target_platforms
           )
         `)
         .eq('user_id', user.id)
@@ -1107,12 +1131,15 @@ const MyPageWithWithdrawal = () => {
   const handleNewVideoSubmit = async ({ applicationId, videoUrl, cleanVideoUrl, weekNumber, is4Week }) => {
     try {
       let updateData = {
-        updated_at: new Date().toISOString()
+        updated_at: new Date().toISOString(),
+        revision_requested: false,
+        revision_notes: null
       }
 
       if (is4Week && weekNumber) {
         updateData[`week${weekNumber}_video_url`] = videoUrl
         updateData[`week${weekNumber}_video_submitted_at`] = new Date().toISOString()
+        updateData.status = 'video_submitted'
       } else {
         updateData.video_url = videoUrl
         updateData.video_submission_url = videoUrl

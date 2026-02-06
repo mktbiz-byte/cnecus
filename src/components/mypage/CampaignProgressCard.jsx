@@ -251,6 +251,21 @@ const CampaignProgressCard = ({
                   {is4Week ? '4-Week' : 'Standard'}
                 </span>
               </div>
+              {application?.main_channel && (
+                <div className="mt-1">
+                  <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${
+                    application.main_channel === 'instagram'
+                      ? 'bg-pink-100 text-pink-700 border border-pink-200'
+                      : application.main_channel === 'youtube'
+                      ? 'bg-red-100 text-red-700 border border-red-200'
+                      : 'bg-gray-100 text-gray-700 border border-gray-200'
+                  }`}>
+                    {application.main_channel === 'instagram' ? '📸 Instagram'
+                      : application.main_channel === 'youtube' ? '📺 YouTube'
+                      : '🎵 TikTok'}
+                  </span>
+                </div>
+              )}
             </div>
           </div>
           <div className="flex flex-col items-end">
