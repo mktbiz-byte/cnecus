@@ -530,28 +530,28 @@ const HomePageUS = () => {
       {/* Stats Section - Compact */}
       <section className="py-10 bg-white/50">
         <div className="container mx-auto px-4">
-          <div className="grid grid-cols-4 gap-2 md:gap-4">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 md:gap-4">
             <Card className="text-center border-0 shadow-md bg-gradient-to-br from-purple-500 to-purple-600 text-white">
               <CardContent className="py-4 px-2">
-                <div className="text-xl md:text-2xl font-bold mb-0.5">{stats.totalCampaigns || '50'}+</div>
+                <div className="text-lg sm:text-xl md:text-2xl font-bold mb-0.5">{stats.totalCampaigns || '50'}+</div>
                 <div className="text-purple-100 text-xs">Campaigns</div>
               </CardContent>
             </Card>
             <Card className="text-center border-0 shadow-md bg-gradient-to-br from-blue-500 to-blue-600 text-white">
               <CardContent className="py-4 px-2">
-                <div className="text-xl md:text-2xl font-bold mb-0.5">{stats.totalUsers || '2.5'}K</div>
+                <div className="text-lg sm:text-xl md:text-2xl font-bold mb-0.5">{stats.totalUsers || '2.5'}K</div>
                 <div className="text-blue-100 text-xs">Creators</div>
               </CardContent>
             </Card>
             <Card className="text-center border-0 shadow-md bg-gradient-to-br from-green-500 to-green-600 text-white">
               <CardContent className="py-4 px-2">
-                <div className="text-xl md:text-2xl font-bold mb-0.5">{stats.totalApplications || '10'}K</div>
+                <div className="text-lg sm:text-xl md:text-2xl font-bold mb-0.5">{stats.totalApplications || '10'}K</div>
                 <div className="text-green-100 text-xs">Collabs</div>
               </CardContent>
             </Card>
             <Card className="text-center border-0 shadow-md bg-gradient-to-br from-orange-500 to-orange-600 text-white">
               <CardContent className="py-4 px-2">
-                <div className="text-xl md:text-2xl font-bold mb-0.5">$500K</div>
+                <div className="text-lg sm:text-xl md:text-2xl font-bold mb-0.5">$500K</div>
                 <div className="text-orange-100 text-xs">Paid Out</div>
               </CardContent>
             </Card>
@@ -595,11 +595,11 @@ const HomePageUS = () => {
       <section id="testimonials" className="py-16">
         <div className="container mx-auto px-4">
           <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold text-gray-800 mb-4">Loved by Creators</h2>
-            <p className="text-gray-600">See what our community is saying</p>
+            <h2 className="text-2xl md:text-3xl font-bold text-gray-800 mb-3">Loved by Creators</h2>
+            <p className="text-sm md:text-base text-gray-600">See what our community is saying</p>
           </div>
 
-          <div className="grid md:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 md:gap-8">
             {testimonials.map((testimonial, index) => (
               <Card key={index} className="border-0 shadow-lg">
                 <CardContent className="pt-6">
@@ -630,8 +630,8 @@ const HomePageUS = () => {
       {/* CTA Section */}
       <section className="py-16 bg-gradient-to-r from-purple-600 to-pink-600 text-white">
         <div className="container mx-auto px-4 text-center">
-          <h2 className="text-3xl md:text-4xl font-bold mb-4">Ready to Start Earning?</h2>
-          <p className="text-xl text-purple-100 mb-8 max-w-2xl mx-auto">
+          <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-4">Ready to Start Earning?</h2>
+          <p className="text-base sm:text-lg md:text-xl text-purple-100 mb-6 md:mb-8 max-w-2xl mx-auto">
             Join thousands of creators who are already collaborating with K-Beauty brands
           </p>
           <Link to="/signup">
@@ -646,8 +646,8 @@ const HomePageUS = () => {
       {/* Footer */}
       <footer className="bg-gray-900 text-white py-12">
         <div className="container mx-auto px-4">
-          <div className="grid md:grid-cols-4 gap-8">
-            <div>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-6 md:gap-8">
+            <div className="col-span-2 md:col-span-1">
               <div className="flex items-center space-x-2 mb-4">
                 <div className="text-2xl">🎬</div>
                 <div className="text-xl font-bold">CNEC</div>
@@ -721,9 +721,9 @@ const HomePageUS = () => {
       {/* Campaign Detail Modal */}
       {selectedCampaign && (
         <Dialog open={detailModal} onOpenChange={setDetailModal}>
-          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto mx-2 sm:mx-auto">
             <DialogHeader>
-              <DialogTitle className="text-2xl">{selectedCampaign.title_en || selectedCampaign.title}</DialogTitle>
+              <DialogTitle className="text-lg sm:text-2xl">{selectedCampaign.title_en || selectedCampaign.title}</DialogTitle>
               <DialogDescription className="text-purple-600 font-medium">
                 {selectedCampaign.brand_en || selectedCampaign.brand}
               </DialogDescription>
@@ -839,7 +839,7 @@ const HomePageUS = () => {
                   <h3 className="font-semibold mb-3 flex items-center text-blue-700">
                     🎥 Video Specifications
                   </h3>
-                  <div className="grid grid-cols-3 gap-3">
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 sm:gap-3">
                     {selectedCampaign.video_duration_en && (
                       <div className="bg-white p-3 rounded-lg text-center">
                         <div className="text-xs text-gray-500 mb-1">Duration</div>

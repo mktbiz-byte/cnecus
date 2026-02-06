@@ -213,10 +213,10 @@ const ProfileSettings = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 to-blue-50 py-8">
+    <div className="min-h-screen bg-gradient-to-br from-purple-50 to-blue-50 py-4 sm:py-8">
       <div className="max-w-2xl mx-auto px-4">
         {/* Header */}
-        <div className="mb-8">
+        <div className="mb-6 sm:mb-8">
           <Link
             to="/"
             className="inline-flex items-center text-purple-600 hover:text-purple-700 mb-4"
@@ -224,38 +224,38 @@ const ProfileSettings = () => {
             <ArrowLeft className="h-4 w-4 mr-2" />
             Back to Home
           </Link>
-          <h1 className="text-2xl font-bold text-gray-900">Profile Settings</h1>
+          <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Profile Settings</h1>
           <p className="text-gray-600 mt-1">Manage your account</p>
         </div>
 
         {/* Messages */}
         {error && (
-          <Alert className="mb-6 border-red-200 bg-red-50">
+          <Alert className="mb-4 sm:mb-6 border-red-200 bg-red-50">
             <AlertCircle className="h-4 w-4 text-red-600" />
             <AlertDescription className="text-red-800">{error}</AlertDescription>
           </Alert>
         )}
 
         {success && (
-          <Alert className="mb-6 border-green-200 bg-green-50">
+          <Alert className="mb-4 sm:mb-6 border-green-200 bg-green-50">
             <CheckCircle className="h-4 w-4 text-green-600" />
             <AlertDescription className="text-green-800">{success}</AlertDescription>
           </Alert>
         )}
 
         {/* Profile Card */}
-        <Card className="mb-6">
+        <Card className="mb-4 sm:mb-6">
           <CardHeader>
             <CardTitle className="flex items-center text-lg">
               <User className="h-5 w-5 mr-2" />
               Profile
             </CardTitle>
           </CardHeader>
-          <CardContent className="space-y-6">
+          <CardContent className="space-y-4 sm:space-y-6">
             {/* Profile Photo - Required */}
             <div className="flex items-center gap-4">
               <div className="relative">
-                <div className={`w-20 h-20 rounded-full flex items-center justify-center overflow-hidden ${
+                <div className={`w-16 h-16 sm:w-20 sm:h-20 rounded-full flex items-center justify-center overflow-hidden ${
                   profile.profile_image_url
                     ? 'bg-gray-200'
                     : 'bg-gradient-to-br from-red-400 to-orange-400 ring-2 ring-red-500 ring-offset-2'
@@ -267,7 +267,7 @@ const ProfileSettings = () => {
                       className="w-full h-full object-cover"
                     />
                   ) : (
-                    <Camera className="h-8 w-8 text-white" />
+                    <Camera className="h-6 w-6 sm:h-8 sm:w-8 text-white" />
                   )}
                 </div>
                 <label className="absolute bottom-0 right-0 w-7 h-7 bg-purple-600 rounded-full flex items-center justify-center cursor-pointer hover:bg-purple-700 transition-colors">
@@ -335,7 +335,7 @@ const ProfileSettings = () => {
             <Button
               onClick={handleSaveProfile}
               disabled={saving}
-              className="w-full bg-purple-600 hover:bg-purple-700"
+              className="w-full min-h-[44px] bg-purple-600 hover:bg-purple-700"
             >
               {saving ? (
                 <>
@@ -395,7 +395,7 @@ const ProfileSettings = () => {
               onClick={handleChangePassword}
               disabled={saving}
               variant="outline"
-              className="w-full"
+              className="w-full min-h-[44px]"
             >
               {saving ? (
                 <Loader2 className="h-4 w-4 animate-spin" />

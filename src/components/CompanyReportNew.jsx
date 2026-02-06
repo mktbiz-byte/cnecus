@@ -266,7 +266,7 @@ const CompanyReportNew = () => {
           <div className="flex items-center space-x-4">
             <Building className="h-8 w-8 text-blue-600" />
             <div>
-              <h1 className="text-3xl font-bold text-gray-800">
+              <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-800">
                 {t.title}
               </h1>
               <p className="text-gray-600">
@@ -328,9 +328,9 @@ const CompanyReportNew = () => {
                 <p className="text-gray-500">{t.noApplications}</p>
               </div>
             ) : (
-              <div className="space-y-6">
+              <div className="space-y-4 sm:space-y-6">
                 {applications.map((application) => (
-                  <div key={application.id} className="border rounded-lg p-6 bg-white">
+                  <div key={application.id} className="border rounded-lg p-4 sm:p-6 bg-white">
                     <div className="flex items-start justify-between mb-4">
                       <div className="flex-1">
                         <div className="flex items-center space-x-3 mb-2">
@@ -343,7 +343,7 @@ const CompanyReportNew = () => {
                         {/* SNS 주소 */}
                         <div className="mb-4">
                           <h4 className="font-medium text-gray-700 mb-2">{t.snsAddress}</h4>
-                          <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-2">
                             {application.instagram_url && (
                               <a 
                                 href={application.instagram_url}
