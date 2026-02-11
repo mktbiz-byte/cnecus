@@ -6,7 +6,10 @@ import {
   User, Mail, Phone, MapPin, Calendar, Award,
   CreditCard, Download, Settings, LogOut,
   AlertTriangle, Trash2, Shield, Eye, EyeOff, X,
-  Camera, Loader2
+  Camera, Loader2, DollarSign, TrendingUp, BarChart3,
+  CheckCircle2, Clock, ArrowUpRight, Wallet, ChevronRight,
+  Globe, Instagram, Youtube, ExternalLink, Briefcase,
+  Target, Zap, Home
 } from 'lucide-react'
 
 // Import new mypage components
@@ -1316,491 +1319,397 @@ const MyPageWithWithdrawal = () => {
     return types[type] || type
   }
 
+  // Computed dashboard metrics
+  const totalEarnedAmount = pointTransactions
+    .filter(t => t.amount > 0)
+    .reduce((sum, t) => sum + t.amount, 0)
+  const totalWithdrawnAmount = withdrawals
+    .reduce((sum, w) => sum + (w.amount || 0), 0)
+  const completedCount = applications.filter(a => ['sns_uploaded', 'completed'].includes(a.status)).length
+  const successRate = applications.length > 0
+    ? Math.round((completedCount / applications.length) * 100)
+    : 0
+
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600"></div>
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
+        <div className="flex flex-col items-center gap-4">
+          <div className="relative">
+            <div className="w-16 h-16 rounded-full border-4 border-slate-200 animate-pulse"></div>
+            <div className="absolute inset-0 w-16 h-16 rounded-full border-4 border-indigo-600 border-t-transparent animate-spin"></div>
+          </div>
+          <p className="text-sm font-medium text-slate-500 tracking-wide">Loading Dashboard...</p>
+        </div>
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* 헤더 */}
-        <div className="mb-8">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-            <div>
-              <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900">{t.title}</h1>
-              <p className="mt-2 text-gray-600">
-{`${profile?.name || user?.email}'s Account Information`}
-              </p>
+    <div className="min-h-screen bg-slate-50">
+      {/* Top Navigation Bar */}
+      <header className="bg-slate-900 border-b border-slate-800">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between h-16">
+            <div className="flex items-center gap-3">
+              <div className="w-9 h-9 rounded-lg bg-indigo-600 flex items-center justify-center">
+                <Zap className="w-5 h-5 text-white" />
+              </div>
+              <div>
+                <h1 className="text-base font-bold text-white tracking-tight">Creator Dashboard</h1>
+                <p className="text-xs text-slate-400">{profile?.email || user?.email}</p>
+              </div>
             </div>
-            <div className="flex space-x-3">
+            <div className="flex items-center gap-2">
               <button
                 onClick={() => window.location.href = '/'}
-                className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-slate-300 hover:text-white bg-slate-800 hover:bg-slate-700 rounded-lg transition-colors"
               >
-                <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
-                </svg>
-                {t.goHome}
+                <Home className="w-3.5 h-3.5" />
+                <span className="hidden sm:inline">{t.goHome}</span>
               </button>
               <button
                 onClick={signOut}
-                className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-red-600 hover:bg-red-700"
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-slate-300 hover:text-white bg-slate-800 hover:bg-slate-700 rounded-lg transition-colors"
               >
-                <LogOut className="w-4 h-4 mr-2" />
-                {t.logout}
+                <LogOut className="w-3.5 h-3.5" />
+                <span className="hidden sm:inline">{t.logout}</span>
               </button>
             </div>
           </div>
         </div>
+      </header>
 
-        {/* 알림 메시지 */}
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
+        {/* Alert Messages */}
         {error && error !== t.messages?.error && (
-          <div className="mb-6 bg-red-50 border border-red-200 rounded-md p-4">
-            <div className="flex">
-              <AlertTriangle className="h-5 w-5 text-red-400" />
-              <div className="ml-3">
-                <p className="text-sm text-red-800">{error}</p>
-              </div>
-            </div>
+          <div className="mb-6 bg-red-50 border border-red-200 rounded-xl p-4 flex items-start gap-3">
+            <AlertTriangle className="h-5 w-5 text-red-500 flex-shrink-0 mt-0.5" />
+            <p className="text-sm font-medium text-red-800">{error}</p>
+            <button onClick={() => setError('')} className="ml-auto text-red-400 hover:text-red-600"><X className="w-4 h-4" /></button>
           </div>
         )}
-
         {success && (
-          <div className="mb-6 bg-green-50 border border-green-200 rounded-md p-4">
-            <div className="flex">
-              <Shield className="h-5 w-5 text-green-400" />
-              <div className="ml-3">
-                <p className="text-sm text-green-800">{success}</p>
-              </div>
-            </div>
+          <div className="mb-6 bg-emerald-50 border border-emerald-200 rounded-xl p-4 flex items-start gap-3">
+            <CheckCircle2 className="h-5 w-5 text-emerald-500 flex-shrink-0 mt-0.5" />
+            <p className="text-sm font-medium text-emerald-800">{success}</p>
+            <button onClick={() => setSuccess('')} className="ml-auto text-emerald-400 hover:text-emerald-600"><X className="w-4 h-4" /></button>
           </div>
         )}
 
-        {/* 탭 네비게이션 */}
-        <div className="bg-white rounded-lg shadow mb-6">
-          <div className="border-b border-gray-200">
-            <nav className="-mb-px flex space-x-4 sm:space-x-8 px-4 sm:px-6 overflow-x-auto">
-              {[
-                { id: 'profile', label: t.profile, icon: User },
-                { id: 'applications', label: t.applications, icon: Award },
-                { id: 'withdrawals', label: t.withdrawals, icon: CreditCard },
-                { id: 'points', label: t.points, icon: Download },
-                { id: 'settings', label: t.accountSettings, icon: Settings }
-              ].map((tab) => {
-                const Icon = tab.icon
-                return (
-                  <button
-                    key={tab.id}
-                    onClick={() => setActiveTab(tab.id)}
-                    className={`py-4 px-1 border-b-2 font-medium text-sm ${
-                      activeTab === tab.id
-                        ? 'border-purple-500 text-purple-600'
-                        : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                    }`}
-                  >
-                    <Icon className="w-4 h-4 mr-2 inline" />
-                    {tab.label}
-                  </button>
-                )
-              })}
-            </nav>
+        {/* Earnings Card - Premium Dark Card */}
+        <div className="bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 rounded-2xl p-5 sm:p-8 mb-6 text-white relative overflow-hidden">
+          <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-600/10 rounded-full -translate-y-1/2 translate-x-1/3 blur-3xl"></div>
+          <div className="absolute bottom-0 left-0 w-48 h-48 bg-emerald-600/10 rounded-full translate-y-1/2 -translate-x-1/3 blur-3xl"></div>
+          <div className="relative z-10">
+            <div className="flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-6 mb-6">
+              {/* Avatar */}
+              <div className="relative flex-shrink-0">
+                <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center overflow-hidden ring-4 ring-white/10">
+                  {(editForm.profile_image_url || profile?.profile_image_url) ? (
+                    <img src={editForm.profile_image_url || profile?.profile_image_url} alt="Profile" className="w-full h-full object-cover" />
+                  ) : (
+                    <span className="text-white text-2xl sm:text-3xl font-black">{profile?.name?.charAt(0)?.toUpperCase() || 'U'}</span>
+                  )}
+                </div>
+                <label className="absolute -bottom-1 -right-1 w-7 h-7 bg-indigo-600 rounded-lg flex items-center justify-center cursor-pointer hover:bg-indigo-500 transition-colors ring-2 ring-slate-900">
+                  {uploadingImage ? <Loader2 className="h-3.5 w-3.5 text-white animate-spin" /> : <Camera className="h-3.5 w-3.5 text-white" />}
+                  <input type="file" accept="image/*" onChange={handleImageUpload} className="hidden" disabled={uploadingImage} />
+                </label>
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <h2 className="text-xl sm:text-2xl font-black tracking-tight truncate">{profile?.name || 'Creator'}</h2>
+                  <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${
+                    profile?.user_role === 'vip' ? 'bg-amber-500/20 text-amber-300 ring-1 ring-amber-500/30' :
+                    profile?.user_role === 'admin' ? 'bg-red-500/20 text-red-300 ring-1 ring-red-500/30' :
+                    profile?.user_role === 'manager' ? 'bg-blue-500/20 text-blue-300 ring-1 ring-blue-500/30' :
+                    'bg-slate-500/20 text-slate-300 ring-1 ring-slate-500/30'
+                  }`}>
+                    {t.roles[profile?.user_role] || t.roles.user}
+                  </span>
+                </div>
+                <p className="text-slate-400 text-sm mt-0.5">
+                  Member since {profile?.created_at ? new Date(profile.created_at).toLocaleDateString('en-US', { month: 'short', year: 'numeric' }) : '-'}
+                </p>
+              </div>
+            </div>
+
+            {/* Earnings Grid */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6">
+              <div className="bg-white/5 backdrop-blur-sm rounded-xl p-4 ring-1 ring-white/10">
+                <div className="flex items-center gap-2 mb-1">
+                  <Wallet className="w-4 h-4 text-emerald-400" />
+                  <p className="text-xs font-medium text-slate-400 uppercase tracking-wider">Available Balance</p>
+                </div>
+                <p className="text-2xl sm:text-3xl font-black text-white">{(profile?.points || 0).toLocaleString()}<span className="text-base font-medium text-slate-400 ml-1">P</span></p>
+                <p className="text-xs text-slate-500 mt-1">= ${(profile?.points || 0).toLocaleString()} USD</p>
+              </div>
+              <div className="bg-white/5 backdrop-blur-sm rounded-xl p-4 ring-1 ring-white/10">
+                <div className="flex items-center gap-2 mb-1">
+                  <TrendingUp className="w-4 h-4 text-indigo-400" />
+                  <p className="text-xs font-medium text-slate-400 uppercase tracking-wider">{t.totalEarned}</p>
+                </div>
+                <p className="text-2xl sm:text-3xl font-black text-white">{totalEarnedAmount.toLocaleString()}<span className="text-base font-medium text-slate-400 ml-1">P</span></p>
+              </div>
+              <div className="bg-white/5 backdrop-blur-sm rounded-xl p-4 ring-1 ring-white/10">
+                <div className="flex items-center gap-2 mb-1">
+                  <ArrowUpRight className="w-4 h-4 text-amber-400" />
+                  <p className="text-xs font-medium text-slate-400 uppercase tracking-wider">{t.totalWithdrawn}</p>
+                </div>
+                <p className="text-2xl sm:text-3xl font-black text-white">{totalWithdrawnAmount.toLocaleString()}<span className="text-base font-medium text-slate-400 ml-1">P</span></p>
+                <button
+                  onClick={() => setShowWithdrawModal(true)}
+                  className="mt-2 inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-white bg-indigo-600 hover:bg-indigo-500 rounded-lg transition-colors"
+                >
+                  <DollarSign className="w-3.5 h-3.5" />
+                  {t.withdrawRequest}
+                </button>
+              </div>
+            </div>
           </div>
         </div>
 
-        {/* 탭 콘텐츠 */}
-        <div className="bg-white rounded-lg shadow">
-          {activeTab === 'profile' && (
-            <div className="p-4 sm:p-6">
-              <div className="flex justify-between items-center mb-4 sm:mb-6">
-                <h2 className="text-lg sm:text-xl font-semibold text-gray-900">{t.personalInfo}</h2>
+        {/* Performance Metrics */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-6">
+          <div className="bg-white rounded-xl p-4 ring-1 ring-slate-200/60 hover:ring-indigo-200 transition-all">
+            <div className="flex items-center justify-between mb-3">
+              <div className="w-10 h-10 rounded-xl bg-indigo-50 flex items-center justify-center">
+                <Briefcase className="w-5 h-5 text-indigo-600" />
+              </div>
+              <span className="text-xs font-medium text-slate-400">{t.totalApplications}</span>
+            </div>
+            <p className="text-2xl font-black text-slate-900">{applications.length}</p>
+          </div>
+          <div className="bg-white rounded-xl p-4 ring-1 ring-slate-200/60 hover:ring-amber-200 transition-all">
+            <div className="flex items-center justify-between mb-3">
+              <div className="w-10 h-10 rounded-xl bg-amber-50 flex items-center justify-center">
+                <Clock className="w-5 h-5 text-amber-600" />
+              </div>
+              <span className="text-xs font-medium text-slate-400">In Progress</span>
+            </div>
+            <p className="text-2xl font-black text-slate-900">
+              {applications.filter(a => ['selected', 'filming', 'video_submitted', 'revision_requested', 'approved'].includes(a.status)).length}
+            </p>
+          </div>
+          <div className="bg-white rounded-xl p-4 ring-1 ring-slate-200/60 hover:ring-emerald-200 transition-all">
+            <div className="flex items-center justify-between mb-3">
+              <div className="w-10 h-10 rounded-xl bg-emerald-50 flex items-center justify-center">
+                <Target className="w-5 h-5 text-emerald-600" />
+              </div>
+              <span className="text-xs font-medium text-slate-400">Success Rate</span>
+            </div>
+            <p className="text-2xl font-black text-slate-900">{successRate}<span className="text-base font-medium text-slate-400">%</span></p>
+          </div>
+          <div className="bg-white rounded-xl p-4 ring-1 ring-slate-200/60 hover:ring-purple-200 transition-all">
+            <div className="flex items-center justify-between mb-3">
+              <div className="w-10 h-10 rounded-xl bg-purple-50 flex items-center justify-center">
+                <CheckCircle2 className="w-5 h-5 text-purple-600" />
+              </div>
+              <span className="text-xs font-medium text-slate-400">{t.completedCampaigns}</span>
+            </div>
+            <p className="text-2xl font-black text-slate-900">{completedCount}</p>
+          </div>
+        </div>
+
+        {/* Tab Navigation - Pill Style */}
+        <div className="bg-white rounded-xl p-1.5 ring-1 ring-slate-200/60 mb-6 overflow-x-auto">
+          <nav className="flex gap-1 min-w-max">
+            {[
+              { id: 'profile', label: t.profile, icon: User },
+              { id: 'applications', label: t.applications, icon: Briefcase },
+              { id: 'withdrawals', label: t.withdrawals, icon: CreditCard },
+              { id: 'points', label: t.points, icon: BarChart3 },
+              { id: 'settings', label: t.accountSettings, icon: Settings }
+            ].map((tab) => {
+              const Icon = tab.icon
+              return (
                 <button
-                  onClick={() => {
-                    if (isEditing) {
-                      handleProfileSave()
-                    } else {
-                      setIsEditing(true)
-                    }
-                  }}
-                  disabled={processing}
-                  className="px-3 py-1.5 sm:px-4 sm:py-2 text-sm bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50"
+                  key={tab.id}
+                  onClick={() => setActiveTab(tab.id)}
+                  className={`flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-semibold transition-all whitespace-nowrap ${
+                    activeTab === tab.id
+                      ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/20'
+                      : 'text-slate-500 hover:text-slate-700 hover:bg-slate-50'
+                  }`}
                 >
-                  {processing ? t.processing : (isEditing ? t.save : t.edit)}
+                  <Icon className="w-4 h-4" />
+                  {tab.label}
                 </button>
-              </div>
-              
-              {/* 성공/오류 메시지 */}
-              {success && (
-                <div className="mb-4 p-4 bg-green-50 border border-green-200 rounded-md">
-                  <p className="text-green-800">{success}</p>
-                </div>
-              )}
-              {error && (
-                <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-md">
-                  <p className="text-red-800">{error}</p>
-                </div>
-              )}
+              )
+            })}
+          </nav>
+        </div>
 
-              {/* Profile Photo Section */}
-              <div className="mb-4 sm:mb-6 flex items-center gap-3 sm:gap-4">
-                <div className="relative">
-                  <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-full bg-gradient-to-br from-purple-400 to-pink-400 flex items-center justify-center overflow-hidden border-4 border-white shadow-lg">
-                    {(editForm.profile_image_url || profile?.profile_image_url) ? (
-                      <img
-                        src={editForm.profile_image_url || profile?.profile_image_url}
-                        alt="Profile"
-                        className="w-full h-full object-cover"
-                      />
-                    ) : (
-                      <span className="text-white text-2xl sm:text-3xl font-bold">
-                        {profile?.name?.charAt(0)?.toUpperCase() || 'U'}
-                      </span>
-                    )}
+        {/* Tab Content */}
+        <div>
+          {activeTab === 'profile' && (
+            <div className="space-y-6">
+              {/* Personal Information Card */}
+              <div className="bg-white rounded-xl ring-1 ring-slate-200/60 overflow-hidden">
+                <div className="flex items-center justify-between px-5 sm:px-6 py-4 border-b border-slate-100">
+                  <div className="flex items-center gap-2">
+                    <User className="w-5 h-5 text-indigo-600" />
+                    <h2 className="text-base font-bold text-slate-900">{t.personalInfo}</h2>
                   </div>
-                  <label className="absolute bottom-0 right-0 w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center cursor-pointer hover:bg-blue-700 transition-colors shadow-md">
-                    {uploadingImage ? (
-                      <Loader2 className="h-4 w-4 text-white animate-spin" />
-                    ) : (
-                      <Camera className="h-4 w-4 text-white" />
-                    )}
-                    <input
-                      type="file"
-                      accept="image/*"
-                      onChange={handleImageUpload}
-                      className="hidden"
-                      disabled={uploadingImage}
-                    />
-                  </label>
+                  <button
+                    onClick={() => { if (isEditing) { handleProfileSave() } else { setIsEditing(true) } }}
+                    disabled={processing}
+                    className={`px-4 py-2 text-sm font-semibold rounded-lg transition-all disabled:opacity-50 ${
+                      isEditing
+                        ? 'bg-emerald-600 text-white hover:bg-emerald-500 shadow-sm'
+                        : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+                    }`}
+                  >
+                    {processing ? t.processing : (isEditing ? t.save : t.edit)}
+                  </button>
                 </div>
-                <div>
-                  <p className="font-semibold text-gray-800">{profile?.name || 'Your Name'}</p>
-                  <p className="text-sm text-gray-500">{profile?.email || user?.email}</p>
-                  <p className="text-xs text-gray-400 mt-1">Click camera icon to upload photo</p>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
-                <div className="space-y-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700">{t.name}</label>
-                    {isEditing ? (
-                      <input
-                        type="text"
-                        value={editForm.name}
-                        onChange={(e) => setEditForm({...editForm, name: e.target.value})}
-                        className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      />
-                    ) : (
-                      <p className="mt-1 text-sm text-gray-900">{profile?.name || 'Not Set'}</p>
-                    )}
-                  </div>
-                  
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700">{t.email}</label>
-                    <p className="mt-1 text-sm text-gray-900">{profile?.email || user?.email}</p>
-                  </div>
-                  
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700">
-                      {t.phone}
-                      <span className="text-xs text-gray-500 ml-1">(Optional)</span>
-                    </label>
-                    {isEditing ? (
-                      <input
-                        type="tel"
-                        value={editForm.phone}
-                        onChange={(e) => setEditForm({...editForm, phone: e.target.value})}
-                        className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        placeholder="(555) 123-4567"
-                      />
-                    ) : (
-                      <p className="mt-1 text-sm text-gray-900">{profile?.phone || 'Not Registered'}</p>
-                    )}
-                  </div>
-                  
-                  {/* 주소 필드는 데이터베이스 스키마 적용 후 활성화 */}
-                  {/* 
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700">
-                      {t.address}
-                      <span className="text-xs text-gray-500 ml-1">(Optional)</span>
-                    </label>
-                    {isEditing ? (
-                      <input
-                        type="text"
-                        value={editForm.address || ''}
-                        onChange={(e) => setEditForm({...editForm, address: e.target.value})}
-                        className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        placeholder={language === 'ja' ? '東京都渋谷区...' : '서울특별시 강남구...'}
-                      />
-                    ) : (
-                      <p className="mt-1 text-sm text-gray-900">{profile?.address || '未登録'}</p>
-                    )}
-                  </div>
-                  */}
-                  
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700">{t.skinType}</label>
-                    {isEditing ? (
-                      <select
-                        value={editForm.skin_type}
-                        onChange={(e) => setEditForm({...editForm, skin_type: e.target.value})}
-                        className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      >
-                        <option value="">Select</option>
-                        <option value="Dry">Dry</option>
-                        <option value="Oily">Oily</option>
-                        <option value="Combination">Combination</option>
-                        <option value="Sensitive">Sensitive</option>
-                        <option value="Normal">Normal</option>
-                      </select>
-                    ) : (
-                      <p className="mt-1 text-sm text-gray-900">{profile?.skin_type || 'Not Set'}</p>
-                    )}
-                  </div>
-                </div>
-                
-                <div className="space-y-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700">
-                      {t.age}
-                      <span className="text-xs text-gray-500 ml-1">(Optional)</span>
-                    </label>
-                    {isEditing ? (
-                      <input
-                        type="number"
-                        value={editForm.age || ''}
-                        onChange={(e) => setEditForm({...editForm, age: e.target.value})}
-                        className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        placeholder="25"
-                        min="1"
-                        max="100"
-                      />
-                    ) : (
-                      <p className="mt-1 text-sm text-gray-900">{profile?.age || 'Not Set'}</p>
-                    )}
-                  </div>
-                  
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700">
-                      {t.region}
-                      <span className="text-xs text-gray-500 ml-1">(Optional)</span>
-                    </label>
-                    {isEditing ? (
-                      <input
-                        type="text"
-                        value={editForm.region || ''}
-                        onChange={(e) => setEditForm({...editForm, region: e.target.value})}
-                        className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        placeholder="New York"
-                      />
-                    ) : (
-                      <p className="mt-1 text-sm text-gray-900">{profile?.region || 'Not Set'}</p>
-                    )}
-                  </div>
-                  
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700">
-                      {t.bio}
-                      <span className="text-xs text-gray-500 ml-1">(Optional)</span>
-                    </label>
-                    {isEditing ? (
-                      <textarea
-                        value={editForm.bio || ''}
-                        onChange={(e) => setEditForm({...editForm, bio: e.target.value})}
-                        className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        rows="2"
-                        placeholder="Enter your bio..."
-                      />
-                    ) : (
-                      <p className="mt-1 text-sm text-gray-900">{profile?.bio || 'Not Set'}</p>
-                    )}
-                  </div>
-                  
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700">{t.joinDate}</label>
-                    <p className="mt-1 text-sm text-gray-900">
-                      {profile?.created_at ? new Date(profile.created_at).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) : '-'}
-                    </p>
-                  </div>
-                  
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700">{t.userRole}</label>
-                    <div className="mt-1">{getRoleBadge(profile?.user_role)}</div>
-                  </div>
-                  
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700">{t.currentPoints}</label>
-                    <div className="flex items-center justify-between mt-1">
-                      <p className="text-lg font-semibold text-purple-600">
-                        {profile?.points?.toLocaleString() || 0}P
-                      </p>
-                      <button
-                        onClick={() => setShowWithdrawModal(true)}
-                        className="ml-4 px-3 py-1 bg-green-600 text-white text-sm rounded-md hover:bg-green-700 transition-colors"
-                      >
-                        {t.withdrawRequest}
-                      </button>
+                <div className="p-5 sm:p-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                    <div>
+                      <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5">{t.name}</label>
+                      {isEditing ? (
+                        <input type="text" value={editForm.name} onChange={(e) => setEditForm({...editForm, name: e.target.value})}
+                          className="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent" />
+                      ) : (
+                        <p className="text-sm font-medium text-slate-900">{profile?.name || 'Not Set'}</p>
+                      )}
+                    </div>
+                    <div>
+                      <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5">{t.email}</label>
+                      <p className="text-sm font-medium text-slate-900">{profile?.email || user?.email}</p>
+                    </div>
+                    <div>
+                      <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5">{t.phone}</label>
+                      {isEditing ? (
+                        <input type="tel" value={editForm.phone} onChange={(e) => setEditForm({...editForm, phone: e.target.value})}
+                          className="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                          placeholder="(555) 123-4567" />
+                      ) : (
+                        <p className="text-sm font-medium text-slate-900">{profile?.phone || 'Not Registered'}</p>
+                      )}
+                    </div>
+                    <div>
+                      <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5">{t.age}</label>
+                      {isEditing ? (
+                        <input type="number" value={editForm.age || ''} onChange={(e) => setEditForm({...editForm, age: e.target.value})}
+                          className="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                          placeholder="25" min="1" max="100" />
+                      ) : (
+                        <p className="text-sm font-medium text-slate-900">{profile?.age || 'Not Set'}</p>
+                      )}
+                    </div>
+                    <div>
+                      <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5">{t.region}</label>
+                      {isEditing ? (
+                        <input type="text" value={editForm.region || ''} onChange={(e) => setEditForm({...editForm, region: e.target.value})}
+                          className="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                          placeholder="New York" />
+                      ) : (
+                        <p className="text-sm font-medium text-slate-900">{profile?.region || 'Not Set'}</p>
+                      )}
+                    </div>
+                    <div>
+                      <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5">{t.skinType}</label>
+                      {isEditing ? (
+                        <select value={editForm.skin_type} onChange={(e) => setEditForm({...editForm, skin_type: e.target.value})}
+                          className="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
+                          <option value="">Select</option>
+                          <option value="Dry">Dry</option>
+                          <option value="Oily">Oily</option>
+                          <option value="Combination">Combination</option>
+                          <option value="Sensitive">Sensitive</option>
+                          <option value="Normal">Normal</option>
+                        </select>
+                      ) : (
+                        <p className="text-sm font-medium text-slate-900">{profile?.skin_type || 'Not Set'}</p>
+                      )}
+                    </div>
+                    <div className="md:col-span-2">
+                      <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5">{t.bio}</label>
+                      {isEditing ? (
+                        <textarea value={editForm.bio || ''} onChange={(e) => setEditForm({...editForm, bio: e.target.value})}
+                          className="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                          rows="2" placeholder="Enter your bio..." />
+                      ) : (
+                        <p className="text-sm font-medium text-slate-900">{profile?.bio || 'Not Set'}</p>
+                      )}
                     </div>
                   </div>
                 </div>
               </div>
-              
-              {/* SNS 주소 섹션 */}
-              <div className="mt-8 pt-6 border-t border-gray-200">
-                <h3 className="text-lg font-medium text-gray-900 mb-4">
-                  {'SNS Information'}
-                </h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700">Instagram</label>
-                    {isEditing ? (
-                      <input
-                        type="url"
-                        value={editForm.instagram_url}
-                        onChange={(e) => setEditForm({...editForm, instagram_url: e.target.value})}
-                        className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        placeholder="https://instagram.com/username"
-                      />
-                    ) : (
-                      <p className="mt-1 text-sm text-gray-900">
-                        {profile?.instagram_url ? (
-                          <a href={profile.instagram_url} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">
-                            {profile.instagram_url}
-                          </a>
-                        ) : 'Not Registered'}
-                      </p>
-                    )}
-                  </div>
-                  
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700">TikTok</label>
-                    {isEditing ? (
-                      <input
-                        type="url"
-                        value={editForm.tiktok_url}
-                        onChange={(e) => setEditForm({...editForm, tiktok_url: e.target.value})}
-                        className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        placeholder="https://tiktok.com/@username"
-                      />
-                    ) : (
-                      <p className="mt-1 text-sm text-gray-900">
-                        {profile?.tiktok_url ? (
-                          <a href={profile.tiktok_url} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">
-                            {profile.tiktok_url}
-                          </a>
-                        ) : 'Not Registered'}
-                      </p>
-                    )}
-                  </div>
-                  
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700">YouTube</label>
-                    {isEditing ? (
-                      <input
-                        type="url"
-                        value={editForm.youtube_url}
-                        onChange={(e) => setEditForm({...editForm, youtube_url: e.target.value})}
-                        className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        placeholder="https://youtube.com/@username"
-                      />
-                    ) : (
-                      <p className="mt-1 text-sm text-gray-900">
-                        {profile?.youtube_url ? (
-                          <a href={profile.youtube_url} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">
-                            {profile.youtube_url}
-                          </a>
-                        ) : 'Not Registered'}
-                      </p>
-                    )}
-                  </div>
-                  
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700">Other SNS</label>
-                    {isEditing ? (
-                      <input
-                        type="url"
-                        value={editForm.other_sns_url}
-                        onChange={(e) => setEditForm({...editForm, other_sns_url: e.target.value})}
-                        className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        placeholder="https://other-sns.com/username"
-                      />
-                    ) : (
-                      <p className="mt-1 text-sm text-gray-900">
-                        {profile?.other_sns_url ? (
-                          <a href={profile.other_sns_url} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">
-                            {profile.other_sns_url}
-                          </a>
-                        ) : 'Not Registered'}
-                      </p>
-                    )}
+
+              {/* Social Accounts Card */}
+              <div className="bg-white rounded-xl ring-1 ring-slate-200/60 overflow-hidden">
+                <div className="flex items-center gap-2 px-5 sm:px-6 py-4 border-b border-slate-100">
+                  <Globe className="w-5 h-5 text-indigo-600" />
+                  <h2 className="text-base font-bold text-slate-900">Social Accounts</h2>
+                </div>
+                <div className="p-5 sm:p-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                    {[
+                      { label: 'Instagram', key: 'instagram_url', placeholder: 'https://instagram.com/username', color: 'from-pink-500 to-purple-500' },
+                      { label: 'TikTok', key: 'tiktok_url', placeholder: 'https://tiktok.com/@username', color: 'from-slate-900 to-slate-700' },
+                      { label: 'YouTube', key: 'youtube_url', placeholder: 'https://youtube.com/@username', color: 'from-red-500 to-red-600' },
+                      { label: 'Other SNS', key: 'other_sns_url', placeholder: 'https://other-sns.com/username', color: 'from-blue-500 to-blue-600' }
+                    ].map((sns) => (
+                      <div key={sns.key} className="flex items-start gap-3">
+                        <div className={`w-9 h-9 rounded-lg bg-gradient-to-br ${sns.color} flex items-center justify-center flex-shrink-0 mt-0.5`}>
+                          <Globe className="w-4 h-4 text-white" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5">{sns.label}</label>
+                          {isEditing ? (
+                            <input type="url" value={editForm[sns.key]} onChange={(e) => setEditForm({...editForm, [sns.key]: e.target.value})}
+                              className="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                              placeholder={sns.placeholder} />
+                          ) : (
+                            <p className="text-sm font-medium text-slate-900 truncate">
+                              {profile?.[sns.key] ? (
+                                <a href={profile[sns.key]} target="_blank" rel="noopener noreferrer" className="text-indigo-600 hover:text-indigo-500 flex items-center gap-1">
+                                  {profile[sns.key].replace(/^https?:\/\/(www\.)?/, '')}
+                                  <ExternalLink className="w-3 h-3 flex-shrink-0" />
+                                </a>
+                              ) : <span className="text-slate-400">Not Connected</span>}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                    ))}
                   </div>
                 </div>
               </div>
 
-
-
-              {/* SNS 팔로워 수 섹션 */}
-              <div className="mt-8 pt-6 border-t border-gray-200">
-                <h3 className="text-lg font-medium text-gray-900 mb-4">
-                  {'SNS Followers'}
-                </h3>
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700">{t.instagramFollowers}</label>
-                    {isEditing ? (
-                      <input
-                        type="number"
-                        value={editForm.instagram_followers}
-                        onChange={(e) => setEditForm({...editForm, instagram_followers: e.target.value})}
-                        className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        placeholder="1000"
-                        min="0"
-                      />
-                    ) : (
-                      <p className="mt-1 text-sm text-gray-900">
-                        {profile?.instagram_followers ? profile.instagram_followers.toLocaleString() : 'Not Set'}
-                      </p>
-                    )}
-                  </div>
-                  
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700">{t.tiktokFollowers}</label>
-                    {isEditing ? (
-                      <input
-                        type="number"
-                        value={editForm.tiktok_followers}
-                        onChange={(e) => setEditForm({...editForm, tiktok_followers: e.target.value})}
-                        className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        placeholder="1000"
-                        min="0"
-                      />
-                    ) : (
-                      <p className="mt-1 text-sm text-gray-900">
-                        {profile?.tiktok_followers ? profile.tiktok_followers.toLocaleString() : 'Not Set'}
-                      </p>
-                    )}
-                  </div>
-                  
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700">{t.youtubeSubscribers}</label>
-                    {isEditing ? (
-                      <input
-                        type="number"
-                        value={editForm.youtube_subscribers}
-                        onChange={(e) => setEditForm({...editForm, youtube_subscribers: e.target.value})}
-                        className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        placeholder="1000"
-                        min="0"
-                      />
-                    ) : (
-                      <p className="mt-1 text-sm text-gray-900">
-                        {profile?.youtube_subscribers ? profile.youtube_subscribers.toLocaleString() : 'Not Set'}
-                      </p>
-                    )}
+              {/* Audience Metrics Card */}
+              <div className="bg-white rounded-xl ring-1 ring-slate-200/60 overflow-hidden">
+                <div className="flex items-center gap-2 px-5 sm:px-6 py-4 border-b border-slate-100">
+                  <BarChart3 className="w-5 h-5 text-indigo-600" />
+                  <h2 className="text-base font-bold text-slate-900">Audience Metrics</h2>
+                </div>
+                <div className="p-5 sm:p-6">
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    {[
+                      { label: t.instagramFollowers, key: 'instagram_followers', icon: 'IG', color: 'bg-gradient-to-br from-pink-500 to-purple-500' },
+                      { label: t.tiktokFollowers, key: 'tiktok_followers', icon: 'TT', color: 'bg-gradient-to-br from-slate-900 to-slate-700' },
+                      { label: t.youtubeSubscribers, key: 'youtube_subscribers', icon: 'YT', color: 'bg-gradient-to-br from-red-500 to-red-600' }
+                    ].map((metric) => (
+                      <div key={metric.key} className="bg-slate-50 rounded-xl p-4 ring-1 ring-slate-200/60">
+                        <div className="flex items-center gap-2 mb-3">
+                          <div className={`w-8 h-8 rounded-lg ${metric.color} flex items-center justify-center`}>
+                            <span className="text-xs font-black text-white">{metric.icon}</span>
+                          </div>
+                          <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">{metric.label}</span>
+                        </div>
+                        {isEditing ? (
+                          <input type="number" value={editForm[metric.key]} onChange={(e) => setEditForm({...editForm, [metric.key]: e.target.value})}
+                            className="w-full px-3 py-2.5 bg-white border border-slate-200 rounded-lg text-sm font-bold focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                            placeholder="0" min="0" />
+                        ) : (
+                          <p className="text-2xl font-black text-slate-900">
+                            {profile?.[metric.key] ? profile[metric.key].toLocaleString() : <span className="text-slate-300 text-lg">--</span>}
+                          </p>
+                        )}
+                      </div>
+                    ))}
                   </div>
                 </div>
               </div>
@@ -1808,68 +1717,20 @@ const MyPageWithWithdrawal = () => {
           )}
 
           {activeTab === 'applications' && (
-            <div className="p-4 sm:p-6">
-              <h2 className="text-lg sm:text-xl font-semibold text-gray-900 mb-4 sm:mb-6">{t.campaignApplications}</h2>
-
-              {/* 신청 통계 */}
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 mb-4 sm:mb-6">
-                <div className="bg-blue-50 rounded-lg p-3 sm:p-4">
-                  <div className="flex items-center">
-                    <Award className="h-6 w-6 sm:h-8 sm:w-8 text-blue-600 flex-shrink-0" />
-                    <div className="ml-2 sm:ml-4 min-w-0">
-                      <p className="text-xs sm:text-sm font-medium text-gray-500 truncate">{t.totalApplications}</p>
-                      <p className="text-xl sm:text-2xl font-bold text-gray-900">{applications.length}</p>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="bg-purple-50 rounded-lg p-3 sm:p-4">
-                  <div className="flex items-center">
-                    <Calendar className="h-6 w-6 sm:h-8 sm:w-8 text-purple-600 flex-shrink-0" />
-                    <div className="ml-2 sm:ml-4 min-w-0">
-                      <p className="text-xs sm:text-sm font-medium text-gray-500 truncate">In Progress</p>
-                      <p className="text-xl sm:text-2xl font-bold text-gray-900">
-                        {applications.filter(a => ['selected', 'filming', 'video_submitted', 'revision_requested', 'approved'].includes(a.status)).length}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="bg-green-50 rounded-lg p-3 sm:p-4">
-                  <div className="flex items-center">
-                    <Shield className="h-6 w-6 sm:h-8 sm:w-8 text-green-600 flex-shrink-0" />
-                    <div className="ml-2 sm:ml-4 min-w-0">
-                      <p className="text-xs sm:text-sm font-medium text-gray-500 truncate">{t.approvedApplications}</p>
-                      <p className="text-xl sm:text-2xl font-bold text-gray-900">
-                        {applications.filter(a => a.status === 'approved').length}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="bg-emerald-50 rounded-lg p-3 sm:p-4">
-                  <div className="flex items-center">
-                    <Download className="h-6 w-6 sm:h-8 sm:w-8 text-emerald-600 flex-shrink-0" />
-                    <div className="ml-2 sm:ml-4 min-w-0">
-                      <p className="text-xs sm:text-sm font-medium text-gray-500 truncate">{t.completedCampaigns}</p>
-                      <p className="text-xl sm:text-2xl font-bold text-gray-900">
-                        {applications.filter(a => ['sns_uploaded', 'completed'].includes(a.status)).length}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Active Campaigns Section - Using New CampaignWorkflowStepper */}
+            <div className="space-y-6">
+              {/* Active Campaigns Section */}
               {applications.filter(a => ['selected', 'filming', 'video_submitted', 'revision_requested', 'approved', 'sns_uploaded', 'completed'].includes(a.status)).length > 0 && (
-                <div className="mb-8">
-                  <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center">
-                    🎬 Active Campaigns
-                    <span className="ml-2 text-sm font-normal text-gray-500">
-                      ({applications.filter(a => ['selected', 'filming', 'video_submitted', 'revision_requested', 'approved', 'sns_uploaded', 'completed'].includes(a.status)).length})
-                    </span>
-                  </h3>
-                  <div className="space-y-4">
+                <div className="bg-white rounded-xl ring-1 ring-slate-200/60 overflow-hidden">
+                  <div className="flex items-center justify-between px-5 sm:px-6 py-4 border-b border-slate-100">
+                    <div className="flex items-center gap-2">
+                      <Zap className="w-5 h-5 text-indigo-600" />
+                      <h2 className="text-base font-bold text-slate-900">Active Campaigns</h2>
+                      <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-bold bg-indigo-100 text-indigo-700">
+                        {applications.filter(a => ['selected', 'filming', 'video_submitted', 'revision_requested', 'approved', 'sns_uploaded', 'completed'].includes(a.status)).length}
+                      </span>
+                    </div>
+                  </div>
+                  <div className="p-5 sm:p-6 space-y-4">
                     {applications
                       .filter(a => ['selected', 'filming', 'video_submitted', 'revision_requested', 'approved', 'sns_uploaded', 'completed'].includes(a.status))
                       .map((application) => (
@@ -1888,19 +1749,23 @@ const MyPageWithWithdrawal = () => {
               )}
 
               {/* Pending Applications Section */}
-              <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center">
-                ⏳ Pending Applications
-                <span className="ml-2 text-sm font-normal text-gray-500">
-                  ({applications.filter(a => a.status === 'pending').length})
-                </span>
-              </h3>
+              <div className="bg-white rounded-xl ring-1 ring-slate-200/60 overflow-hidden">
+                <div className="flex items-center justify-between px-5 sm:px-6 py-4 border-b border-slate-100">
+                  <div className="flex items-center gap-2">
+                    <Clock className="w-5 h-5 text-amber-500" />
+                    <h2 className="text-base font-bold text-slate-900">Pending Applications</h2>
+                    <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-bold bg-amber-100 text-amber-700">
+                      {applications.filter(a => a.status === 'pending').length}
+                    </span>
+                  </div>
+                </div>
+                <div className="p-5 sm:p-6">
               
-              {/* Campaign Applications List - Card Format */}
               <div className="space-y-4">
                 {applications.length === 0 ? (
-                  <div className="text-center py-12 text-gray-500">
-                    <Award className="mx-auto h-12 w-12 text-gray-400 mb-4" />
-                    <p>{t.noData}</p>
+                  <div className="text-center py-12">
+                    <Briefcase className="mx-auto h-12 w-12 text-slate-300 mb-3" />
+                    <p className="text-sm font-medium text-slate-400">{t.noData}</p>
                   </div>
                 ) : (
                   applications.map((application) => {
@@ -1940,31 +1805,30 @@ const MyPageWithWithdrawal = () => {
                     const weeklySubmissions = getWeeklySubmissions()
 
                     return (
-                    <div key={application.id} className="border border-gray-200 rounded-lg overflow-hidden">
+                    <div key={application.id} className="rounded-xl ring-1 ring-slate-200/60 overflow-hidden hover:ring-indigo-200 transition-all">
                       {/* Campaign Header */}
-                      <div className="p-4 bg-gradient-to-r from-purple-50 to-blue-50 flex justify-between items-start">
-                        <div>
-                          <div className="flex items-center gap-2 mb-1">
-                            <h3 className="font-semibold text-gray-900">
+                      <div className="p-4 sm:p-5 bg-gradient-to-r from-slate-50 to-white flex justify-between items-start gap-3">
+                        <div className="min-w-0">
+                          <div className="flex items-center gap-2 mb-1 flex-wrap">
+                            <h3 className="font-bold text-slate-900 text-sm sm:text-base">
                               {application.campaigns?.title_en || application.campaigns?.title || application.campaign_title || 'Campaign'}
                             </h3>
-                            {/* Campaign Type Badge */}
-                            <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${
-                              is4WeekChallenge ? 'bg-orange-100 text-orange-700' : 'bg-blue-100 text-blue-700'
+                            <span className={`inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wider ${
+                              is4WeekChallenge ? 'bg-amber-100 text-amber-700' : 'bg-indigo-100 text-indigo-700'
                             }`}>
-                              {is4WeekChallenge ? '4-Week Challenge' : 'Standard'}
+                              {is4WeekChallenge ? '4-Week' : 'Standard'}
                             </span>
                           </div>
-                          <p className="text-sm text-purple-600">{application.campaigns?.brand_en || application.campaigns?.brand}</p>
-                          <p className="text-xs text-gray-500 mt-1">
-                            Applied: {new Date(application.created_at).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })}
+                          <p className="text-sm font-medium text-indigo-600">{application.campaigns?.brand_en || application.campaigns?.brand}</p>
+                          <p className="text-xs text-slate-400 mt-1">
+                            Applied {new Date(application.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
                           </p>
                         </div>
-                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                          application.status === 'approved' ? 'bg-green-100 text-green-800' :
-                          application.status === 'rejected' ? 'bg-red-100 text-red-800' :
-                          application.status === 'completed' ? 'bg-blue-100 text-blue-800' :
-                          'bg-yellow-100 text-yellow-800'
+                        <span className={`inline-flex items-center px-2.5 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wider flex-shrink-0 ${
+                          application.status === 'approved' ? 'bg-emerald-100 text-emerald-700' :
+                          application.status === 'rejected' ? 'bg-red-100 text-red-700' :
+                          application.status === 'completed' ? 'bg-indigo-100 text-indigo-700' :
+                          'bg-amber-100 text-amber-700'
                         }`}>
                           {application.status === 'approved' ? 'Approved' :
                            application.status === 'rejected' ? 'Rejected' :
@@ -1975,13 +1839,13 @@ const MyPageWithWithdrawal = () => {
 
                       {/* Approved Campaign Content */}
                       {(application.status === 'approved' || application.status === 'completed') && (
-                        <div className="p-4 border-t border-gray-100">
+                        <div className="p-4 sm:p-5 border-t border-slate-100">
                           {/* SNS Upload Warning */}
-                          <div className="mb-4 p-3 bg-amber-50 border border-amber-200 rounded-lg">
-                            <div className="flex items-start">
-                              <AlertTriangle className="h-5 w-5 text-amber-600 mt-0.5 mr-2 flex-shrink-0" />
-                              <p className="text-sm text-amber-800">
-                                <strong>Important:</strong> Before uploading to SNS, please ensure your video has been reviewed and approved. Do not post until the final version is confirmed.
+                          <div className="mb-4 p-3 bg-amber-50 rounded-xl ring-1 ring-amber-200/60">
+                            <div className="flex items-start gap-2">
+                              <AlertTriangle className="h-4 w-4 text-amber-500 mt-0.5 flex-shrink-0" />
+                              <p className="text-xs text-amber-700">
+                                <span className="font-bold">Important:</span> Before uploading to SNS, please ensure your video has been reviewed and approved.
                               </p>
                             </div>
                           </div>
@@ -2047,18 +1911,18 @@ const MyPageWithWithdrawal = () => {
                             {hasShootingGuide(application) && (
                               <button
                                 onClick={() => toggleGuideExpand(application.id)}
-                                className="inline-flex items-center px-3 py-2 rounded-md text-sm font-medium bg-purple-100 text-purple-800 hover:bg-purple-200 transition-colors"
+                                className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-bold bg-indigo-50 text-indigo-700 hover:bg-indigo-100 ring-1 ring-indigo-200/60 transition-colors"
                               >
-                                📖 Shooting Guide
-                                <span className="ml-1">{expandedGuides[application.id] ? '▲' : '▼'}</span>
+                                <Eye className="w-3.5 h-3.5" /> Shooting Guide
+                                <ChevronRight className={`w-3.5 h-3.5 transition-transform ${expandedGuides[application.id] ? 'rotate-90' : ''}`} />
                               </button>
                             )}
 
                             <button
                               onClick={() => openVideoUploadModal(application)}
-                              className="inline-flex items-center px-3 py-2 rounded-md text-sm font-medium bg-blue-100 text-blue-800 hover:bg-blue-200 transition-colors"
+                              className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-bold bg-indigo-600 text-white hover:bg-indigo-500 shadow-sm transition-colors"
                             >
-                              📹 {is4WeekChallenge ? 'Submit Weekly Video' : (application.video_submission_url ? 'Update Video' : 'Submit Video')}
+                              <Camera className="w-3.5 h-3.5" /> {is4WeekChallenge ? 'Submit Weekly Video' : (application.video_submission_url ? 'Update Video' : 'Submit Video')}
                             </button>
 
                             {application.video_submission_url && !is4WeekChallenge && (
@@ -2066,9 +1930,9 @@ const MyPageWithWithdrawal = () => {
                                 href={application.video_submission_url}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="inline-flex items-center px-3 py-2 rounded-md text-sm font-medium bg-green-100 text-green-800 hover:bg-green-200 transition-colors"
+                                className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-bold bg-emerald-50 text-emerald-700 hover:bg-emerald-100 ring-1 ring-emerald-200/60 transition-colors"
                               >
-                                🔗 View Submitted Video
+                                <ExternalLink className="w-3.5 h-3.5" /> View Video
                               </a>
                             )}
                           </div>
@@ -2202,20 +2066,20 @@ const MyPageWithWithdrawal = () => {
 
                       {/* Pending Status */}
                       {application.status === 'pending' && (
-                        <div className="p-4 border-t border-gray-100">
-                          <div className="flex items-center text-sm text-gray-600">
-                            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                            Your application is being reviewed. We'll notify you once a decision is made.
+                        <div className="p-4 sm:p-5 border-t border-slate-100">
+                          <div className="flex items-center gap-2 text-sm text-slate-500">
+                            <Loader2 className="h-4 w-4 animate-spin text-indigo-500" />
+                            <span>Your application is being reviewed. We'll notify you once a decision is made.</span>
                           </div>
                         </div>
                       )}
 
                       {/* Rejected Status */}
                       {application.status === 'rejected' && (
-                        <div className="p-4 border-t border-gray-100">
-                          <div className="flex items-center text-sm text-gray-600">
-                            <X className="h-4 w-4 mr-2 text-red-500" />
-                            Unfortunately, your application was not selected for this campaign.
+                        <div className="p-4 sm:p-5 border-t border-slate-100">
+                          <div className="flex items-center gap-2 text-sm text-slate-500">
+                            <X className="h-4 w-4 text-red-400" />
+                            <span>Unfortunately, your application was not selected for this campaign.</span>
                           </div>
                         </div>
                       )}
@@ -2223,17 +2087,19 @@ const MyPageWithWithdrawal = () => {
                   )})
                 )}
               </div>
-              
-              {/* SNS 업로드 경고 메시지 */}
+              </div>
+              </div>
+
+              {/* SNS Posting Guidelines */}
               {applications.some(app => app.status === 'approved') && (
-                <div className="mt-6 p-4 bg-amber-50 border border-amber-200 rounded-lg">
-                  <div className="flex items-start">
-                    <AlertTriangle className="h-5 w-5 text-amber-600 mt-0.5 mr-3 flex-shrink-0" />
-                    <div className="text-sm text-amber-800">
-                      <p className="font-medium mb-1">
-                        {'⚠️ SNS Posting Guidelines'}
-                      </p>
-                      <p>
+                <div className="bg-white rounded-xl ring-1 ring-amber-200/60 overflow-hidden">
+                  <div className="p-5 flex items-start gap-3">
+                    <div className="w-9 h-9 rounded-lg bg-amber-100 flex items-center justify-center flex-shrink-0">
+                      <AlertTriangle className="h-5 w-5 text-amber-600" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-bold text-slate-900 mb-1">SNS Posting Guidelines</p>
+                      <p className="text-xs text-slate-500">
                         Please upload to SNS only after your video has been reviewed and approved. Do not post immediately without approval.
                       </p>
                     </div>
@@ -2244,177 +2110,161 @@ const MyPageWithWithdrawal = () => {
           )}
 
           {activeTab === 'withdrawals' && (
-            <div className="p-4 sm:p-6">
-              <h2 className="text-lg sm:text-xl font-semibold text-gray-900 mb-4 sm:mb-6">{t.withdrawalHistory}</h2>
-              
-              {withdrawals.length === 0 ? (
-                <div className="text-center py-12 text-gray-500">
-                  <CreditCard className="mx-auto h-12 w-12 text-gray-400" />
-                  <p className="mt-4">{t.noData}</p>
+            <div className="bg-white rounded-xl ring-1 ring-slate-200/60 overflow-hidden">
+              <div className="flex items-center justify-between px-5 sm:px-6 py-4 border-b border-slate-100">
+                <div className="flex items-center gap-2">
+                  <CreditCard className="w-5 h-5 text-indigo-600" />
+                  <h2 className="text-base font-bold text-slate-900">{t.withdrawalHistory}</h2>
                 </div>
-              ) : (
-                <div className="overflow-x-auto">
-                  <table className="min-w-full divide-y divide-gray-200">
-                    <thead className="bg-gray-50">
-                      <tr>
-                        <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          {'出金方法'}
-                        </th>
-                        <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          {'金額'}
-                        </th>
-                        <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          {'ステータス'}
-                        </th>
-                        <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          {'申請日'}
-                        </th>
-                        <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          {'処理日'}
-                        </th>
-                      </tr>
-                    </thead>
-                    <tbody className="bg-white divide-y divide-gray-200">
-                      {withdrawals.map((withdrawal) => (
-                        <tr key={withdrawal.id}>
-                          <td className="px-3 sm:px-6 py-3 sm:py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                            PayPal
-                          </td>
-                          <td className="px-3 sm:px-6 py-3 sm:py-4 whitespace-nowrap text-sm text-gray-900">
-                            ${withdrawal.amount?.toLocaleString() || '0'}
-                          </td>
-                          <td className="px-3 sm:px-6 py-3 sm:py-4 whitespace-nowrap">
-                            <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                              withdrawal.status === 'completed' ? 'bg-green-100 text-green-800' :
-                              withdrawal.status === 'approved' ? 'bg-blue-100 text-blue-800' :
-                              withdrawal.status === 'rejected' ? 'bg-red-100 text-red-800' :
-                              'bg-yellow-100 text-yellow-800'
-                            }`}>
-                              {withdrawal.status === 'completed' ? ('Completed') :
-                               withdrawal.status === 'approved' ? ('Approved') :
-                               withdrawal.status === 'rejected' ? ('Rejected') :
-                               ('Pending')}
-                            </span>
-                          </td>
-                          <td className="px-3 sm:px-6 py-3 sm:py-4 whitespace-nowrap text-sm text-gray-500">
-                            {new Date(withdrawal.created_at).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })}
-                          </td>
-                          <td className="px-3 sm:px-6 py-3 sm:py-4 whitespace-nowrap text-sm text-gray-500">
-                            {withdrawal.processed_at ?
-                              new Date(withdrawal.processed_at).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' }) :
-                              '-'
-                            }
-                          </td>
+                <button
+                  onClick={() => setShowWithdrawModal(true)}
+                  className="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-bold text-white bg-indigo-600 hover:bg-indigo-500 rounded-lg shadow-sm transition-colors"
+                >
+                  <DollarSign className="w-3.5 h-3.5" />
+                  {t.withdrawRequest}
+                </button>
+              </div>
+              <div className="p-5 sm:p-6">
+                {withdrawals.length === 0 ? (
+                  <div className="text-center py-12">
+                    <CreditCard className="mx-auto h-12 w-12 text-slate-300 mb-3" />
+                    <p className="text-sm font-medium text-slate-400">{t.noData}</p>
+                  </div>
+                ) : (
+                  <div className="overflow-x-auto">
+                    <table className="min-w-full">
+                      <thead>
+                        <tr className="border-b border-slate-100">
+                          <th className="px-3 sm:px-4 py-3 text-left text-[10px] font-bold text-slate-400 uppercase tracking-wider">Method</th>
+                          <th className="px-3 sm:px-4 py-3 text-left text-[10px] font-bold text-slate-400 uppercase tracking-wider">{t.amount}</th>
+                          <th className="px-3 sm:px-4 py-3 text-left text-[10px] font-bold text-slate-400 uppercase tracking-wider">Status</th>
+                          <th className="px-3 sm:px-4 py-3 text-left text-[10px] font-bold text-slate-400 uppercase tracking-wider">Requested</th>
+                          <th className="px-3 sm:px-4 py-3 text-left text-[10px] font-bold text-slate-400 uppercase tracking-wider">Processed</th>
                         </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              )}
+                      </thead>
+                      <tbody className="divide-y divide-slate-50">
+                        {withdrawals.map((withdrawal) => (
+                          <tr key={withdrawal.id} className="hover:bg-slate-50/50 transition-colors">
+                            <td className="px-3 sm:px-4 py-3 whitespace-nowrap">
+                              <span className="inline-flex items-center gap-1.5 text-sm font-semibold text-slate-900">
+                                <Wallet className="w-4 h-4 text-indigo-500" /> PayPal
+                              </span>
+                            </td>
+                            <td className="px-3 sm:px-4 py-3 whitespace-nowrap text-sm font-bold text-slate-900">
+                              ${withdrawal.amount?.toLocaleString() || '0'}
+                            </td>
+                            <td className="px-3 sm:px-4 py-3 whitespace-nowrap">
+                              <span className={`inline-flex items-center px-2.5 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wider ${
+                                withdrawal.status === 'completed' ? 'bg-emerald-100 text-emerald-700' :
+                                withdrawal.status === 'approved' ? 'bg-indigo-100 text-indigo-700' :
+                                withdrawal.status === 'rejected' ? 'bg-red-100 text-red-700' :
+                                'bg-amber-100 text-amber-700'
+                              }`}>
+                                {withdrawal.status === 'completed' ? 'Completed' :
+                                 withdrawal.status === 'approved' ? 'Approved' :
+                                 withdrawal.status === 'rejected' ? 'Rejected' :
+                                 'Pending'}
+                              </span>
+                            </td>
+                            <td className="px-3 sm:px-4 py-3 whitespace-nowrap text-xs text-slate-500">
+                              {new Date(withdrawal.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                            </td>
+                            <td className="px-3 sm:px-4 py-3 whitespace-nowrap text-xs text-slate-500">
+                              {withdrawal.processed_at ? new Date(withdrawal.processed_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '--'}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </div>
             </div>
           )}
 
           {activeTab === 'points' && (
-            <div className="p-4 sm:p-6">
-              <h2 className="text-lg sm:text-xl font-semibold text-gray-900 mb-4 sm:mb-6">{t.pointHistory}</h2>
-              
-              <div className="overflow-x-auto">
-                <table className="min-w-full divide-y divide-gray-200">
-                  <thead className="bg-gray-50">
-                    <tr>
-                      <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        {t.transactionType}
-                      </th>
-                      <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        {t.amount}
-                      </th>
-                      <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        {t.description}
-                      </th>
-                      <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        {t.date}
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody className="bg-white divide-y divide-gray-200">
-                    {pointTransactions.length === 0 ? (
-                      <tr>
-                        <td colSpan="4" className="px-6 py-12 text-center text-gray-500">
-                          {t.noData}
-                        </td>
+            <div className="bg-white rounded-xl ring-1 ring-slate-200/60 overflow-hidden">
+              <div className="flex items-center gap-2 px-5 sm:px-6 py-4 border-b border-slate-100">
+                <BarChart3 className="w-5 h-5 text-indigo-600" />
+                <h2 className="text-base font-bold text-slate-900">{t.pointHistory}</h2>
+              </div>
+              <div className="p-5 sm:p-6">
+                <div className="overflow-x-auto">
+                  <table className="min-w-full">
+                    <thead>
+                      <tr className="border-b border-slate-100">
+                        <th className="px-3 sm:px-4 py-3 text-left text-[10px] font-bold text-slate-400 uppercase tracking-wider">{t.transactionType}</th>
+                        <th className="px-3 sm:px-4 py-3 text-left text-[10px] font-bold text-slate-400 uppercase tracking-wider">{t.amount}</th>
+                        <th className="px-3 sm:px-4 py-3 text-left text-[10px] font-bold text-slate-400 uppercase tracking-wider">{t.description}</th>
+                        <th className="px-3 sm:px-4 py-3 text-left text-[10px] font-bold text-slate-400 uppercase tracking-wider">{t.date}</th>
                       </tr>
-                    ) : (
-                      pointTransactions.map((transaction) => (
-                        <tr key={transaction.id}>
-                          <td className="px-3 sm:px-6 py-3 sm:py-4 whitespace-nowrap">
-                            <span className={`text-sm font-medium ${getTransactionTypeColor(transaction.transaction_type)}`}>
-                              {getTransactionTypeText(transaction.transaction_type)}
-                            </span>
-                          </td>
-                          <td className="px-3 sm:px-6 py-3 sm:py-4 whitespace-nowrap">
-                            <span className={`text-sm font-medium ${
-                              transaction.amount > 0 ? 'text-green-600' : 'text-red-600'
-                            }`}>
-                              {transaction.amount > 0 ? '+' : ''}{transaction.amount.toLocaleString()}P
-                            </span>
-                          </td>
-                          <td className="px-3 sm:px-6 py-3 sm:py-4">
-                            <div className="text-sm text-gray-900 max-w-xs truncate">
-                              {transaction.description || '-'}
-                            </div>
-                          </td>
-                          <td className="px-3 sm:px-6 py-3 sm:py-4 whitespace-nowrap text-sm text-gray-500">
-                            {new Date(transaction.created_at).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })}
+                    </thead>
+                    <tbody className="divide-y divide-slate-50">
+                      {pointTransactions.length === 0 ? (
+                        <tr>
+                          <td colSpan="4" className="px-4 py-12 text-center">
+                            <BarChart3 className="mx-auto h-12 w-12 text-slate-300 mb-3" />
+                            <p className="text-sm font-medium text-slate-400">{t.noData}</p>
                           </td>
                         </tr>
-                      ))
-                    )}
-                  </tbody>
-                </table>
-              </div>
-              
-              {/* SNS 업로드 경고 메시지 */}
-              {applications.some(app => app.status === 'approved') && (
-                <div className="mt-6 p-4 bg-amber-50 border border-amber-200 rounded-lg">
-                  <div className="flex items-start">
-                    <AlertTriangle className="h-5 w-5 text-amber-600 mt-0.5 mr-3 flex-shrink-0" />
-                    <div className="text-sm text-amber-800">
-                      <p className="font-medium mb-1">
-                        {'⚠️ SNS Posting Guidelines'}
-                      </p>
-                      <p>
-                        Please upload to SNS only after your video has been reviewed and approved. Do not post immediately without approval.
-                      </p>
-                    </div>
-                  </div>
+                      ) : (
+                        pointTransactions.map((transaction) => (
+                          <tr key={transaction.id} className="hover:bg-slate-50/50 transition-colors">
+                            <td className="px-3 sm:px-4 py-3 whitespace-nowrap">
+                              <span className={`inline-flex items-center px-2.5 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wider ${
+                                ['earn', 'earned', 'bonus', 'admin_add', 'reward'].includes(transaction.transaction_type)
+                                  ? 'bg-emerald-100 text-emerald-700'
+                                  : ['spend', 'spent', 'admin_subtract'].includes(transaction.transaction_type)
+                                  ? 'bg-red-100 text-red-700'
+                                  : 'bg-slate-100 text-slate-600'
+                              }`}>
+                                {getTransactionTypeText(transaction.transaction_type)}
+                              </span>
+                            </td>
+                            <td className="px-3 sm:px-4 py-3 whitespace-nowrap">
+                              <span className={`text-sm font-bold ${transaction.amount > 0 ? 'text-emerald-600' : 'text-red-500'}`}>
+                                {transaction.amount > 0 ? '+' : ''}{transaction.amount.toLocaleString()}P
+                              </span>
+                            </td>
+                            <td className="px-3 sm:px-4 py-3">
+                              <div className="text-xs text-slate-500 max-w-xs truncate">{transaction.description || '--'}</div>
+                            </td>
+                            <td className="px-3 sm:px-4 py-3 whitespace-nowrap text-xs text-slate-500">
+                              {new Date(transaction.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                            </td>
+                          </tr>
+                        ))
+                      )}
+                    </tbody>
+                  </table>
                 </div>
-              )}
+              </div>
             </div>
           )}
 
           {activeTab === 'settings' && (
-            <div className="p-4 sm:p-6">
-              <h2 className="text-lg sm:text-xl font-semibold text-gray-900 mb-4 sm:mb-6">{t.accountSettings}</h2>
-
-              <div className="space-y-4 sm:space-y-6">
-                {/* 계정 삭제 섹션 */}
-                <div className="border border-red-200 rounded-lg p-4 sm:p-6 bg-red-50">
-                  <div className="flex items-start">
-                    <AlertTriangle className="h-6 w-6 text-red-600 mt-1" />
-                    <div className="ml-4 flex-1">
-                      <h3 className="text-lg font-medium text-red-900">{t.accountDeletion}</h3>
-                      <p className="mt-2 text-sm text-red-700">
-                        {t.deleteAccountWarning}
-                      </p>
-                      <p className="mt-2 text-sm text-red-700">
-                        {t.deleteAccountDescription}
-                      </p>
-                      <div className="mt-4">
+            <div className="space-y-6">
+              <div className="bg-white rounded-xl ring-1 ring-slate-200/60 overflow-hidden">
+                <div className="flex items-center gap-2 px-5 sm:px-6 py-4 border-b border-slate-100">
+                  <Settings className="w-5 h-5 text-indigo-600" />
+                  <h2 className="text-base font-bold text-slate-900">{t.accountSettings}</h2>
+                </div>
+                <div className="p-5 sm:p-6 space-y-6">
+                  {/* Danger Zone */}
+                  <div className="rounded-xl ring-1 ring-red-200 bg-red-50/50 p-5">
+                    <div className="flex items-start gap-4">
+                      <div className="w-10 h-10 rounded-xl bg-red-100 flex items-center justify-center flex-shrink-0">
+                        <AlertTriangle className="h-5 w-5 text-red-600" />
+                      </div>
+                      <div className="flex-1">
+                        <h3 className="text-sm font-bold text-red-900">{t.accountDeletion}</h3>
+                        <p className="mt-1 text-xs text-red-700/80">{t.deleteAccountWarning}</p>
+                        <p className="mt-1 text-xs text-red-700/80">{t.deleteAccountDescription}</p>
                         <button
                           onClick={() => setShowWithdrawalModal(true)}
-                          className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-red-600 hover:bg-red-700"
+                          className="mt-4 inline-flex items-center gap-1.5 px-4 py-2 text-xs font-bold text-white bg-red-600 hover:bg-red-500 rounded-lg shadow-sm transition-colors"
                         >
-                          <Trash2 className="w-4 h-4 mr-2" />
+                          <Trash2 className="w-3.5 h-3.5" />
                           {t.deleteAccount}
                         </button>
                       </div>
@@ -2426,118 +2276,76 @@ const MyPageWithWithdrawal = () => {
           )}
         </div>
 
-        {/* 출금 신청 모달 */}
+        {/* Withdrawal Request Modal */}
         {showWithdrawModal && (
-          <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-[9999]">
-            <div className="relative top-20 mx-4 sm:mx-auto p-5 border w-auto max-w-sm shadow-lg rounded-md bg-white">
-              <div className="mt-3">
-                <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-lg font-medium text-gray-900">{t.withdrawRequestTitle}</h3>
-                  <button
-                    onClick={() => setShowWithdrawModal(false)}
-                    className="text-gray-400 hover:text-gray-600"
-                  >
+          <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm overflow-y-auto h-full w-full z-[9999] flex items-start justify-center pt-16 sm:pt-24">
+            <div className="mx-4 w-full max-w-md bg-white rounded-2xl shadow-2xl ring-1 ring-slate-200/60 overflow-hidden">
+              <div className="p-5 sm:p-6">
+                <div className="flex items-center justify-between mb-5">
+                  <div className="flex items-center gap-2">
+                    <div className="w-9 h-9 rounded-lg bg-indigo-100 flex items-center justify-center">
+                      <DollarSign className="w-5 h-5 text-indigo-600" />
+                    </div>
+                    <h3 className="text-base font-bold text-slate-900">{t.withdrawRequestTitle}</h3>
+                  </div>
+                  <button onClick={() => setShowWithdrawModal(false)} className="text-slate-400 hover:text-slate-600 p-1">
                     <X className="h-5 w-5" />
                   </button>
                 </div>
                 
                 {error && (
-                  <div className="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded">
-                    {error}
-                  </div>
+                  <div className="mb-4 p-3 bg-red-50 rounded-xl ring-1 ring-red-200 text-xs font-medium text-red-700">{error}</div>
                 )}
-                
                 {success && (
-                  <div className="mb-4 p-3 bg-green-100 border border-green-400 text-green-700 rounded">
-                    {success}
-                  </div>
+                  <div className="mb-4 p-3 bg-emerald-50 rounded-xl ring-1 ring-emerald-200 text-xs font-medium text-emerald-700">{success}</div>
                 )}
-                
+
                 {/* Point value guide */}
-                <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-                  <p className="text-sm text-blue-800 font-medium">
-                    💰 1 Point = $1.00 USD
-                  </p>
-                  <p className="text-xs text-blue-600 mt-1">
-                    Withdrawals are processed via PayPal in USD
-                  </p>
+                <div className="mb-5 p-3 bg-indigo-50 rounded-xl ring-1 ring-indigo-200/60">
+                  <p className="text-xs font-bold text-indigo-900">1 Point = $1.00 USD</p>
+                  <p className="text-[10px] text-indigo-600 mt-0.5">Withdrawals are processed via PayPal in USD</p>
                 </div>
 
                 <div className="space-y-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      {t.withdrawAmount} *
-                    </label>
-                    <input
-                      type="number"
-                      value={withdrawForm.amount}
-                      onChange={(e) => setWithdrawForm({...withdrawForm, amount: e.target.value})}
+                    <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5">{t.withdrawAmount} *</label>
+                    <input type="number" value={withdrawForm.amount} onChange={(e) => setWithdrawForm({...withdrawForm, amount: e.target.value})}
                       placeholder="Enter points to withdraw"
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
-                      max={profile?.points || 0}
-                    />
-                    <p className="text-sm text-gray-500 mt-1">
-                      Available Points: {profile?.points?.toLocaleString() || 0}P
-                      {withdrawForm.amount && (
-                        <span className="ml-2 text-green-600 font-medium">
-                          (≈ ${parseInt(withdrawForm.amount || 0).toLocaleString()} USD)
-                        </span>
-                      )}
+                      className="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                      max={profile?.points || 0} />
+                    <p className="text-xs text-slate-400 mt-1.5">
+                      Available: <span className="font-bold text-slate-600">{(profile?.points || 0).toLocaleString()}P</span>
+                      {withdrawForm.amount && <span className="ml-2 font-bold text-emerald-600">(= ${parseInt(withdrawForm.amount || 0).toLocaleString()} USD)</span>}
                     </p>
                   </div>
-                  
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      {t.paypalEmail} *
-                    </label>
-                    <input
-                      type="email"
-                      value={withdrawForm.paypalEmail}
-                      onChange={(e) => setWithdrawForm({...withdrawForm, paypalEmail: e.target.value})}
+                    <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5">{t.paypalEmail} *</label>
+                    <input type="email" value={withdrawForm.paypalEmail} onChange={(e) => setWithdrawForm({...withdrawForm, paypalEmail: e.target.value})}
                       placeholder="your-paypal@email.com"
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
-                    />
+                      className="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent" />
                   </div>
-                  
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      {t.paypalName} *
-                    </label>
-                    <input
-                      type="text"
-                      value={withdrawForm.paypalName}
-                      onChange={(e) => setWithdrawForm({...withdrawForm, paypalName: e.target.value})}
+                    <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5">{t.paypalName} *</label>
+                    <input type="text" value={withdrawForm.paypalName} onChange={(e) => setWithdrawForm({...withdrawForm, paypalName: e.target.value})}
                       placeholder="Your full name as registered on PayPal"
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
-                    />
+                      className="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent" />
                   </div>
-                  
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      {t.withdrawReason}
-                    </label>
-                    <textarea
-                      value={withdrawForm.reason}
-                      onChange={(e) => setWithdrawForm({...withdrawForm, reason: e.target.value})}
-                      rows={3}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
-                      placeholder="Reason for withdrawal (optional)"
-                    />
+                    <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5">{t.withdrawReason}</label>
+                    <textarea value={withdrawForm.reason} onChange={(e) => setWithdrawForm({...withdrawForm, reason: e.target.value})}
+                      rows={2}
+                      className="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                      placeholder="Reason for withdrawal (optional)" />
                   </div>
                 </div>
-                
-                <div className="mt-6 flex justify-end space-x-3">
-                  <button
-                    onClick={() => setShowWithdrawModal(false)}
-                    className="px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400"
-                  >
+
+                <div className="mt-6 flex justify-end gap-3">
+                  <button onClick={() => setShowWithdrawModal(false)}
+                    className="px-4 py-2.5 text-sm font-semibold text-slate-600 bg-slate-100 rounded-lg hover:bg-slate-200 transition-colors">
                     {t.cancel}
                   </button>
-                  <button
-                    onClick={handleWithdrawSubmit}
-                    disabled={processing}
-                    className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 disabled:opacity-50"
-                  >
+                  <button onClick={handleWithdrawSubmit} disabled={processing}
+                    className="px-4 py-2.5 text-sm font-bold text-white bg-indigo-600 rounded-lg hover:bg-indigo-500 disabled:opacity-50 shadow-sm transition-colors">
                     {processing ? t.processing : t.submitWithdrawRequest}
                   </button>
                 </div>
@@ -2546,79 +2354,56 @@ const MyPageWithWithdrawal = () => {
           </div>
         )}
 
-        {/* 회원 탈퇴 모달 */}
+        {/* Account Deletion Modal */}
         {showWithdrawalModal && (
-          <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
-            <div className="relative top-20 mx-4 sm:mx-auto p-5 border w-auto max-w-sm shadow-lg rounded-md bg-white">
-              <div className="mt-3">
-                <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-lg font-medium text-gray-900">{t.accountDeletion}</h3>
-                  <button
-                    onClick={() => setShowWithdrawalModal(false)}
-                    className="text-gray-400 hover:text-gray-600"
-                  >
-                    <AlertTriangle className="w-5 h-5" />
+          <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm overflow-y-auto h-full w-full z-50 flex items-start justify-center pt-16 sm:pt-24">
+            <div className="mx-4 w-full max-w-md bg-white rounded-2xl shadow-2xl ring-1 ring-slate-200/60 overflow-hidden">
+              <div className="p-5 sm:p-6">
+                <div className="flex items-center justify-between mb-5">
+                  <div className="flex items-center gap-2">
+                    <div className="w-9 h-9 rounded-lg bg-red-100 flex items-center justify-center">
+                      <AlertTriangle className="w-5 h-5 text-red-600" />
+                    </div>
+                    <h3 className="text-base font-bold text-slate-900">{t.accountDeletion}</h3>
+                  </div>
+                  <button onClick={() => setShowWithdrawalModal(false)} className="text-slate-400 hover:text-slate-600 p-1">
+                    <X className="w-5 h-5" />
                   </button>
                 </div>
-                
+
                 <div className="space-y-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      {t.withdrawalReason} *
-                    </label>
-                    <select
-                      value={withdrawalReason}
-                      onChange={(e) => setWithdrawalReason(e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500"
-                    >
-                      <option value="">사유를 선택하세요</option>
+                    <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5">{t.withdrawalReason} *</label>
+                    <select value={withdrawalReason} onChange={(e) => setWithdrawalReason(e.target.value)}
+                      className="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent">
+                      <option value="">Select a reason</option>
                       <option value="service">{t.reasons.service}</option>
                       <option value="privacy">{t.reasons.privacy}</option>
                       <option value="unused">{t.reasons.unused}</option>
                       <option value="other">{t.reasons.other}</option>
                     </select>
                   </div>
-                  
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      {t.withdrawalDetails}
-                    </label>
-                    <textarea
-                      value={withdrawalDetails}
-                      onChange={(e) => setWithdrawalDetails(e.target.value)}
-                      rows={3}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500"
-                      placeholder="추가 설명이 있으시면 입력해주세요"
-                    />
+                    <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5">{t.withdrawalDetails}</label>
+                    <textarea value={withdrawalDetails} onChange={(e) => setWithdrawalDetails(e.target.value)} rows={2}
+                      className="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                      placeholder="Additional details (optional)" />
                   </div>
-                  
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      {t.confirmDeletion} *
-                    </label>
-                    <p className="text-sm text-gray-600 mb-2">{t.confirmText}</p>
-                    <input
-                      type="text"
-                      value={confirmText}
-                      onChange={(e) => setConfirmText(e.target.value)}
-                      placeholder={t.confirmPlaceholder}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500"
-                    />
+                    <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5">{t.confirmDeletion} *</label>
+                    <p className="text-xs text-slate-500 mb-2">{t.confirmText}</p>
+                    <input type="text" value={confirmText} onChange={(e) => setConfirmText(e.target.value)} placeholder={t.confirmPlaceholder}
+                      className="w-full px-3 py-2.5 bg-slate-50 border border-red-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent" />
                   </div>
                 </div>
-                
-                <div className="mt-6 flex justify-end space-x-3">
-                  <button
-                    onClick={() => setShowWithdrawalModal(false)}
-                    className="px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400"
-                  >
+
+                <div className="mt-6 flex justify-end gap-3">
+                  <button onClick={() => setShowWithdrawalModal(false)}
+                    className="px-4 py-2.5 text-sm font-semibold text-slate-600 bg-slate-100 rounded-lg hover:bg-slate-200 transition-colors">
                     {t.cancel}
                   </button>
-                  <button
-                    onClick={handleWithdrawalSubmit}
-                    disabled={processing}
-                    className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 disabled:opacity-50"
-                  >
+                  <button onClick={handleWithdrawalSubmit} disabled={processing}
+                    className="px-4 py-2.5 text-sm font-bold text-white bg-red-600 rounded-lg hover:bg-red-500 disabled:opacity-50 shadow-sm transition-colors">
                     {processing ? t.processing : t.submitWithdrawal}
                   </button>
                 </div>
@@ -2627,136 +2412,92 @@ const MyPageWithWithdrawal = () => {
           </div>
         )}
 
-        {/* Video Upload Modal - Supabase Storage */}
+        {/* Video Upload Modal */}
         {showVideoUploadModal && (
-          <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
-            <div className="relative top-10 mx-4 sm:mx-auto p-5 border w-auto max-w-md shadow-lg rounded-xl bg-white">
-              <div className="flex items-center justify-between mb-4">
-                <div>
-                  <h3 className="text-lg font-bold text-gray-900">
-                    📤 {selectedApplication?.campaigns?.campaign_type === '4week_challenge' ? 'Upload Weekly Video' : 'Upload Video'}
-                  </h3>
-                  <p className="text-sm text-gray-500">
-                    {selectedApplication?.campaigns?.campaign_type === '4week_challenge' ? '4-Week Challenge' : 'Standard Campaign'}
-                  </p>
+          <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm overflow-y-auto h-full w-full z-50 flex items-start justify-center pt-10 sm:pt-20">
+            <div className="mx-4 w-full max-w-md bg-white rounded-2xl shadow-2xl ring-1 ring-slate-200/60 overflow-hidden">
+              <div className="p-5 sm:p-6">
+              <div className="flex items-center justify-between mb-5">
+                <div className="flex items-center gap-2">
+                  <div className="w-9 h-9 rounded-lg bg-indigo-100 flex items-center justify-center">
+                    <Camera className="w-5 h-5 text-indigo-600" />
+                  </div>
+                  <div>
+                    <h3 className="text-base font-bold text-slate-900">
+                      {selectedApplication?.campaigns?.campaign_type === '4week_challenge' ? 'Upload Weekly Video' : 'Upload Video'}
+                    </h3>
+                    <p className="text-xs text-slate-400">
+                      {selectedApplication?.campaigns?.campaign_type === '4week_challenge' ? '4-Week Challenge' : 'Standard Campaign'}
+                    </p>
+                  </div>
                 </div>
                 <button
-                  onClick={() => {
-                    setShowVideoUploadModal(false)
-                    setVideoFile(null)
-                    setSelectedWeekNumber(1)
-                    setUploadProgress(0)
-                  }}
+                  onClick={() => { setShowVideoUploadModal(false); setVideoFile(null); setSelectedWeekNumber(1); setUploadProgress(0) }}
                   disabled={uploadingVideo}
-                  className="text-gray-400 hover:text-gray-600 disabled:opacity-50"
+                  className="text-slate-400 hover:text-slate-600 disabled:opacity-50 p-1"
                 >
                   <X className="w-5 h-5" />
                 </button>
               </div>
 
               {error && (
-                <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
-                  <p className="text-sm text-red-800">{error}</p>
-                </div>
+                <div className="mb-4 p-3 bg-red-50 rounded-xl ring-1 ring-red-200 text-xs font-medium text-red-700">{error}</div>
               )}
 
               <div className="space-y-4">
                 {/* Week Selection for 4-Week Challenge */}
                 {selectedApplication?.campaigns?.campaign_type === '4week_challenge' && (
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Select Week <span className="text-red-500">*</span>
-                    </label>
+                    <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Select Week *</label>
                     <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                       {[1, 2, 3, 4].map(week => {
                         const existingVideo = selectedApplication?.[`week${week}_video_url`]
-                        const deadline = selectedApplication?.custom_deadlines?.[`week${week}_deadline`] ||
-                                       selectedApplication?.campaigns?.[`week${week}_deadline`]
+                        const deadline = selectedApplication?.custom_deadlines?.[`week${week}_deadline`] || selectedApplication?.campaigns?.[`week${week}_deadline`]
                         const isSelected = selectedWeekNumber === week
-
                         return (
-                          <button
-                            key={week}
-                            type="button"
-                            onClick={() => setSelectedWeekNumber(week)}
-                            disabled={uploadingVideo}
-                            className={`p-3 rounded-lg border-2 text-center transition-all ${
-                              isSelected
-                                ? 'border-purple-500 bg-purple-50'
-                                : existingVideo
-                                ? 'border-green-300 bg-green-50'
-                                : 'border-gray-200 hover:border-gray-300'
-                            } disabled:opacity-50`}
-                          >
-                            <div className="font-medium text-sm">Week {week}</div>
-                            {deadline && (
-                              <div className="text-xs text-gray-500 mt-1">
-                                {new Date(deadline).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
-                              </div>
-                            )}
-                            {existingVideo && (
-                              <div className="text-xs text-green-600 mt-1">✓</div>
-                            )}
+                          <button key={week} type="button" onClick={() => setSelectedWeekNumber(week)} disabled={uploadingVideo}
+                            className={`p-3 rounded-xl text-center transition-all ring-1 ${
+                              isSelected ? 'ring-2 ring-indigo-500 bg-indigo-50' : existingVideo ? 'ring-emerald-300 bg-emerald-50' : 'ring-slate-200 hover:ring-slate-300'
+                            } disabled:opacity-50`}>
+                            <div className="font-bold text-sm text-slate-900">Week {week}</div>
+                            {deadline && <div className="text-[10px] text-slate-400 mt-0.5">{new Date(deadline).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</div>}
+                            {existingVideo && <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 mx-auto mt-1" />}
                           </button>
                         )
                       })}
                     </div>
                     {selectedApplication?.[`week${selectedWeekNumber}_video_url`] && (
-                      <p className="mt-2 text-xs text-amber-600">
-                        ⚠️ Week {selectedWeekNumber} already has a video. Uploading will replace it.
-                      </p>
+                      <p className="mt-2 text-[10px] text-amber-600 font-medium">Week {selectedWeekNumber} already has a video. Uploading will replace it.</p>
                     )}
                   </div>
                 )}
 
                 {/* File Upload */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Video File <span className="text-red-500">*</span>
-                  </label>
-
-                  <input
-                    ref={videoInputRef}
-                    type="file"
-                    accept="video/*"
-                    onChange={handleVideoFileSelect}
-                    className="hidden"
-                    disabled={uploadingVideo}
-                  />
-
+                  <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Video File *</label>
+                  <input ref={videoInputRef} type="file" accept="video/*" onChange={handleVideoFileSelect} className="hidden" disabled={uploadingVideo} />
                   {!videoFile ? (
-                    <button
-                      type="button"
-                      onClick={() => videoInputRef.current?.click()}
-                      disabled={uploadingVideo}
-                      className="w-full border-2 border-dashed border-gray-300 rounded-xl p-4 sm:p-8 hover:border-purple-400 hover:bg-purple-50 transition-all disabled:opacity-50"
-                    >
+                    <button type="button" onClick={() => videoInputRef.current?.click()} disabled={uploadingVideo}
+                      className="w-full border-2 border-dashed border-slate-200 rounded-xl p-6 hover:border-indigo-400 hover:bg-indigo-50/50 transition-all disabled:opacity-50 group">
                       <div className="flex flex-col items-center">
-                        <Camera className="w-12 h-12 text-gray-400 mb-3" />
-                        <p className="text-sm font-medium text-gray-700">Click to select video</p>
-                        <p className="text-xs text-gray-500 mt-1">MP4, MOV, AVI, WebM (max 500MB)</p>
+                        <Camera className="w-10 h-10 text-slate-300 group-hover:text-indigo-400 mb-2 transition-colors" />
+                        <p className="text-sm font-semibold text-slate-600">Click to select video</p>
+                        <p className="text-[10px] text-slate-400 mt-1">MP4, MOV, AVI, WebM (max 500MB)</p>
                       </div>
                     </button>
                   ) : (
-                    <div className="border border-green-200 bg-green-50 rounded-xl p-4">
+                    <div className="bg-emerald-50 rounded-xl p-4 ring-1 ring-emerald-200/60">
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
-                            <Camera className="w-5 h-5 text-green-600" />
+                          <div className="w-10 h-10 bg-emerald-100 rounded-lg flex items-center justify-center">
+                            <CheckCircle2 className="w-5 h-5 text-emerald-600" />
                           </div>
                           <div>
-                            <p className="text-sm font-medium text-gray-900 truncate max-w-[200px]">
-                              {videoFile.name}
-                            </p>
-                            <p className="text-xs text-gray-500">{formatFileSize(videoFile.size)}</p>
+                            <p className="text-sm font-semibold text-slate-900 truncate max-w-[200px]">{videoFile.name}</p>
+                            <p className="text-[10px] text-slate-400">{formatFileSize(videoFile.size)}</p>
                           </div>
                         </div>
-                        <button
-                          type="button"
-                          onClick={() => setVideoFile(null)}
-                          disabled={uploadingVideo}
-                          className="p-2 text-red-600 hover:bg-red-100 rounded-full disabled:opacity-50"
-                        >
+                        <button type="button" onClick={() => setVideoFile(null)} disabled={uploadingVideo} className="p-1.5 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-lg disabled:opacity-50">
                           <X className="w-4 h-4" />
                         </button>
                       </div>
@@ -2767,146 +2508,94 @@ const MyPageWithWithdrawal = () => {
                 {/* Upload Progress */}
                 {uploadingVideo && (
                   <div className="space-y-2">
-                    <div className="flex items-center justify-between text-sm">
-                      <span className="text-gray-600">Uploading...</span>
-                      <span className="text-purple-600 font-medium">{uploadProgress}%</span>
+                    <div className="flex items-center justify-between text-xs">
+                      <span className="text-slate-500 font-medium">Uploading...</span>
+                      <span className="text-indigo-600 font-bold">{uploadProgress}%</span>
                     </div>
-                    <div className="w-full bg-gray-200 rounded-full h-2">
-                      <div
-                        className="bg-purple-600 h-2 rounded-full transition-all duration-300"
-                        style={{ width: `${uploadProgress}%` }}
-                      />
+                    <div className="w-full bg-slate-100 rounded-full h-2">
+                      <div className="bg-indigo-600 h-2 rounded-full transition-all duration-300" style={{ width: `${uploadProgress}%` }} />
                     </div>
                   </div>
                 )}
 
                 {/* Tips */}
-                <div className="p-3 bg-amber-50 border border-amber-200 rounded-lg">
-                  <h4 className="text-sm font-medium text-amber-800 mb-1">💡 Tips</h4>
-                  <ul className="text-xs text-amber-700 space-y-0.5">
-                    <li>• Upload video in the highest quality possible</li>
-                    <li>• Supported formats: MP4, MOV, AVI, WebM</li>
-                    <li>• Maximum file size: 500MB</li>
+                <div className="p-3 bg-slate-50 rounded-xl ring-1 ring-slate-200/60">
+                  <h4 className="text-xs font-bold text-slate-600 mb-1">Tips</h4>
+                  <ul className="text-[10px] text-slate-400 space-y-0.5">
+                    <li>Upload video in the highest quality possible</li>
+                    <li>Supported: MP4, MOV, AVI, WebM (max 500MB)</li>
                   </ul>
                 </div>
 
                 {/* Action Buttons */}
-                <div className="flex justify-end space-x-3 pt-2">
-                  <button
-                    onClick={() => {
-                      setShowVideoUploadModal(false)
-                      setVideoFile(null)
-                      setUploadProgress(0)
-                    }}
-                    disabled={uploadingVideo}
-                    className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 disabled:opacity-50"
-                  >
+                <div className="flex justify-end gap-3 pt-2">
+                  <button onClick={() => { setShowVideoUploadModal(false); setVideoFile(null); setUploadProgress(0) }}
+                    disabled={uploadingVideo} className="px-4 py-2.5 text-sm font-semibold text-slate-600 bg-slate-100 rounded-lg hover:bg-slate-200 disabled:opacity-50 transition-colors">
                     Cancel
                   </button>
-                  <button
-                    onClick={handleVideoSubmit}
-                    disabled={uploadingVideo || !videoFile}
-                    className="px-4 py-2 text-sm font-medium text-white bg-purple-600 rounded-lg hover:bg-purple-700 disabled:opacity-50 flex items-center gap-2"
-                  >
-                    {uploadingVideo ? (
-                      <>
-                        <Loader2 className="w-4 h-4 animate-spin" />
-                        Uploading...
-                      </>
-                    ) : (
-                      <>
-                        <Camera className="w-4 h-4" />
-                        Upload Video
-                      </>
-                    )}
+                  <button onClick={handleVideoSubmit} disabled={uploadingVideo || !videoFile}
+                    className="px-4 py-2.5 text-sm font-bold text-white bg-indigo-600 rounded-lg hover:bg-indigo-500 disabled:opacity-50 shadow-sm flex items-center gap-2 transition-colors">
+                    {uploadingVideo ? (<><Loader2 className="w-4 h-4 animate-spin" /> Uploading...</>) : (<><Camera className="w-4 h-4" /> Upload Video</>)}
                   </button>
                 </div>
+              </div>
               </div>
             </div>
           </div>
         )}
 
-        {/* SNS 업로드 및 포인트 신청 모달 */}
+        {/* SNS Upload & Point Request Modal */}
         {showSnsUploadModal && (
-          <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
-            <div className="relative top-20 mx-4 sm:mx-auto p-5 border w-auto max-w-sm shadow-lg rounded-md bg-white">
-              <div className="mt-3">
-                <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-lg font-medium text-gray-900">{t.pointRequestTitle}</h3>
-                  <button
-                    onClick={() => setShowSnsUploadModal(false)}
-                    className="text-gray-400 hover:text-gray-600"
-                  >
-                    <X className="w-5 h-5" />
-                  </button>
+          <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm overflow-y-auto h-full w-full z-50 flex items-start justify-center pt-16 sm:pt-24">
+            <div className="mx-4 w-full max-w-md bg-white rounded-2xl shadow-2xl ring-1 ring-slate-200/60 overflow-hidden">
+              <div className="p-5 sm:p-6">
+                <div className="flex items-center justify-between mb-5">
+                  <div className="flex items-center gap-2">
+                    <div className="w-9 h-9 rounded-lg bg-indigo-100 flex items-center justify-center">
+                      <Globe className="w-5 h-5 text-indigo-600" />
+                    </div>
+                    <h3 className="text-base font-bold text-slate-900">{t.pointRequestTitle}</h3>
+                  </div>
+                  <button onClick={() => setShowSnsUploadModal(false)} className="text-slate-400 hover:text-slate-600 p-1"><X className="w-5 h-5" /></button>
                 </div>
-                
-                <div className="mb-4 p-3 bg-blue-50 rounded-lg">
-                  <p className="text-sm text-blue-800">
-                    {t.snsUploadDescription}
-                  </p>
+
+                <div className="mb-5 p-3 bg-indigo-50 rounded-xl ring-1 ring-indigo-200/60">
+                  <p className="text-xs text-indigo-700">{t.snsUploadDescription}</p>
                   {selectedApplication && (
-                    <p className="text-sm text-blue-600 mt-2 font-medium">
-                      캠페인: {selectedApplication.campaign_title}
-                    </p>
+                    <p className="text-xs text-indigo-900 mt-1.5 font-bold">Campaign: {selectedApplication.campaign_title}</p>
                   )}
                 </div>
-                
-                {error && (
-                  <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-md">
-                    <p className="text-sm text-red-800">{error}</p>
-                  </div>
-                )}
-                
-                {success && (
-                  <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-md">
-                    <p className="text-sm text-green-800">{success}</p>
-                  </div>
-                )}
-                
+
+                {error && <div className="mb-4 p-3 bg-red-50 rounded-xl ring-1 ring-red-200 text-xs font-medium text-red-700">{error}</div>}
+                {success && <div className="mb-4 p-3 bg-emerald-50 rounded-xl ring-1 ring-emerald-200 text-xs font-medium text-emerald-700">{success}</div>}
+
                 <div className="space-y-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      {t.snsUploadUrl} *
-                    </label>
-                    <input
-                      type="url"
-                      value={snsUploadForm.sns_upload_url}
+                    <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5">{t.snsUploadUrl} *</label>
+                    <input type="url" value={snsUploadForm.sns_upload_url}
                       onChange={(e) => setSnsUploadForm({...snsUploadForm, sns_upload_url: e.target.value})}
-                      placeholder="https://instagram.com/p/... or https://tiktok.com/@.../video/..."
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    />
-                    <p className="mt-1 text-xs text-gray-500">
-                      Enter the URL of your Instagram, TikTok, or YouTube post
-                    </p>
+                      placeholder="https://instagram.com/p/..."
+                      className="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent" />
+                    <p className="mt-1 text-[10px] text-slate-400">Instagram, TikTok, or YouTube post URL</p>
                   </div>
-                  
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      {t.additionalNotes}
-                    </label>
-                    <textarea
-                      value={snsUploadForm.notes}
+                    <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5">{t.additionalNotes}</label>
+                    <textarea value={snsUploadForm.notes}
                       onChange={(e) => setSnsUploadForm({...snsUploadForm, notes: e.target.value})}
-                      rows={3}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      placeholder="Enter any additional information (optional)"
-                    />
+                      rows={2}
+                      className="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                      placeholder="Additional information (optional)" />
                   </div>
                 </div>
-                
-                <div className="mt-6 flex justify-end space-x-3">
-                  <button
-                    onClick={() => setShowSnsUploadModal(false)}
-                    className="px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400"
-                  >
+
+                <div className="mt-6 flex justify-end gap-3">
+                  <button onClick={() => setShowSnsUploadModal(false)}
+                    className="px-4 py-2.5 text-sm font-semibold text-slate-600 bg-slate-100 rounded-lg hover:bg-slate-200 transition-colors">
                     {t.cancel}
                   </button>
-                  <button
-                    onClick={handleSnsUploadSubmit}
+                  <button onClick={handleSnsUploadSubmit}
                     disabled={processing || !snsUploadForm.sns_upload_url || typeof snsUploadForm.sns_upload_url !== 'string' || !snsUploadForm.sns_upload_url.trim()}
-                    className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50"
-                  >
+                    className="px-4 py-2.5 text-sm font-bold text-white bg-indigo-600 rounded-lg hover:bg-indigo-500 disabled:opacity-50 shadow-sm transition-colors">
                     {processing ? t.processing : t.submitPointRequest}
                   </button>
                 </div>
@@ -2954,7 +2643,7 @@ const MyPageWithWithdrawal = () => {
           campaign={selectedCampaign}
           onSubmit={handleNewSNSSubmit}
         />
-      </div>
+      </main>
     </div>
   )
 }
