@@ -17,7 +17,7 @@ const SNSSubmitModal = ({
   const [showInstructions, setShowInstructions] = useState(false)
 
   const is4Week = campaign?.campaign_type === '4week_challenge'
-  const requiresAdCode = campaign?.requires_ad_code || campaign?.meta_ad_code_requested
+  const requiresAdCode = campaign?.partnership_ad_code_required || campaign?.meta_ad_code_requested
   // For 4-week, check per-week clean video; for standard, check single clean_video_url
   const requiresCleanVideo = campaign?.requires_clean_video && (
     is4Week
@@ -35,7 +35,7 @@ const SNSSubmitModal = ({
       // Find the first week without SNS submission
       if (is4Week) {
         for (let i = 1; i <= 4; i++) {
-          if (application?.[`week${i}_video_url`] && !application?.[`week${i}_sns_url`]) {
+          if (application?.[`week${i}_url`] && !application?.[`week${i}_sns_url`]) {
             setSelectedWeek(i)
             break
           }
@@ -139,7 +139,7 @@ const SNSSubmitModal = ({
               </label>
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                 {[1, 2, 3, 4].map(week => {
-                  const hasVideo = application?.[`week${week}_video_url`]
+                  const hasVideo = application?.[`week${week}_url`]
                   const hasSns = application?.[`week${week}_sns_url`]
                   const deadline = getWeekSnsDeadline(week)
                   const isSelected = selectedWeek === week

@@ -32,7 +32,7 @@ const VideoUploadModal = ({
       // Find the first week without a video submission
       if (is4Week) {
         for (let i = 1; i <= 4; i++) {
-          if (!application?.[`week${i}_video_url`]) {
+          if (!application?.[`week${i}_url`]) {
             setSelectedWeek(i)
             break
           }
@@ -66,17 +66,16 @@ const VideoUploadModal = ({
     const file = e.target.files[0]
     if (!file) return
 
-    // Validate file type
-    const validTypes = ['video/mp4', 'video/quicktime', 'video/x-msvideo', 'video/x-ms-wmv', 'video/webm', 'video/mpeg']
-    if (!validTypes.includes(file.type)) {
-      setError('Please upload a valid video file (MP4, MOV, AVI, WMV, WebM)')
+    // Validate file type (accept all video/* types)
+    if (!file.type.startsWith('video/')) {
+      setError('Please upload a valid video file')
       return
     }
 
-    // Validate file size (max 500MB)
-    const maxSize = 500 * 1024 * 1024
+    // Validate file size (max 2GB)
+    const maxSize = 2 * 1024 * 1024 * 1024
     if (file.size > maxSize) {
-      setError('File size must be less than 500MB')
+      setError('File size must be less than 2GB')
       return
     }
 
@@ -88,14 +87,15 @@ const VideoUploadModal = ({
     }
   }
 
-  const uploadToSupabase = async (file, folder) => {
+  const uploadToSupabase = async (file, folder, version = 1) => {
     const timestamp = Date.now()
     const fileExt = file.name.split('.').pop()
-    const fileName = `${application.id}_${folder}_${timestamp}.${fileExt}`
-    const filePath = `videos/${application.user_id}/${fileName}`
+    const videoSlot = folder // e.g., 'main', 'week1', 'clean', 'week1_clean'
+    const fileName = `${videoSlot}_v${version}_${timestamp}.${fileExt}`
+    const filePath = `${application.campaign_id}/${application.user_id}/${fileName}`
 
     const { data, error: uploadError } = await supabase.storage
-      .from('creator-videos')
+      .from('videos')
       .upload(filePath, file, {
         cacheControl: '3600',
         upsert: true
@@ -107,7 +107,7 @@ const VideoUploadModal = ({
 
     // Get public URL
     const { data: urlData } = supabase.storage
-      .from('creator-videos')
+      .from('videos')
       .getPublicUrl(filePath)
 
     return urlData.publicUrl
@@ -131,15 +131,33 @@ const VideoUploadModal = ({
     setUploadProgress(10)
 
     try {
+      // Determine version by checking existing submissions
+      let version = 1
+      try {
+        const { data: existingSubs } = await supabase
+          .from('video_submissions')
+          .select('version')
+          .eq('application_id', application.id)
+          .eq('week_number', is4Week ? selectedWeek : null)
+          .order('version', { ascending: false })
+          .limit(1)
+        if (existingSubs && existingSubs.length > 0) {
+          version = (existingSubs[0].version || 0) + 1
+        }
+      } catch (e) {
+        console.warn('Could not fetch existing version:', e)
+      }
+
       // Upload main video
       setUploadProgress(20)
-      const videoUrl = await uploadToSupabase(videoFile, is4Week ? `week${selectedWeek}` : 'main')
+      const videoSlot = is4Week ? `week${selectedWeek}` : 'main'
+      const videoUrl = await uploadToSupabase(videoFile, videoSlot, version)
       setUploadProgress(60)
 
       // Upload clean video if required
       let cleanVideoUrl = null
       if (cleanVideoFile) {
-        cleanVideoUrl = await uploadToSupabase(cleanVideoFile, is4Week ? `week${selectedWeek}_clean` : 'clean')
+        cleanVideoUrl = await uploadToSupabase(cleanVideoFile, is4Week ? `week${selectedWeek}_clean` : 'clean', version)
         setUploadProgress(90)
       }
 
@@ -147,8 +165,13 @@ const VideoUploadModal = ({
 
       await onSubmit({
         applicationId: application.id,
+        campaignId: application.campaign_id,
+        userId: application.user_id,
         videoUrl,
         cleanVideoUrl,
+        videoFileName: videoFile.name,
+        videoFileSize: videoFile.size,
+        version,
         weekNumber: is4Week ? selectedWeek : null,
         is4Week
       })
@@ -210,7 +233,7 @@ const VideoUploadModal = ({
               </label>
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                 {[1, 2, 3, 4].map(week => {
-                  const existingVideo = application?.[`week${week}_video_url`]
+                  const existingVideo = application?.[`week${week}_url`]
                   const deadline = getWeekDeadline(week)
                   const isSelected = selectedWeek === week
 
@@ -241,7 +264,7 @@ const VideoUploadModal = ({
                   )
                 })}
               </div>
-              {application?.[`week${selectedWeek}_video_url`] && (
+              {application?.[`week${selectedWeek}_url`] && (
                 <p className="text-xs text-amber-600 mt-2">
                   ⚠️ Week {selectedWeek} already has a video. Uploading will replace it.
                 </p>
@@ -279,7 +302,7 @@ const VideoUploadModal = ({
                 <div className="flex flex-col items-center">
                   <Film className="w-8 h-8 sm:w-12 sm:h-12 text-gray-400 mb-2 sm:mb-3" />
                   <p className="text-xs sm:text-sm font-medium text-gray-700">Tap to select video</p>
-                  <p className="text-xs text-gray-500 mt-1">MP4, MOV, AVI, WebM (max 500MB)</p>
+                  <p className="text-xs text-gray-500 mt-1">All video formats (max 2GB)</p>
                 </div>
               </button>
             ) : (
@@ -390,8 +413,8 @@ const VideoUploadModal = ({
             <h4 className="text-xs sm:text-sm font-medium text-amber-800 mb-1.5 sm:mb-2">💡 Tips</h4>
             <ul className="text-xs text-amber-700 space-y-0.5 sm:space-y-1">
               <li>• Upload video in the highest quality possible</li>
-              <li>• Supported formats: MP4, MOV, AVI, WebM</li>
-              <li>• Maximum file size: 500MB</li>
+              <li>• Supported formats: All video formats (MP4, MOV, AVI, WebM, etc.)</li>
+              <li>• Maximum file size: 2GB</li>
               <li>• Use a stable internet connection for faster uploads</li>
             </ul>
           </div>

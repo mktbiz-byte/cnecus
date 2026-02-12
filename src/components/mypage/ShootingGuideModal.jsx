@@ -73,7 +73,7 @@ const ShootingGuideModal = ({ isOpen, onClose, campaign, application }) => {
   const hasVideoSpecs = campaign.video_duration_en || campaign.video_tempo_en || campaign.video_tone_en
   const hasShootingScenes = activeSceneChecks.length > 0 || campaign.shooting_scenes_en?.length > 0
   const hasNotes = campaign.additional_details_en || campaign.additional_shooting_requests_en
-  const hasSpecialReqs = campaign.requires_ad_code || campaign.meta_ad_code_requested || campaign.requires_clean_video
+  const hasSpecialReqs = campaign.partnership_ad_code_required || campaign.meta_ad_code_requested || campaign.requires_clean_video
 
   return (
     <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-2 sm:p-4 overflow-y-auto">
@@ -243,7 +243,7 @@ const ShootingGuideModal = ({ isOpen, onClose, campaign, application }) => {
                     const snsDeadline = campaign[`week${week}_sns_deadline`]
                     const videoDays = getDaysLeft(videoDeadline)
                     const isExpanded = expandedWeek === week
-                    const videoSubmitted = !!application?.[`week${week}_video_url`]
+                    const videoSubmitted = !!application?.[`week${week}_url`]
                     const snsSubmitted = !!application?.[`week${week}_sns_url`]
 
                     return (
@@ -603,7 +603,7 @@ const ShootingGuideModal = ({ isOpen, onClose, campaign, application }) => {
                 </h3>
               </div>
               <div className="p-4 space-y-3">
-                {(campaign.requires_ad_code || campaign.meta_ad_code_requested) && (
+                {(campaign.partnership_ad_code_required || campaign.meta_ad_code_requested) && (
                   <div className="flex items-start gap-3 p-3 bg-red-50/50 rounded-lg border border-red-200">
                     <div className="w-10 h-10 bg-red-100 rounded-lg flex items-center justify-center flex-shrink-0">
                       <Hash className="w-5 h-5 text-red-600" />

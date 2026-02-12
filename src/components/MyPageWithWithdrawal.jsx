@@ -450,12 +450,14 @@ const MyPageWithWithdrawal = () => {
             week2_sns_deadline,
             week3_sns_deadline,
             week4_sns_deadline,
-            requires_ad_code,
+            partnership_ad_code_required,
             meta_ad_code_requested,
             requires_clean_video,
             video_guide_url,
             reference_video_url,
             shooting_guide,
+            guide_pdf_url,
+            guide_delivery_mode,
             google_drive_url,
             google_slides_url,
             required_dialogues_en,
@@ -467,6 +469,8 @@ const MyPageWithWithdrawal = () => {
             video_tone_en,
             additional_details_en,
             additional_shooting_requests_en,
+            challenge_guide_data_en,
+            challenge_weekly_guides,
             shooting_scenes_ba_photo,
             shooting_scenes_no_makeup,
             shooting_scenes_closeup,
@@ -483,7 +487,7 @@ const MyPageWithWithdrawal = () => {
         .eq('user_id', user.id)
         .order('created_at', { ascending: false })
 
-      const [profileData, _, pointTransactionsResult] = await Promise.all([
+      const [profileData, _, pointTransactionsResult, videoSubmissionsResult] = await Promise.all([
         // 1. 프로필 정보
         database.userProfiles.get(user.id),
         // 2. 신청 내역 (already loaded above with shooting_guide)
@@ -491,6 +495,12 @@ const MyPageWithWithdrawal = () => {
         // 3. 포인트 거래 내역 (출금 + 전체)
         supabase
           .from('point_transactions')
+          .select('*')
+          .eq('user_id', user.id)
+          .order('created_at', { ascending: false }),
+        // 4. 영상 제출 이력 (버전 관리 + 수정 요청)
+        supabase
+          .from('video_submissions')
           .select('*')
           .eq('user_id', user.id)
           .order('created_at', { ascending: false })
@@ -518,8 +528,31 @@ const MyPageWithWithdrawal = () => {
         })
       }
 
-      // 신청 내역 설정 (with shooting_guide from campaigns)
-      setApplications(applicationsWithGuide || [])
+      // Process video_submissions to attach revision_requests to applications
+      const videoSubmissions = videoSubmissionsResult?.data || []
+      const enrichedApplications = (applicationsWithGuide || []).map(app => {
+        // Find revision requests from video_submissions for this application
+        const appSubmissions = videoSubmissions.filter(vs => vs.application_id === app.id)
+        const revisionRequests = appSubmissions
+          .filter(vs => vs.status === 'revision_requested')
+          .map(vs => ({
+            id: vs.id,
+            comment: vs.revision_notes || vs.admin_comment || '',
+            comment_en: vs.revision_notes_en || vs.admin_comment_en || '',
+            created_at: vs.updated_at || vs.created_at,
+            video_number: vs.video_number,
+            week_number: vs.week_number,
+            version: vs.version
+          }))
+        return {
+          ...app,
+          revision_requests: revisionRequests,
+          video_submissions: appSubmissions
+        }
+      })
+
+      // 신청 내역 설정 (with shooting_guide from campaigns + revision data)
+      setApplications(enrichedApplications)
 
       // 포인트 거래 내역 처리
       const { data: pointData, error: pointError } = pointTransactionsResult
@@ -989,17 +1022,16 @@ const MyPageWithWithdrawal = () => {
     const file = e.target.files[0]
     if (!file) return
 
-    // Validate file type
-    const validTypes = ['video/mp4', 'video/quicktime', 'video/x-msvideo', 'video/webm', 'video/mpeg']
-    if (!validTypes.includes(file.type)) {
-      setError('Please upload a valid video file (MP4, MOV, AVI, WebM)')
+    // Validate file type (accept all video/* types)
+    if (!file.type.startsWith('video/')) {
+      setError('Please upload a valid video file')
       return
     }
 
-    // Validate file size (max 500MB)
-    const maxSize = 500 * 1024 * 1024
+    // Validate file size (max 2GB)
+    const maxSize = 2 * 1024 * 1024 * 1024
     if (file.size > maxSize) {
-      setError('File size must be less than 500MB')
+      setError('File size must be less than 2GB')
       return
     }
 
@@ -1031,17 +1063,34 @@ const MyPageWithWithdrawal = () => {
       // Check if this is a 4-week challenge
       const is4WeekChallenge = selectedApplication?.campaigns?.campaign_type === '4week_challenge'
 
-      // Upload to Supabase Storage
+      // Determine version
+      let version = 1
+      try {
+        const { data: existingSubs } = await supabase
+          .from('video_submissions')
+          .select('version')
+          .eq('application_id', selectedApplication.id)
+          .eq('week_number', is4WeekChallenge ? selectedWeekNumber : null)
+          .order('version', { ascending: false })
+          .limit(1)
+        if (existingSubs && existingSubs.length > 0) {
+          version = (existingSubs[0].version || 0) + 1
+        }
+      } catch (e) {
+        console.warn('Could not fetch existing version:', e)
+      }
+
+      // Upload to Supabase Storage (videos bucket, spec path pattern)
       const timestamp = Date.now()
       const fileExt = videoFile.name.split('.').pop()
-      const folder = is4WeekChallenge ? `week${selectedWeekNumber}` : 'main'
-      const fileName = `${selectedApplication.id}_${folder}_${timestamp}.${fileExt}`
-      const filePath = `videos/${selectedApplication.user_id}/${fileName}`
+      const videoSlot = is4WeekChallenge ? `week${selectedWeekNumber}` : 'main'
+      const fileName = `${videoSlot}_v${version}_${timestamp}.${fileExt}`
+      const filePath = `${selectedApplication.campaign_id}/${selectedApplication.user_id}/${fileName}`
 
       setUploadProgress(30)
 
       const { data: uploadData, error: uploadError } = await supabase.storage
-        .from('creator-videos')
+        .from('videos')
         .upload(filePath, videoFile, {
           cacheControl: '3600',
           upsert: true
@@ -1053,10 +1102,32 @@ const MyPageWithWithdrawal = () => {
 
       // Get public URL
       const { data: urlData } = supabase.storage
-        .from('creator-videos')
+        .from('videos')
         .getPublicUrl(filePath)
 
       const videoUrl = urlData.publicUrl
+
+      setUploadProgress(80)
+
+      // Insert into video_submissions table for version tracking
+      try {
+        await supabase.from('video_submissions').insert({
+          campaign_id: selectedApplication.campaign_id,
+          application_id: selectedApplication.id,
+          user_id: user.id,
+          video_number: is4WeekChallenge ? null : 1,
+          week_number: is4WeekChallenge ? selectedWeekNumber : null,
+          version: version,
+          video_file_url: videoUrl,
+          video_file_name: videoFile.name,
+          video_file_size: videoFile.size,
+          video_uploaded_at: new Date().toISOString(),
+          status: 'submitted',
+          submitted_at: new Date().toISOString()
+        })
+      } catch (e) {
+        console.warn('video_submissions insert failed:', e)
+      }
 
       setUploadProgress(90)
 
@@ -1066,14 +1137,13 @@ const MyPageWithWithdrawal = () => {
       }
 
       if (is4WeekChallenge) {
-        const weekVideoKey = `week${selectedWeekNumber}_video_url`
-        const weekVideoTimeKey = `week${selectedWeekNumber}_video_submitted_at`
-        updateData[weekVideoKey] = videoUrl
-        updateData[weekVideoTimeKey] = new Date().toISOString()
+        const weekUrlKey = `week${selectedWeekNumber}_url`
+        updateData[weekUrlKey] = videoUrl
       } else {
-        updateData.video_submission_url = videoUrl
-        updateData.video_url = videoUrl
-        updateData.video_submitted_at = new Date().toISOString()
+        updateData.video_file_url = videoUrl
+        updateData.video_file_name = videoFile.name
+        updateData.video_file_size = videoFile.size
+        updateData.video_uploaded_at = new Date().toISOString()
         updateData.status = 'video_submitted'
       }
 
@@ -1131,27 +1201,45 @@ const MyPageWithWithdrawal = () => {
   }
 
   // Handle video submission from new modal
-  const handleNewVideoSubmit = async ({ applicationId, videoUrl, cleanVideoUrl, weekNumber, is4Week }) => {
+  const handleNewVideoSubmit = async ({ applicationId, campaignId, userId, videoUrl, cleanVideoUrl, videoFileName, videoFileSize, version, weekNumber, is4Week }) => {
     try {
+      // Insert into video_submissions table for version tracking
+      try {
+        await supabase.from('video_submissions').insert({
+          campaign_id: campaignId || selectedApplication?.campaign_id,
+          application_id: applicationId,
+          user_id: userId || user.id,
+          video_number: is4Week ? null : 1,
+          week_number: weekNumber || null,
+          version: version || 1,
+          video_file_url: videoUrl,
+          video_file_name: videoFileName || null,
+          video_file_size: videoFileSize || null,
+          video_uploaded_at: new Date().toISOString(),
+          clean_video_url: cleanVideoUrl || null,
+          status: 'submitted',
+          submitted_at: new Date().toISOString()
+        })
+      } catch (e) {
+        console.warn('video_submissions insert failed:', e)
+      }
+
       let updateData = {
-        updated_at: new Date().toISOString(),
-        revision_requested: false,
-        revision_notes: null
+        updated_at: new Date().toISOString()
       }
 
       if (is4Week && weekNumber) {
-        updateData[`week${weekNumber}_video_url`] = videoUrl
-        updateData[`week${weekNumber}_video_submitted_at`] = new Date().toISOString()
+        updateData[`week${weekNumber}_url`] = videoUrl
         updateData.status = 'video_submitted'
       } else {
-        updateData.video_url = videoUrl
-        updateData.video_submission_url = videoUrl
-        updateData.video_submitted_at = new Date().toISOString()
+        updateData.video_file_url = videoUrl
+        updateData.video_file_name = videoFileName || null
+        updateData.video_file_size = videoFileSize || null
+        updateData.video_uploaded_at = new Date().toISOString()
         updateData.status = 'video_submitted'
       }
 
       if (cleanVideoUrl) {
-        // For 4-week, save clean video per-week; for standard, save to single field
         if (is4Week && weekNumber) {
           updateData[`week${weekNumber}_clean_video_url`] = cleanVideoUrl
         } else {
@@ -1187,15 +1275,15 @@ const MyPageWithWithdrawal = () => {
       }
 
       if (is4Week && weekNumber) {
+        // 4-week challenge: store SNS URL per-week if column exists, also update main field
         updateData[`week${weekNumber}_sns_url`] = snsUrl
-        updateData[`week${weekNumber}_sns_submitted_at`] = new Date().toISOString()
+        updateData.sns_upload_url = snsUrl
       } else {
         updateData.sns_upload_url = snsUrl
         updateData.status = 'sns_uploaded'
       }
 
       if (partnershipCode) {
-        // For 4-week, save partnership code per-week; for standard, save to single field
         if (is4Week && weekNumber) {
           updateData[`week${weekNumber}_partnership_code`] = partnershipCode
         } else {
@@ -1204,12 +1292,33 @@ const MyPageWithWithdrawal = () => {
       }
 
       if (cleanVideoUrl) {
-        // For 4-week, save clean video per-week; for standard, save to single field
         if (is4Week && weekNumber) {
           updateData[`week${weekNumber}_clean_video_url`] = cleanVideoUrl
         } else {
           updateData.clean_video_url = cleanVideoUrl
         }
+      }
+
+      // Also update the video_submissions record if exists
+      try {
+        const { data: latestSub } = await supabase
+          .from('video_submissions')
+          .select('id')
+          .eq('application_id', applicationId)
+          .eq('week_number', is4Week ? weekNumber : null)
+          .order('version', { ascending: false })
+          .limit(1)
+
+        if (latestSub && latestSub.length > 0) {
+          await supabase.from('video_submissions').update({
+            sns_upload_url: snsUrl,
+            partnership_code: partnershipCode || null,
+            clean_video_url: cleanVideoUrl || null,
+            updated_at: new Date().toISOString()
+          }).eq('id', latestSub[0].id)
+        }
+      } catch (e) {
+        console.warn('video_submissions SNS update failed:', e)
       }
 
       const { error: updateError } = await supabase
@@ -1760,15 +1869,15 @@ const MyPageWithWithdrawal = () => {
                   </div>
                 </div>
                 <div className="p-5 sm:p-6">
-              
+
               <div className="space-y-4">
-                {applications.length === 0 ? (
+                {applications.filter(a => !['selected', 'filming', 'video_submitted', 'revision_requested', 'approved', 'sns_uploaded', 'completed'].includes(a.status)).length === 0 ? (
                   <div className="text-center py-12">
                     <Briefcase className="mx-auto h-12 w-12 text-slate-300 mb-3" />
                     <p className="text-sm font-medium text-slate-400">{t.noData}</p>
                   </div>
                 ) : (
-                  applications.map((application) => {
+                  applications.filter(a => !['selected', 'filming', 'video_submitted', 'revision_requested', 'approved', 'sns_uploaded', 'completed'].includes(a.status)).map((application) => {
                     // Get campaign type
                     const campaignType = application.campaigns?.campaign_type || 'regular'
                     const is4WeekChallenge = campaignType === '4week_challenge'
@@ -1789,7 +1898,7 @@ const MyPageWithWithdrawal = () => {
                       if (!is4WeekChallenge) return []
                       const submissions = []
                       for (let i = 1; i <= 4; i++) {
-                        const videoKey = `week${i}_video_url`
+                        const videoKey = `week${i}_url`
                         const snsKey = `week${i}_sns_url`
                         submissions.push({
                           week: i,
@@ -1922,12 +2031,12 @@ const MyPageWithWithdrawal = () => {
                               onClick={() => openVideoUploadModal(application)}
                               className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-bold bg-indigo-600 text-white hover:bg-indigo-500 shadow-sm transition-colors"
                             >
-                              <Camera className="w-3.5 h-3.5" /> {is4WeekChallenge ? 'Submit Weekly Video' : (application.video_submission_url ? 'Update Video' : 'Submit Video')}
+                              <Camera className="w-3.5 h-3.5" /> {is4WeekChallenge ? 'Submit Weekly Video' : (application.video_file_url ? 'Update Video' : 'Submit Video')}
                             </button>
 
-                            {application.video_submission_url && !is4WeekChallenge && (
+                            {application.video_file_url && !is4WeekChallenge && (
                               <a
-                                href={application.video_submission_url}
+                                href={application.video_file_url}
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-bold bg-emerald-50 text-emerald-700 hover:bg-emerald-100 ring-1 ring-emerald-200/60 transition-colors"
@@ -1938,9 +2047,9 @@ const MyPageWithWithdrawal = () => {
                           </div>
 
                           {/* Video Submission Status - Standard Campaign */}
-                          {application.video_submission_url && !is4WeekChallenge && (
+                          {application.video_file_url && !is4WeekChallenge && (
                             <div className="flex items-center text-sm text-green-600 mb-4">
-                              ✅ Video submitted on {new Date(application.video_submitted_at).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })}
+                              ✅ Video submitted on {new Date(application.video_uploaded_at).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })}
                             </div>
                           )}
 
@@ -2412,8 +2521,8 @@ const MyPageWithWithdrawal = () => {
           </div>
         )}
 
-        {/* Video Upload Modal */}
-        {showVideoUploadModal && (
+        {/* Video Upload Modal (inline - legacy, only shows when no campaign selected) */}
+        {showVideoUploadModal && !selectedCampaign && (
           <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm overflow-y-auto h-full w-full z-50 flex items-start justify-center pt-10 sm:pt-20">
             <div className="mx-4 w-full max-w-md bg-white rounded-2xl shadow-2xl ring-1 ring-slate-200/60 overflow-hidden">
               <div className="p-5 sm:p-6">
@@ -2451,7 +2560,7 @@ const MyPageWithWithdrawal = () => {
                     <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Select Week *</label>
                     <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                       {[1, 2, 3, 4].map(week => {
-                        const existingVideo = selectedApplication?.[`week${week}_video_url`]
+                        const existingVideo = selectedApplication?.[`week${week}_url`]
                         const deadline = selectedApplication?.custom_deadlines?.[`week${week}_deadline`] || selectedApplication?.campaigns?.[`week${week}_deadline`]
                         const isSelected = selectedWeekNumber === week
                         return (
@@ -2466,7 +2575,7 @@ const MyPageWithWithdrawal = () => {
                         )
                       })}
                     </div>
-                    {selectedApplication?.[`week${selectedWeekNumber}_video_url`] && (
+                    {selectedApplication?.[`week${selectedWeekNumber}_url`] && (
                       <p className="mt-2 text-[10px] text-amber-600 font-medium">Week {selectedWeekNumber} already has a video. Uploading will replace it.</p>
                     )}
                   </div>
@@ -2482,7 +2591,7 @@ const MyPageWithWithdrawal = () => {
                       <div className="flex flex-col items-center">
                         <Camera className="w-10 h-10 text-slate-300 group-hover:text-indigo-400 mb-2 transition-colors" />
                         <p className="text-sm font-semibold text-slate-600">Click to select video</p>
-                        <p className="text-[10px] text-slate-400 mt-1">MP4, MOV, AVI, WebM (max 500MB)</p>
+                        <p className="text-[10px] text-slate-400 mt-1">All video formats (max 2GB)</p>
                       </div>
                     </button>
                   ) : (
@@ -2523,7 +2632,7 @@ const MyPageWithWithdrawal = () => {
                   <h4 className="text-xs font-bold text-slate-600 mb-1">Tips</h4>
                   <ul className="text-[10px] text-slate-400 space-y-0.5">
                     <li>Upload video in the highest quality possible</li>
-                    <li>Supported: MP4, MOV, AVI, WebM (max 500MB)</li>
+                    <li>Supported: All video formats (max 2GB)</li>
                   </ul>
                 </div>
 
