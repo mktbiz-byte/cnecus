@@ -1021,20 +1021,42 @@ const MyPageWithWithdrawal = () => {
   }
 
   // Check if application has personalized guide (stored in applications.personalized_guide)
+  // Parse personalized_guide into unified format (3 types: ai_guide, external_url, external_pdf, text)
+  const parseGuide = (personalized_guide) => {
+    if (!personalized_guide) return null
+    let guide = personalized_guide
+    if (typeof guide === 'string') {
+      try { guide = JSON.parse(guide) } catch {
+        return { type: 'text', content: guide }
+      }
+    }
+    if (guide.type === 'external_url') {
+      return { type: 'external_url', url: guide.url, title: guide.title || 'Filming Guide' }
+    }
+    if (guide.type === 'external_pdf') {
+      return { type: 'external_pdf', url: guide.fileUrl, fileName: guide.fileName, title: guide.title || 'Filming Guide' }
+    }
+    if (guide.scenes && Array.isArray(guide.scenes)) {
+      return { type: 'ai_guide', scenes: guide.scenes, style: guide.dialogue_style, tempo: guide.tempo, mood: guide.mood }
+    }
+    return null
+  }
+
   const hasShootingGuide = (application) => {
-    // Check personalized_guide first
-    if (application.personalized_guide?.scenes?.length > 0) return true
-    // Check campaigns._en fields or shooting_guide JSON
+    // Check personalized_guide (all 3 types)
+    const guide = parseGuide(application.personalized_guide)
+    if (guide) return true
+    // Check campaigns fields
     const c = application.campaigns
     if (!c) return false
     if (c.shooting_guide) return true
+    if (c.ai_generated_guide) return true
     if (c.brand_name_en || c.product_name_en || c.product_description_en) return true
     if (c.required_dialogues_en?.length > 0 || c.required_scenes_en?.length > 0) return true
     if (c.video_duration_en || c.video_tempo_en || c.video_tone_en) return true
     if (c.google_drive_url || c.google_slides_url) return true
     if (c.requires_ad_code || c.requires_clean_video || c.meta_ad_code_requested) return true
-    // Check if any deadline exists (to at least show the guide modal with deadline info)
-    if (c.video_deadline || c.sns_deadline || c.application_deadline || c.posting_deadline) return true
+    if (c.video_deadline || c.sns_deadline || c.end_date || c.application_deadline || c.posting_deadline) return true
     return false
   }
 
@@ -2092,82 +2114,132 @@ const MyPageWithWithdrawal = () => {
                           )}
 
                           {/* Expandable Shooting Guide - Using personalized_guide from applications */}
-                          {expandedGuides[application.id] && hasShootingGuide(application) && (
+                          {expandedGuides[application.id] && hasShootingGuide(application) && (() => {
+                            const guideData = parseGuide(application.personalized_guide)
+                            return (
                             <div className="mt-4 p-4 bg-gray-50 rounded-lg">
                               <h4 className="font-semibold text-gray-900 mb-4 flex items-center">
-                                📖 Shooting Guide
+                                Shooting Guide
                               </h4>
 
-                              {/* Guide Info */}
-                              {(application.personalized_guide?.mood || application.personalized_guide?.tempo) && (
+                              {/* External URL Guide */}
+                              {guideData?.type === 'external_url' && guideData.url && (
+                                <a
+                                  href={guideData.url}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="flex items-center gap-4 p-4 bg-white rounded-xl border-2 border-purple-200 hover:border-purple-400 hover:shadow-md transition-all group mb-4"
+                                >
+                                  <div className="w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center flex-shrink-0">
+                                    <ExternalLink className="w-6 h-6 text-purple-600" />
+                                  </div>
+                                  <div className="flex-1 min-w-0">
+                                    <p className="font-bold text-purple-800 text-sm">{guideData.title}</p>
+                                    <p className="text-xs text-gray-500 mt-0.5 truncate">{guideData.url}</p>
+                                  </div>
+                                  <div className="flex-shrink-0 bg-purple-600 text-white px-3 py-1.5 rounded-lg text-xs font-medium">
+                                    Open
+                                  </div>
+                                </a>
+                              )}
+
+                              {/* External PDF Guide */}
+                              {guideData?.type === 'external_pdf' && guideData.url && (
+                                <a
+                                  href={guideData.url}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="flex items-center gap-4 p-4 bg-white rounded-xl border-2 border-indigo-200 hover:border-indigo-400 hover:shadow-md transition-all group mb-4"
+                                >
+                                  <div className="w-12 h-12 bg-indigo-100 rounded-xl flex items-center justify-center flex-shrink-0">
+                                    <FileText className="w-6 h-6 text-indigo-600" />
+                                  </div>
+                                  <div className="flex-1 min-w-0">
+                                    <p className="font-bold text-indigo-800 text-sm">{guideData.title}</p>
+                                    <p className="text-xs text-gray-500 mt-0.5">{guideData.fileName || 'PDF Guide'}</p>
+                                  </div>
+                                  <div className="flex-shrink-0 bg-indigo-600 text-white px-3 py-1.5 rounded-lg text-xs font-medium">
+                                    Download
+                                  </div>
+                                </a>
+                              )}
+
+                              {/* Text Guide */}
+                              {guideData?.type === 'text' && guideData.content && (
+                                <div className="mb-4 p-4 bg-white rounded-lg border border-gray-200">
+                                  <pre className="text-sm text-gray-700 whitespace-pre-wrap font-sans leading-relaxed">{guideData.content}</pre>
+                                </div>
+                              )}
+
+                              {/* AI Guide - mood/tempo/style info */}
+                              {guideData?.type === 'ai_guide' && (guideData.mood || guideData.tempo) && (
                                 <div className="mb-4 p-3 bg-purple-50 rounded-lg flex flex-wrap gap-2">
-                                  {application.personalized_guide?.mood && (
+                                  {guideData.mood && (
                                     <span className="text-xs bg-purple-200 text-purple-800 px-2 py-1 rounded">
-                                      Mood: {application.personalized_guide.mood}
+                                      Mood: {guideData.mood}
                                     </span>
                                   )}
-                                  {application.personalized_guide?.tempo && (
+                                  {guideData.tempo && (
                                     <span className="text-xs bg-purple-200 text-purple-800 px-2 py-1 rounded">
-                                      Tempo: {application.personalized_guide.tempo}
+                                      Tempo: {guideData.tempo}
                                     </span>
                                   )}
-                                  {application.personalized_guide?.dialogue_style && (
+                                  {guideData.style && (
                                     <span className="text-xs bg-purple-200 text-purple-800 px-2 py-1 rounded">
-                                      Style: {application.personalized_guide.dialogue_style}
+                                      Style: {guideData.style}
                                     </span>
                                   )}
                                 </div>
                               )}
 
-                              {/* Scenes - Using _translated fields for English */}
-                              <div className="space-y-3">
-                                {application.personalized_guide?.scenes?.map((scene, index) => (
-                                  <div key={index} className="border border-gray-200 rounded-lg overflow-hidden bg-white">
-                                    <div className="bg-gray-100 px-4 py-2 flex justify-between items-center">
-                                      <h5 className="font-medium text-gray-800">
-                                        Scene {scene.order || index + 1}: {scene.scene_type}
-                                      </h5>
-                                    </div>
-                                    <div className="p-4 space-y-3">
-                                      {/* What to Film - scene_description_translated */}
-                                      {scene.scene_description_translated && (
-                                        <div>
-                                          <h6 className="text-sm font-medium text-gray-700 mb-1">📷 What to Film</h6>
-                                          <p className="text-sm text-gray-600 pl-5">
-                                            {scene.scene_description_translated}
-                                          </p>
-                                        </div>
-                                      )}
-                                      {/* Script - dialogue_translated */}
-                                      {scene.dialogue_translated && (
-                                        <div>
-                                          <h6 className="text-sm font-medium text-gray-700 mb-1">💬 Script / What to Say</h6>
-                                          <div className="bg-green-50 p-2 rounded pl-5">
-                                            <p className="text-sm text-gray-700 italic">
-                                              "{scene.dialogue_translated}"
+                              {/* AI Guide - Scenes */}
+                              {guideData?.type === 'ai_guide' && guideData.scenes?.length > 0 && (
+                                <div className="space-y-3">
+                                  {guideData.scenes.map((scene, index) => (
+                                    <div key={index} className="border border-gray-200 rounded-lg overflow-hidden bg-white">
+                                      <div className="bg-gray-100 px-4 py-2 flex justify-between items-center">
+                                        <h5 className="font-medium text-gray-800">
+                                          Scene {scene.order || index + 1}: {scene.scene_type}
+                                        </h5>
+                                      </div>
+                                      <div className="p-4 space-y-3">
+                                        {(scene.scene_description_translated || scene.scene_description) && (
+                                          <div>
+                                            <h6 className="text-sm font-medium text-gray-700 mb-1">What to Film</h6>
+                                            <p className="text-sm text-gray-600 pl-5">
+                                              {scene.scene_description_translated || scene.scene_description}
                                             </p>
                                           </div>
-                                        </div>
-                                      )}
-                                      {/* Tips - shooting_tip_translated */}
-                                      {scene.shooting_tip_translated && (
-                                        <div>
-                                          <h6 className="text-sm font-medium text-gray-700 mb-1">💡 Tips</h6>
-                                          <p className="text-sm text-gray-600 pl-5">
-                                            {scene.shooting_tip_translated}
-                                          </p>
-                                        </div>
-                                      )}
+                                        )}
+                                        {(scene.dialogue_translated || scene.dialogue) && (
+                                          <div>
+                                            <h6 className="text-sm font-medium text-gray-700 mb-1">Script / What to Say</h6>
+                                            <div className="bg-green-50 p-2 rounded pl-5">
+                                              <p className="text-sm text-gray-700 italic">
+                                                "{scene.dialogue_translated || scene.dialogue}"
+                                              </p>
+                                            </div>
+                                          </div>
+                                        )}
+                                        {(scene.shooting_tip_translated || scene.shooting_tip) && (
+                                          <div>
+                                            <h6 className="text-sm font-medium text-gray-700 mb-1">Tips</h6>
+                                            <p className="text-sm text-gray-600 pl-5">
+                                              {scene.shooting_tip_translated || scene.shooting_tip}
+                                            </p>
+                                          </div>
+                                        )}
+                                      </div>
                                     </div>
-                                  </div>
-                                ))}
-                              </div>
+                                  ))}
+                                </div>
+                              )}
 
-                              {/* Required Scenes & Dialogues */}
+                              {/* Required Scenes & Dialogues (from personalized_guide) */}
                               {(application.personalized_guide?.required_scenes?.length > 0 ||
                                 application.personalized_guide?.required_dialogues?.length > 0) && (
                                 <div className="mt-4 p-3 bg-amber-50 border border-amber-200 rounded-lg">
-                                  <h5 className="font-medium text-amber-800 mb-2">⚠️ Required Elements</h5>
+                                  <h5 className="font-medium text-amber-800 mb-2">Required Elements</h5>
                                   {application.personalized_guide?.required_scenes?.length > 0 && (
                                     <div className="mb-2">
                                       <p className="text-xs font-medium text-amber-700">Required Scenes:</p>
@@ -2191,7 +2263,8 @@ const MyPageWithWithdrawal = () => {
                                 </div>
                               )}
                             </div>
-                          )}
+                            )
+                          })()}
 
                           {/* No Guide Message */}
                           {!hasShootingGuide(application) && (

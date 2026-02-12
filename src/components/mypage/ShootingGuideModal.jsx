@@ -13,6 +13,22 @@ const ShootingGuideModal = ({ isOpen, onClose, campaign, application }) => {
   const [expandedWeek, setExpandedWeek] = useState(1)
   const [selectedGuideWeek, setSelectedGuideWeek] = useState(1)
 
+  // Parse personalized_guide from application (3 types: ai_guide, external_url, external_pdf, text)
+  const personalizedGuide = useMemo(() => {
+    const pg = application?.personalized_guide
+    if (!pg) return null
+    let guide = pg
+    if (typeof guide === 'string') {
+      try { guide = JSON.parse(guide) } catch {
+        return { type: 'text', content: guide }
+      }
+    }
+    if (guide.type === 'external_url') return { type: 'external_url', url: guide.url, title: guide.title || 'Filming Guide' }
+    if (guide.type === 'external_pdf') return { type: 'external_pdf', url: guide.fileUrl, fileName: guide.fileName, title: guide.title || 'Filming Guide' }
+    if (guide.scenes && Array.isArray(guide.scenes)) return { type: 'ai_guide', scenes: guide.scenes, style: guide.dialogue_style, tempo: guide.tempo, mood: guide.mood }
+    return null
+  }, [application?.personalized_guide])
+
   // Parse shooting_guide JSON if available (fallback for when _en fields are empty)
   const parsedGuide = useMemo(() => {
     if (!campaign.shooting_guide) return null
@@ -143,7 +159,8 @@ const ShootingGuideModal = ({ isOpen, onClose, campaign, application }) => {
 
   const hasSpecialReqs = campaign.requires_ad_code || campaign.meta_ad_code_requested || campaign.requires_clean_video
 
-  const hasAnyGuideContent = hasProductInfo || hasDialogues || hasScenes || hasHashtags || hasVideoSpecs || hasShootingScenes || hasNotes || hasSpecialReqs
+  const hasPersonalizedGuide = !!personalizedGuide
+  const hasAnyGuideContent = hasPersonalizedGuide || hasProductInfo || hasDialogues || hasScenes || hasHashtags || hasVideoSpecs || hasShootingScenes || hasNotes || hasSpecialReqs
 
   return (
     <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-2 sm:p-4 overflow-y-auto">
@@ -186,6 +203,120 @@ const ShootingGuideModal = ({ isOpen, onClose, campaign, application }) => {
 
         {/* Scrollable content */}
         <div className="flex-1 overflow-y-auto p-3 sm:p-5 space-y-4 sm:space-y-5">
+
+          {/* ========== PERSONALIZED GUIDE (from application.personalized_guide) ========== */}
+          {personalizedGuide?.type === 'external_url' && personalizedGuide.url && (
+            <div className="rounded-xl p-5 border-2 bg-gradient-to-br from-purple-50 to-indigo-50 border-purple-300">
+              <h3 className="font-bold text-purple-800 mb-3 flex items-center gap-2 text-base">
+                <FileText className="w-5 h-5" />
+                Your Filming Guide
+              </h3>
+              <a
+                href={personalizedGuide.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-4 p-4 bg-white rounded-xl border-2 border-purple-200 hover:border-purple-400 hover:shadow-md transition-all group"
+              >
+                <div className="w-14 h-14 bg-purple-100 rounded-xl flex items-center justify-center flex-shrink-0 group-hover:bg-purple-200 transition-colors">
+                  <ExternalLink className="w-7 h-7 text-purple-600" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="font-bold text-purple-800 text-sm">{personalizedGuide.title}</p>
+                  <p className="text-xs text-gray-500 mt-0.5 truncate">{personalizedGuide.url}</p>
+                </div>
+                <div className="flex-shrink-0 bg-purple-600 text-white px-4 py-2 rounded-lg text-sm font-medium group-hover:bg-purple-700 transition-colors flex items-center gap-1">
+                  Open <ExternalLink className="w-4 h-4" />
+                </div>
+              </a>
+            </div>
+          )}
+
+          {personalizedGuide?.type === 'external_pdf' && personalizedGuide.url && (
+            <div className="rounded-xl p-5 border-2 bg-gradient-to-br from-indigo-50 to-blue-50 border-indigo-300">
+              <h3 className="font-bold text-indigo-800 mb-3 flex items-center gap-2 text-base">
+                <FileText className="w-5 h-5" />
+                Your Filming Guide
+              </h3>
+              <a
+                href={personalizedGuide.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-4 p-4 bg-white rounded-xl border-2 border-indigo-200 hover:border-indigo-400 hover:shadow-md transition-all group"
+              >
+                <div className="w-14 h-14 bg-indigo-100 rounded-xl flex items-center justify-center flex-shrink-0 group-hover:bg-indigo-200 transition-colors">
+                  <Download className="w-7 h-7 text-indigo-600" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="font-bold text-indigo-800 text-sm">{personalizedGuide.title}</p>
+                  <p className="text-xs text-gray-500 mt-0.5">{personalizedGuide.fileName || 'PDF Guide'}</p>
+                </div>
+                <div className="flex-shrink-0 bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm font-medium group-hover:bg-indigo-700 transition-colors flex items-center gap-1">
+                  Download <Download className="w-4 h-4" />
+                </div>
+              </a>
+            </div>
+          )}
+
+          {personalizedGuide?.type === 'text' && personalizedGuide.content && (
+            <div className="rounded-xl p-5 border-2 bg-gray-50 border-gray-300">
+              <h3 className="font-bold text-gray-800 mb-3 flex items-center gap-2 text-base">
+                <FileText className="w-5 h-5" />
+                Your Filming Guide
+              </h3>
+              <div className="bg-white rounded-lg p-4 border border-gray-200">
+                <pre className="text-sm text-gray-700 whitespace-pre-wrap font-sans leading-relaxed">{personalizedGuide.content}</pre>
+              </div>
+            </div>
+          )}
+
+          {personalizedGuide?.type === 'ai_guide' && personalizedGuide.scenes?.length > 0 && (
+            <div className="rounded-xl p-5 border-2 bg-gradient-to-br from-green-50 to-emerald-50 border-green-300">
+              <h3 className="font-bold text-green-800 mb-3 flex items-center gap-2 text-base">
+                <Sparkles className="w-5 h-5" />
+                AI Personalized Guide
+              </h3>
+              {(personalizedGuide.mood || personalizedGuide.tempo || personalizedGuide.style) && (
+                <div className="mb-3 flex flex-wrap gap-2">
+                  {personalizedGuide.mood && <span className="text-xs bg-green-200 text-green-800 px-2 py-1 rounded-full font-medium">Mood: {personalizedGuide.mood}</span>}
+                  {personalizedGuide.tempo && <span className="text-xs bg-green-200 text-green-800 px-2 py-1 rounded-full font-medium">Tempo: {personalizedGuide.tempo}</span>}
+                  {personalizedGuide.style && <span className="text-xs bg-green-200 text-green-800 px-2 py-1 rounded-full font-medium">Style: {personalizedGuide.style}</span>}
+                </div>
+              )}
+              <div className="space-y-3">
+                {personalizedGuide.scenes.map((scene, idx) => (
+                  <div key={idx} className="bg-white rounded-lg border border-green-200 overflow-hidden">
+                    <div className="bg-green-100 px-4 py-2">
+                      <h5 className="font-medium text-green-800 text-sm">
+                        Scene {scene.order || idx + 1}: {scene.scene_type}
+                      </h5>
+                    </div>
+                    <div className="p-4 space-y-2">
+                      {(scene.scene_description_translated || scene.scene_description) && (
+                        <div>
+                          <p className="text-xs font-bold text-gray-500 uppercase mb-1">What to Film</p>
+                          <p className="text-sm text-gray-700">{scene.scene_description_translated || scene.scene_description}</p>
+                        </div>
+                      )}
+                      {(scene.dialogue_translated || scene.dialogue) && (
+                        <div>
+                          <p className="text-xs font-bold text-gray-500 uppercase mb-1">Script</p>
+                          <div className="bg-green-50 p-2 rounded">
+                            <p className="text-sm text-gray-700 italic">"{scene.dialogue_translated || scene.dialogue}"</p>
+                          </div>
+                        </div>
+                      )}
+                      {(scene.shooting_tip_translated || scene.shooting_tip) && (
+                        <div>
+                          <p className="text-xs font-bold text-gray-500 uppercase mb-1">Tips</p>
+                          <p className="text-sm text-gray-600">{scene.shooting_tip_translated || scene.shooting_tip}</p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
 
           {/* ========== GUIDE DOCUMENTS (PDF / SLIDES / DRIVE) ========== */}
           <div className={`rounded-xl p-5 border-2 ${
@@ -401,9 +532,9 @@ const ShootingGuideModal = ({ isOpen, onClose, campaign, application }) => {
                 </div>
               ) : (
                 (() => {
-                  // Fallback chain: video_deadline → posting_deadline → application_deadline
-                  const effectiveVideoDeadline = campaign.video_deadline || campaign.posting_deadline || campaign.application_deadline
-                  const effectiveSnsDeadline = campaign.sns_deadline || campaign.posting_deadline || campaign.application_deadline
+                  // Fallback chain: video_deadline → end_date → posting_deadline → application_deadline
+                  const effectiveVideoDeadline = campaign.video_deadline || campaign.end_date || campaign.posting_deadline || campaign.application_deadline
+                  const effectiveSnsDeadline = campaign.sns_deadline || campaign.end_date || campaign.posting_deadline || campaign.application_deadline
                   return (
                     <div className="grid grid-cols-2 gap-4">
                       {effectiveVideoDeadline && (

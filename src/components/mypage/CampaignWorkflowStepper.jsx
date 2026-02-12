@@ -93,9 +93,9 @@ const CampaignWorkflowStepper = ({
   const completedCount = Object.values(stepStates).filter(s => s === 'done').length
   const progressPercent = status === 'completed' ? 100 : Math.round((completedCount / 4) * 100)
 
-  // Fallback chain: video_deadline → posting_deadline → application_deadline
-  const effectiveVideoDeadline = campaign?.video_deadline || campaign?.posting_deadline || campaign?.application_deadline
-  const effectiveSnsDeadline = campaign?.sns_deadline || campaign?.posting_deadline || campaign?.application_deadline
+  // Fallback chain: video_deadline → end_date → posting_deadline → application_deadline
+  const effectiveVideoDeadline = campaign?.video_deadline || campaign?.end_date || campaign?.posting_deadline || campaign?.application_deadline
+  const effectiveSnsDeadline = campaign?.sns_deadline || campaign?.end_date || campaign?.posting_deadline || campaign?.application_deadline
   const videoDaysLeft = getDaysLeft(effectiveVideoDeadline)
   const snsDaysLeft = getDaysLeft(effectiveSnsDeadline)
 
