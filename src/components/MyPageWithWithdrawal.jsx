@@ -420,96 +420,65 @@ const MyPageWithWithdrawal = () => {
     try {
       setLoading(true)
 
-      // 🚀 모든 데이터를 병렬로 로딩 (속도 대폭 향상)
-      // Get applications with campaign data
-      // 1차: 상세 campaigns 컬럼 조회 시도
+      // 🚀 모든 데이터를 병렬로 로딩
+      // Step 1: applications 조회 (campaigns join 시도)
       const { data: appsData, error: appsError } = await supabase
         .from('applications')
-        .select(`
-          *,
-          campaigns (
-            id,
-            title,
-            title_en,
-            brand,
-            brand_en,
-            brand_name_en,
-            product_name_en,
-            product_description_en,
-            product_features_en,
-            image_url,
-            campaign_type,
-            reward_amount,
-            video_deadline,
-            sns_deadline,
-            application_deadline,
-            week1_deadline,
-            week2_deadline,
-            week3_deadline,
-            week4_deadline,
-            week1_sns_deadline,
-            week2_sns_deadline,
-            week3_sns_deadline,
-            week4_sns_deadline,
-            partnership_ad_code_required,
-            meta_ad_code_requested,
-            requires_clean_video,
-            video_guide_url,
-            reference_video_url,
-            shooting_guide,
-            guide_pdf_url,
-            guide_delivery_mode,
-            google_drive_url,
-            google_slides_url,
-            required_dialogues_en,
-            required_scenes_en,
-            required_hashtags_en,
-            shooting_scenes_en,
-            video_duration_en,
-            video_tempo_en,
-            video_tone_en,
-            additional_details_en,
-            additional_shooting_requests_en,
-            challenge_guide_data_en,
-            challenge_weekly_guides,
-            shooting_scenes_ba_photo,
-            shooting_scenes_no_makeup,
-            shooting_scenes_closeup,
-            shooting_scenes_product_closeup,
-            shooting_scenes_product_texture,
-            shooting_scenes_outdoor,
-            shooting_scenes_couple,
-            shooting_scenes_child,
-            shooting_scenes_troubled_skin,
-            shooting_scenes_wrinkles,
-            target_platforms
-          )
-        `)
+        .select('*, campaigns(*)')
         .eq('user_id', user.id)
         .order('created_at', { ascending: false })
 
+      console.log('[DEBUG] applications query:', { appsData: appsData?.length, appsError: appsError?.message })
+
       let applicationsWithGuide = appsData
 
-      // 2차: 상세 쿼리 실패 시 (campaigns 컬럼 미존재 등) campaigns(*) 로 fallback
+      // applications 쿼리 실패 시 campaign_applications fallback
       if (appsError || !appsData) {
-        console.warn('상세 applications 쿼리 실패, 간소화 쿼리 시도:', appsError?.message)
-        const { data: fallbackData, error: fallbackError } = await supabase
-          .from('applications')
+        console.warn('[DEBUG] applications 실패, campaign_applications 시도:', appsError?.message)
+        const { data: caData, error: caError } = await supabase
+          .from('campaign_applications')
           .select('*, campaigns(*)')
           .eq('user_id', user.id)
           .order('created_at', { ascending: false })
+        console.log('[DEBUG] campaign_applications query:', { caData: caData?.length, caError: caError?.message })
+        applicationsWithGuide = caData
+      }
 
-        if (!fallbackError && fallbackData) {
-          applicationsWithGuide = fallbackData
-        } else {
-          // 3차: campaign_applications 테이블 시도 (US 스키마)
-          console.warn('applications 테이블 전체 실패, campaign_applications 시도:', fallbackError?.message)
-          const { data: caData } = await supabase
-            .from('campaign_applications')
-            .select('*, campaigns(*)')
-            .eq('user_id', user.id)
-            .order('created_at', { ascending: false })
-          applicationsWithGuide = caData
+      // Step 2: campaigns join이 null인지 체크 → 직접 campaigns 조회로 보완
+      if (applicationsWithGuide && applicationsWithGuide.length > 0) {
+        const firstApp = applicationsWithGuide[0]
+        console.log('[DEBUG] 첫 application campaigns join 결과:', firstApp.campaigns)
+
+        // campaigns가 null이면 RLS 또는 FK 문제 → 직접 조회
+        const hasMissingCampaigns = applicationsWithGuide.some(app => !app.campaigns && app.campaign_id)
+        if (hasMissingCampaigns) {
+          console.warn('[DEBUG] campaigns join이 null → campaigns 직접 조회 시도')
+          const campaignIds = [...new Set(applicationsWithGuide.filter(a => a.campaign_id).map(a => a.campaign_id))]
+          console.log('[DEBUG] 조회할 campaign IDs:', campaignIds)
+
+          const { data: campaignsData, error: campaignsError } = await supabase
+            .from('campaigns')
+            .select('*')
+            .in('id', campaignIds)
+
+          console.log('[DEBUG] campaigns 직접 조회 결과:', {
+            count: campaignsData?.length,
+            error: campaignsError?.message,
+            firstCampaign: campaignsData?.[0] ? Object.keys(campaignsData[0]).slice(0, 10) : 'null'
+          })
+
+          if (campaignsData && campaignsData.length > 0) {
+            // campaigns 데이터를 applications에 수동 매핑
+            const campaignMap = {}
+            campaignsData.forEach(c => { campaignMap[c.id] = c })
+            applicationsWithGuide = applicationsWithGuide.map(app => ({
+              ...app,
+              campaigns: app.campaigns || campaignMap[app.campaign_id] || null
+            }))
+            console.log('[DEBUG] campaigns 수동 매핑 완료, 첫번째:', applicationsWithGuide[0]?.campaigns?.title)
+          } else {
+            console.error('[DEBUG] campaigns 직접 조회도 실패 - RLS 정책 확인 필요')
+          }
         }
       }
 

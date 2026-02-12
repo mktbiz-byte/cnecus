@@ -21,7 +21,7 @@ const SNSSubmitModal = ({
   const cleanVideoInputRef = useRef(null)
 
   const is4Week = campaign?.campaign_type === '4week_challenge'
-  const requiresAdCode = campaign?.partnership_ad_code_required || campaign?.meta_ad_code_requested
+  const requiresAdCode = campaign?.requires_ad_code || campaign?.meta_ad_code_requested
   // Check if clean video is required and not yet submitted
   const requiresCleanVideo = campaign?.requires_clean_video && (
     is4Week

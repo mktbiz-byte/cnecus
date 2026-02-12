@@ -58,21 +58,26 @@ const ShootingGuideModal = ({ isOpen, onClose, campaign, application }) => {
   }
 
   // Guide document URLs - from CAMPAIGN (not application)
+  // 4-week: week{N}_external_url (link), week{N}_external_file_url (uploaded file)
+  // Standard: google_drive_url, google_slides_url
   const getWeekGuideUrls = (week) => {
-    const driveUrl = campaign?.[`week${week}_guide_drive_url`]
-    const slidesUrl = campaign?.[`week${week}_guide_slides_url`]
-    return { driveUrl, slidesUrl, hasLinks: !!(driveUrl || slidesUrl) }
+    const externalUrl = campaign?.[`week${week}_external_url`]
+    const fileUrl = campaign?.[`week${week}_external_file_url`]
+    const fileName = campaign?.[`week${week}_external_file_name`]
+    const title = campaign?.[`week${week}_external_title`]
+    const guideMode = campaign?.[`week${week}_guide_mode`]
+    return { externalUrl, fileUrl, fileName, title, guideMode, hasLinks: !!(externalUrl || fileUrl) }
   }
 
   // For standard campaigns, use campaign-level guide URLs
   const driveUrl = is4Week
-    ? getWeekGuideUrls(selectedGuideWeek).driveUrl
+    ? getWeekGuideUrls(selectedGuideWeek).fileUrl
     : campaign?.google_drive_url
   const slidesUrl = is4Week
-    ? getWeekGuideUrls(selectedGuideWeek).slidesUrl
+    ? getWeekGuideUrls(selectedGuideWeek).externalUrl
     : campaign?.google_slides_url
-  const guidePdfUrl = campaign?.guide_pdf_url
-  const hasGuideLinks = driveUrl || slidesUrl || guidePdfUrl
+  const weekGuideData = is4Week ? getWeekGuideUrls(selectedGuideWeek) : null
+  const hasGuideLinks = driveUrl || slidesUrl
 
   // Check if any week has guides (for 4-week)
   const anyWeekHasGuide = is4Week
@@ -136,7 +141,7 @@ const ShootingGuideModal = ({ isOpen, onClose, campaign, application }) => {
   const additionalShooting = getGuideValue('additional_shooting_requests_en', 'additional_shooting_requests')
   const hasNotes = additionalDetails || additionalShooting
 
-  const hasSpecialReqs = campaign.partnership_ad_code_required || campaign.meta_ad_code_requested || campaign.requires_clean_video
+  const hasSpecialReqs = campaign.requires_ad_code || campaign.meta_ad_code_requested || campaign.requires_clean_video
 
   const hasAnyGuideContent = hasProductInfo || hasDialogues || hasScenes || hasHashtags || hasVideoSpecs || hasShootingScenes || hasNotes || hasSpecialReqs
 
@@ -233,29 +238,7 @@ const ShootingGuideModal = ({ isOpen, onClose, campaign, application }) => {
                   </div>
                 )}
 
-                {/* PDF Guide Download */}
-                {guidePdfUrl && !is4Week && (
-                  <a
-                    href={guidePdfUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-center gap-4 p-4 bg-white rounded-xl border-2 border-red-200 hover:border-red-400 hover:shadow-md transition-all group"
-                  >
-                    <div className="w-14 h-14 bg-red-100 rounded-xl flex items-center justify-center flex-shrink-0 group-hover:bg-red-200 transition-colors">
-                      <Download className="w-7 h-7 text-red-600" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="font-bold text-red-800 text-sm">Download Guide (PDF/PPT)</p>
-                      <p className="text-xs text-gray-500 mt-0.5 truncate">{guidePdfUrl}</p>
-                    </div>
-                    <div className="flex-shrink-0 bg-red-600 text-white px-4 py-2 rounded-lg text-sm font-medium group-hover:bg-red-700 transition-colors flex items-center gap-1">
-                      Download
-                      <Download className="w-4 h-4" />
-                    </div>
-                  </a>
-                )}
-
-                {/* Google Drive Link */}
+                {/* Google Drive / File Link */}
                 {driveUrl && (
                   <a
                     href={driveUrl}
@@ -268,7 +251,7 @@ const ShootingGuideModal = ({ isOpen, onClose, campaign, application }) => {
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="font-bold text-purple-800 text-sm">
-                        {is4Week ? `Week ${selectedGuideWeek} PDF Guide` : 'PDF Guide (Google Drive)'}
+                        {is4Week ? (weekGuideData?.fileName || `Week ${selectedGuideWeek} Guide File`) : 'PDF Guide (Google Drive)'}
                       </p>
                       <p className="text-xs text-gray-500 mt-0.5 truncate">{driveUrl}</p>
                     </div>
@@ -694,7 +677,7 @@ const ShootingGuideModal = ({ isOpen, onClose, campaign, application }) => {
                 </h3>
               </div>
               <div className="p-4 space-y-3">
-                {(campaign.partnership_ad_code_required || campaign.meta_ad_code_requested) && (
+                {(campaign.requires_ad_code || campaign.meta_ad_code_requested) && (
                   <div className="flex items-start gap-3 p-3 bg-red-50/50 rounded-lg border border-red-200">
                     <div className="w-10 h-10 bg-red-100 rounded-lg flex items-center justify-center flex-shrink-0">
                       <Hash className="w-5 h-5 text-red-600" />

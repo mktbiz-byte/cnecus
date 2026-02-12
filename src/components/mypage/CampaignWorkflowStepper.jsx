@@ -404,7 +404,7 @@ const CampaignWorkflowStepper = ({
 
                   {/* Ad Code */}
                   <div className={`flex items-center gap-3 p-3 rounded-xl border-2 transition-all ${
-                    !(campaign?.partnership_ad_code_required || campaign?.meta_ad_code_requested)
+                    !(campaign?.requires_ad_code || campaign?.meta_ad_code_requested)
                       ? 'border-gray-100 bg-gray-50 opacity-50'
                       : application?.partnership_code
                         ? 'border-emerald-300 bg-emerald-50'
@@ -417,7 +417,7 @@ const CampaignWorkflowStepper = ({
                       <p className="text-xs font-bold text-gray-800">Ad Partnership Code</p>
                       <p className="text-[10px] text-gray-500">Meta / YouTube / TikTok ad code</p>
                     </div>
-                    {!(campaign?.partnership_ad_code_required || campaign?.meta_ad_code_requested) ? (
+                    {!(campaign?.requires_ad_code || campaign?.meta_ad_code_requested) ? (
                       <span className="text-[10px] text-gray-400 bg-gray-100 px-2 py-0.5 rounded flex-shrink-0">N/A</span>
                     ) : application?.partnership_code ? (
                       <CheckCircle2 className="w-5 h-5 text-emerald-500 flex-shrink-0" />

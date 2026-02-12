@@ -143,7 +143,7 @@ const WeeklySubmissionStatus = ({ application, campaign }) => {
   if (campaign?.campaign_type !== '4week_challenge') return null
 
   const requiresCleanVideo = campaign?.requires_clean_video
-  const requiresAdCode = campaign?.partnership_ad_code_required || campaign?.meta_ad_code_requested
+  const requiresAdCode = campaign?.requires_ad_code || campaign?.meta_ad_code_requested
 
   return (
     <div className="bg-orange-50 border border-orange-200 rounded-lg p-3 mt-3">
@@ -371,9 +371,9 @@ const CampaignProgressCard = ({
           </div>
 
           {/* Special Requirements */}
-          {(campaign?.partnership_ad_code_required || campaign?.meta_ad_code_requested || campaign?.requires_clean_video) && (
+          {(campaign?.requires_ad_code || campaign?.meta_ad_code_requested || campaign?.requires_clean_video) && (
             <div className="flex flex-wrap gap-2 mt-3">
-              {(campaign.partnership_ad_code_required || campaign.meta_ad_code_requested) && (
+              {(campaign.requires_ad_code || campaign.meta_ad_code_requested) && (
                 <span className="text-xs px-2 py-1 bg-purple-50 text-purple-700 rounded border border-purple-200">
                   📱 Ad Code Required
                 </span>
