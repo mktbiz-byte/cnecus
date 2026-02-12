@@ -1042,6 +1042,16 @@ const MyPageWithWithdrawal = () => {
     return null
   }
 
+  // Get English text from scene field: prefer _translated, fall back to base only if _translated is undefined
+  // (empty string "" means translation not done → base is Korean → don't use it)
+  const getSceneText = (scene, field) => {
+    const translated = scene[`${field}_translated`]
+    if (translated && translated.trim()) return translated
+    // Only use base field if _translated key doesn't exist at all (means guide was generated in English)
+    if (!((`${field}_translated`) in scene)) return scene[field] || ''
+    return ''
+  }
+
   const hasShootingGuide = (application) => {
     // Check personalized_guide (all 3 types)
     const guide = parseGuide(application.personalized_guide)
@@ -1056,7 +1066,7 @@ const MyPageWithWithdrawal = () => {
     if (c.video_duration_en || c.video_tempo_en || c.video_tone_en) return true
     if (c.google_drive_url || c.google_slides_url) return true
     if (c.requires_ad_code || c.requires_clean_video || c.meta_ad_code_requested) return true
-    if (c.video_deadline || c.sns_deadline || c.end_date || c.application_deadline || c.posting_deadline) return true
+    if (c.video_deadline || c.sns_deadline || c.end_date) return true
     return false
   }
 
@@ -2203,29 +2213,29 @@ const MyPageWithWithdrawal = () => {
                                         </h5>
                                       </div>
                                       <div className="p-4 space-y-3">
-                                        {(scene.scene_description_translated || scene.scene_description) && (
+                                        {getSceneText(scene, 'scene_description') && (
                                           <div>
                                             <h6 className="text-sm font-medium text-gray-700 mb-1">What to Film</h6>
                                             <p className="text-sm text-gray-600 pl-5">
-                                              {scene.scene_description_translated || scene.scene_description}
+                                              {getSceneText(scene, 'scene_description')}
                                             </p>
                                           </div>
                                         )}
-                                        {(scene.dialogue_translated || scene.dialogue) && (
+                                        {getSceneText(scene, 'dialogue') && (
                                           <div>
                                             <h6 className="text-sm font-medium text-gray-700 mb-1">Script / What to Say</h6>
                                             <div className="bg-green-50 p-2 rounded pl-5">
                                               <p className="text-sm text-gray-700 italic">
-                                                "{scene.dialogue_translated || scene.dialogue}"
+                                                "{getSceneText(scene, 'dialogue')}"
                                               </p>
                                             </div>
                                           </div>
                                         )}
-                                        {(scene.shooting_tip_translated || scene.shooting_tip) && (
+                                        {getSceneText(scene, 'shooting_tip') && (
                                           <div>
                                             <h6 className="text-sm font-medium text-gray-700 mb-1">Tips</h6>
                                             <p className="text-sm text-gray-600 pl-5">
-                                              {scene.shooting_tip_translated || scene.shooting_tip}
+                                              {getSceneText(scene, 'shooting_tip')}
                                             </p>
                                           </div>
                                         )}

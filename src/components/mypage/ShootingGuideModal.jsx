@@ -55,6 +55,14 @@ const ShootingGuideModal = ({ isOpen, onClose, campaign, application }) => {
     }
   }, [campaign.challenge_guide_data_en])
 
+  // Get English text from scene: prefer _translated, only use base if _translated key is absent
+  const getSceneText = (scene, field) => {
+    const translated = scene[`${field}_translated`]
+    if (translated && translated.trim()) return translated
+    if (!((`${field}_translated`) in scene)) return scene[field] || ''
+    return ''
+  }
+
   // Helper to get guide value with fallback to parsed shooting_guide
   const getGuideValue = (enField, guideKey) => {
     if (campaign[enField]) return campaign[enField]
@@ -291,24 +299,24 @@ const ShootingGuideModal = ({ isOpen, onClose, campaign, application }) => {
                       </h5>
                     </div>
                     <div className="p-4 space-y-2">
-                      {(scene.scene_description_translated || scene.scene_description) && (
+                      {getSceneText(scene, 'scene_description') && (
                         <div>
                           <p className="text-xs font-bold text-gray-500 uppercase mb-1">What to Film</p>
-                          <p className="text-sm text-gray-700">{scene.scene_description_translated || scene.scene_description}</p>
+                          <p className="text-sm text-gray-700">{getSceneText(scene, 'scene_description')}</p>
                         </div>
                       )}
-                      {(scene.dialogue_translated || scene.dialogue) && (
+                      {getSceneText(scene, 'dialogue') && (
                         <div>
                           <p className="text-xs font-bold text-gray-500 uppercase mb-1">Script</p>
                           <div className="bg-green-50 p-2 rounded">
-                            <p className="text-sm text-gray-700 italic">"{scene.dialogue_translated || scene.dialogue}"</p>
+                            <p className="text-sm text-gray-700 italic">"{getSceneText(scene, 'dialogue')}"</p>
                           </div>
                         </div>
                       )}
-                      {(scene.shooting_tip_translated || scene.shooting_tip) && (
+                      {getSceneText(scene, 'shooting_tip') && (
                         <div>
                           <p className="text-xs font-bold text-gray-500 uppercase mb-1">Tips</p>
-                          <p className="text-sm text-gray-600">{scene.shooting_tip_translated || scene.shooting_tip}</p>
+                          <p className="text-sm text-gray-600">{getSceneText(scene, 'shooting_tip')}</p>
                         </div>
                       )}
                     </div>
@@ -532,9 +540,9 @@ const ShootingGuideModal = ({ isOpen, onClose, campaign, application }) => {
                 </div>
               ) : (
                 (() => {
-                  // Fallback chain: video_deadline → end_date → posting_deadline → application_deadline
-                  const effectiveVideoDeadline = campaign.video_deadline || campaign.end_date || campaign.posting_deadline || campaign.application_deadline
-                  const effectiveSnsDeadline = campaign.sns_deadline || campaign.end_date || campaign.posting_deadline || campaign.application_deadline
+                  // Fallback: video_deadline → end_date (application_deadline is for applications, not content delivery)
+                  const effectiveVideoDeadline = campaign.video_deadline || campaign.end_date
+                  const effectiveSnsDeadline = campaign.sns_deadline
                   return (
                     <div className="grid grid-cols-2 gap-4">
                       {effectiveVideoDeadline && (
