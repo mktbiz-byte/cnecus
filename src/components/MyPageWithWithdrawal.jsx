@@ -421,12 +421,8 @@ const MyPageWithWithdrawal = () => {
       setLoading(true)
 
       // 🚀 모든 데이터를 병렬로 로딩 (속도 대폭 향상)
-      // Get applications with campaign data (personalized_guide is in applications table)
-      const { data: applicationsWithGuide } = await supabase
-        .from('applications')
-        .select(`
-          *,
-          campaigns (
+      // Get applications with campaign data - applications 테이블 우선, campaign_applications fallback
+      const campaignSelectFields = `
             id,
             title,
             title_en,
@@ -482,10 +478,31 @@ const MyPageWithWithdrawal = () => {
             shooting_scenes_troubled_skin,
             shooting_scenes_wrinkles,
             target_platforms
-          )
-        `)
+      `
+
+      // 1차: applications 테이블 조회
+      const { data: appsData, error: appsError } = await supabase
+        .from('applications')
+        .select(`*, campaigns (${campaignSelectFields})`)
         .eq('user_id', user.id)
         .order('created_at', { ascending: false })
+
+      let applicationsWithGuide = appsData
+
+      // 2차: applications 테이블에 데이터가 없으면 campaign_applications 테이블 조회 (US 스키마)
+      if ((!appsData || appsData.length === 0) || appsError) {
+        console.log('applications 테이블 데이터 없음, campaign_applications 테이블 확인')
+        const { data: campaignAppsData, error: campaignAppsError } = await supabase
+          .from('campaign_applications')
+          .select(`*, campaigns (${campaignSelectFields})`)
+          .eq('user_id', user.id)
+          .order('created_at', { ascending: false })
+
+        if (!campaignAppsError && campaignAppsData && campaignAppsData.length > 0) {
+          console.log('campaign_applications에서 데이터 발견:', campaignAppsData.length, '개')
+          applicationsWithGuide = campaignAppsData
+        }
+      }
 
       const [profileData, _, pointTransactionsResult, videoSubmissionsResult] = await Promise.all([
         // 1. 프로필 정보
