@@ -421,8 +421,13 @@ const MyPageWithWithdrawal = () => {
       setLoading(true)
 
       // 🚀 모든 데이터를 병렬로 로딩 (속도 대폭 향상)
-      // Get applications with campaign data - applications 테이블 우선, campaign_applications fallback
-      const campaignSelectFields = `
+      // Get applications with campaign data
+      // 1차: 상세 campaigns 컬럼 조회 시도
+      const { data: appsData, error: appsError } = await supabase
+        .from('applications')
+        .select(`
+          *,
+          campaigns (
             id,
             title,
             title_en,
@@ -478,29 +483,33 @@ const MyPageWithWithdrawal = () => {
             shooting_scenes_troubled_skin,
             shooting_scenes_wrinkles,
             target_platforms
-      `
-
-      // 1차: applications 테이블 조회
-      const { data: appsData, error: appsError } = await supabase
-        .from('applications')
-        .select(`*, campaigns (${campaignSelectFields})`)
+          )
+        `)
         .eq('user_id', user.id)
         .order('created_at', { ascending: false })
 
       let applicationsWithGuide = appsData
 
-      // 2차: applications 테이블에 데이터가 없으면 campaign_applications 테이블 조회 (US 스키마)
-      if ((!appsData || appsData.length === 0) || appsError) {
-        console.log('applications 테이블 데이터 없음, campaign_applications 테이블 확인')
-        const { data: campaignAppsData, error: campaignAppsError } = await supabase
-          .from('campaign_applications')
-          .select(`*, campaigns (${campaignSelectFields})`)
+      // 2차: 상세 쿼리 실패 시 (campaigns 컬럼 미존재 등) campaigns(*) 로 fallback
+      if (appsError || !appsData) {
+        console.warn('상세 applications 쿼리 실패, 간소화 쿼리 시도:', appsError?.message)
+        const { data: fallbackData, error: fallbackError } = await supabase
+          .from('applications')
+          .select('*, campaigns(*)')
           .eq('user_id', user.id)
           .order('created_at', { ascending: false })
 
-        if (!campaignAppsError && campaignAppsData && campaignAppsData.length > 0) {
-          console.log('campaign_applications에서 데이터 발견:', campaignAppsData.length, '개')
-          applicationsWithGuide = campaignAppsData
+        if (!fallbackError && fallbackData) {
+          applicationsWithGuide = fallbackData
+        } else {
+          // 3차: campaign_applications 테이블 시도 (US 스키마)
+          console.warn('applications 테이블 전체 실패, campaign_applications 시도:', fallbackError?.message)
+          const { data: caData } = await supabase
+            .from('campaign_applications')
+            .select('*, campaigns(*)')
+            .eq('user_id', user.id)
+            .order('created_at', { ascending: false })
+          applicationsWithGuide = caData
         }
       }
 
