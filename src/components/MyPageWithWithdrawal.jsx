@@ -447,7 +447,28 @@ const MyPageWithWithdrawal = () => {
       // Step 2: campaigns join이 null인지 체크 → 직접 campaigns 조회로 보완
       if (applicationsWithGuide && applicationsWithGuide.length > 0) {
         const firstApp = applicationsWithGuide[0]
-        console.log('[DEBUG] 첫 application campaigns join 결과:', firstApp.campaigns)
+        const c = firstApp.campaigns
+        console.log('[DEBUG] 첫 application campaigns join 결과:', c)
+        console.log('[DEBUG] campaign 주요 필드:', c ? {
+          id: c.id,
+          title: c.title,
+          title_en: c.title_en,
+          video_deadline: c.video_deadline,
+          sns_deadline: c.sns_deadline,
+          application_deadline: c.application_deadline,
+          posting_deadline: c.posting_deadline,
+          google_drive_url: c.google_drive_url,
+          google_slides_url: c.google_slides_url,
+          shooting_guide: c.shooting_guide ? 'EXISTS (jsonb)' : null,
+          brand_name_en: c.brand_name_en,
+          product_name_en: c.product_name_en,
+          required_dialogues_en: c.required_dialogues_en,
+          required_scenes_en: c.required_scenes_en,
+          requires_clean_video: c.requires_clean_video,
+          requires_ad_code: c.requires_ad_code,
+          meta_ad_code_requested: c.meta_ad_code_requested,
+          _allKeys: Object.keys(c).filter(k => c[k] != null).join(', ')
+        } : 'NULL')
 
         // campaigns가 null이면 RLS 또는 FK 문제 → 직접 조회
         const hasMissingCampaigns = applicationsWithGuide.some(app => !app.campaigns && app.campaign_id)
