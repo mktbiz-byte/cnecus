@@ -400,48 +400,55 @@ const ShootingGuideModal = ({ isOpen, onClose, campaign, application }) => {
                   })}
                 </div>
               ) : (
-                <div className="grid grid-cols-2 gap-4">
-                  {campaign.video_deadline && (
-                    <div className="bg-blue-50 rounded-xl p-4 border border-blue-200">
-                      <div className="flex items-center gap-2 mb-2">
-                        <Film className="w-5 h-5 text-blue-600" />
-                        <span className="text-xs font-bold text-blue-700 uppercase">Video Deadline</span>
-                      </div>
-                      <p className="text-lg font-bold text-gray-800">{formatDate(campaign.video_deadline)}</p>
-                      {(() => {
-                        const days = getDaysLeft(campaign.video_deadline)
-                        if (days === null) return null
-                        return (
-                          <p className={`text-xs font-semibold mt-1 ${
-                            days <= 3 ? 'text-red-600' : days <= 7 ? 'text-orange-600' : 'text-green-600'
-                          }`}>
-                            {days > 0 ? `${days} days left` : days === 0 ? 'Due today!' : `${Math.abs(days)} days overdue`}
-                          </p>
-                        )
-                      })()}
+                (() => {
+                  // Fallback chain: video_deadline → posting_deadline → application_deadline
+                  const effectiveVideoDeadline = campaign.video_deadline || campaign.posting_deadline || campaign.application_deadline
+                  const effectiveSnsDeadline = campaign.sns_deadline || campaign.posting_deadline || campaign.application_deadline
+                  return (
+                    <div className="grid grid-cols-2 gap-4">
+                      {effectiveVideoDeadline && (
+                        <div className="bg-blue-50 rounded-xl p-4 border border-blue-200">
+                          <div className="flex items-center gap-2 mb-2">
+                            <Film className="w-5 h-5 text-blue-600" />
+                            <span className="text-xs font-bold text-blue-700 uppercase">Video Deadline</span>
+                          </div>
+                          <p className="text-lg font-bold text-gray-800">{formatDate(effectiveVideoDeadline)}</p>
+                          {(() => {
+                            const days = getDaysLeft(effectiveVideoDeadline)
+                            if (days === null) return null
+                            return (
+                              <p className={`text-xs font-semibold mt-1 ${
+                                days <= 3 ? 'text-red-600' : days <= 7 ? 'text-orange-600' : 'text-green-600'
+                              }`}>
+                                {days > 0 ? `${days} days left` : days === 0 ? 'Due today!' : `${Math.abs(days)} days overdue`}
+                              </p>
+                            )
+                          })()}
+                        </div>
+                      )}
+                      {effectiveSnsDeadline && (
+                        <div className="bg-pink-50 rounded-xl p-4 border border-pink-200">
+                          <div className="flex items-center gap-2 mb-2">
+                            <Hash className="w-5 h-5 text-pink-600" />
+                            <span className="text-xs font-bold text-pink-700 uppercase">SNS Deadline</span>
+                          </div>
+                          <p className="text-lg font-bold text-gray-800">{formatDate(effectiveSnsDeadline)}</p>
+                          {(() => {
+                            const days = getDaysLeft(effectiveSnsDeadline)
+                            if (days === null) return null
+                            return (
+                              <p className={`text-xs font-semibold mt-1 ${
+                                days <= 3 ? 'text-red-600' : days <= 7 ? 'text-orange-600' : 'text-green-600'
+                              }`}>
+                                {days > 0 ? `${days} days left` : days === 0 ? 'Due today!' : `${Math.abs(days)} days overdue`}
+                              </p>
+                            )
+                          })()}
+                        </div>
+                      )}
                     </div>
-                  )}
-                  {campaign.sns_deadline && (
-                    <div className="bg-pink-50 rounded-xl p-4 border border-pink-200">
-                      <div className="flex items-center gap-2 mb-2">
-                        <Hash className="w-5 h-5 text-pink-600" />
-                        <span className="text-xs font-bold text-pink-700 uppercase">SNS Deadline</span>
-                      </div>
-                      <p className="text-lg font-bold text-gray-800">{formatDate(campaign.sns_deadline)}</p>
-                      {(() => {
-                        const days = getDaysLeft(campaign.sns_deadline)
-                        if (days === null) return null
-                        return (
-                          <p className={`text-xs font-semibold mt-1 ${
-                            days <= 3 ? 'text-red-600' : days <= 7 ? 'text-orange-600' : 'text-green-600'
-                          }`}>
-                            {days > 0 ? `${days} days left` : days === 0 ? 'Due today!' : `${Math.abs(days)} days overdue`}
-                          </p>
-                        )
-                      })()}
-                    </div>
-                  )}
-                </div>
+                  )
+                })()
               )}
             </div>
           </div>

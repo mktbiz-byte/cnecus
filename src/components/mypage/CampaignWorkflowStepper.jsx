@@ -93,8 +93,11 @@ const CampaignWorkflowStepper = ({
   const completedCount = Object.values(stepStates).filter(s => s === 'done').length
   const progressPercent = status === 'completed' ? 100 : Math.round((completedCount / 4) * 100)
 
-  const videoDaysLeft = getDaysLeft(campaign?.video_deadline)
-  const snsDaysLeft = getDaysLeft(campaign?.sns_deadline)
+  // Fallback chain: video_deadline → posting_deadline → application_deadline
+  const effectiveVideoDeadline = campaign?.video_deadline || campaign?.posting_deadline || campaign?.application_deadline
+  const effectiveSnsDeadline = campaign?.sns_deadline || campaign?.posting_deadline || campaign?.application_deadline
+  const videoDaysLeft = getDaysLeft(effectiveVideoDeadline)
+  const snsDaysLeft = getDaysLeft(effectiveSnsDeadline)
 
   return (
     <div className="bg-white border border-gray-200 rounded-2xl overflow-hidden shadow-sm mb-4">
@@ -154,7 +157,7 @@ const CampaignWorkflowStepper = ({
               <div>
                 <p className="text-[10px] text-gray-500 font-medium leading-none">Video Due</p>
                 <p className="text-xs sm:text-sm font-bold text-gray-900 leading-tight">
-                  {formatDate(campaign?.video_deadline)}
+                  {formatDate(effectiveVideoDeadline)}
                 </p>
               </div>
               {videoDaysLeft !== null && videoDaysLeft >= 0 && (
@@ -173,7 +176,7 @@ const CampaignWorkflowStepper = ({
               <div>
                 <p className="text-[10px] text-gray-500 font-medium leading-none">SNS Due</p>
                 <p className="text-xs sm:text-sm font-bold text-gray-900 leading-tight">
-                  {formatDate(campaign?.sns_deadline)}
+                  {formatDate(effectiveSnsDeadline)}
                 </p>
               </div>
               {snsDaysLeft !== null && snsDaysLeft >= 0 && (

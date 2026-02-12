@@ -1022,7 +1022,20 @@ const MyPageWithWithdrawal = () => {
 
   // Check if application has personalized guide (stored in applications.personalized_guide)
   const hasShootingGuide = (application) => {
-    return application.personalized_guide?.scenes?.length > 0
+    // Check personalized_guide first
+    if (application.personalized_guide?.scenes?.length > 0) return true
+    // Check campaigns._en fields or shooting_guide JSON
+    const c = application.campaigns
+    if (!c) return false
+    if (c.shooting_guide) return true
+    if (c.brand_name_en || c.product_name_en || c.product_description_en) return true
+    if (c.required_dialogues_en?.length > 0 || c.required_scenes_en?.length > 0) return true
+    if (c.video_duration_en || c.video_tempo_en || c.video_tone_en) return true
+    if (c.google_drive_url || c.google_slides_url) return true
+    if (c.requires_ad_code || c.requires_clean_video || c.meta_ad_code_requested) return true
+    // Check if any deadline exists (to at least show the guide modal with deadline info)
+    if (c.video_deadline || c.sns_deadline || c.application_deadline || c.posting_deadline) return true
+    return false
   }
 
   // Open video upload modal
