@@ -55,6 +55,26 @@ const ShootingGuideModal = ({ isOpen, onClose, campaign, application }) => {
     }
   }, [campaign.challenge_guide_data_en])
 
+  // Korean scene_type → English mapping
+  const SCENE_TYPE_KO_EN = {
+    '훅': 'Hook', '제품 소개': 'Product Introduction', '제품소개': 'Product Introduction',
+    '사용법': 'How to Use', '사용 방법': 'How to Use', '사용 장면': 'Usage Scene',
+    '효과': 'Results', '효과/결과': 'Results',
+    '비포/애프터': 'Before & After', '비포 애프터': 'Before & After', '비포&애프터': 'Before & After',
+    '마무리': 'Closing', '엔딩': 'Closing', '클로징': 'Closing',
+    '오프닝': 'Opening', '인트로': 'Intro', '언박싱': 'Unboxing', '개봉기': 'Unboxing',
+    '텍스처': 'Texture', '질감': 'Texture', '발색': 'Swatches',
+    '착용': 'Wear Test', '착용감': 'Wear Test',
+    '후기': 'Review', '리뷰': 'Review', '총평': 'Final Thoughts',
+    'CTA': 'CTA', '콜투액션': 'Call to Action', '추천': 'Recommendation',
+    '비교': 'Comparison', '성분': 'Ingredients', '성분 소개': 'Ingredients',
+    '피부 고민': 'Skin Concerns', '루틴': 'Routine', '데일리 루틴': 'Daily Routine',
+  }
+  const translateSceneType = (sceneType) => {
+    if (!sceneType) return 'Scene'
+    return SCENE_TYPE_KO_EN[sceneType] || sceneType
+  }
+
   // Get English text from scene: prefer _translated, only use base if _translated key is absent
   const getSceneText = (scene, field) => {
     const translated = scene[`${field}_translated`]
@@ -295,7 +315,7 @@ const ShootingGuideModal = ({ isOpen, onClose, campaign, application }) => {
                   <div key={idx} className="bg-white rounded-lg border border-green-200 overflow-hidden">
                     <div className="bg-green-100 px-4 py-2">
                       <h5 className="font-medium text-green-800 text-sm">
-                        Scene {scene.order || idx + 1}: {scene.scene_type}
+                        Scene {scene.order || idx + 1}: {translateSceneType(scene.scene_type)}
                       </h5>
                     </div>
                     <div className="p-4 space-y-2">
