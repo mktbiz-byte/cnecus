@@ -35,9 +35,11 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
     schema: 'public',
   },
   fetch: (url, options = {}) => {
+    // Storage 요청(업로드/다운로드)은 대용량 파일(최대 2GB) 지원을 위해 timeout 미적용
+    const isStorageRequest = url.includes('/storage/')
     return fetch(url, {
       ...options,
-      signal: AbortSignal.timeout(30000),
+      signal: isStorageRequest ? undefined : AbortSignal.timeout(30000),
     })
   }
 })
