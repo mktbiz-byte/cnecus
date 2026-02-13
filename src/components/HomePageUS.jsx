@@ -387,6 +387,11 @@ const HomePageUS = () => {
                 <ArrowRight className="ml-2 h-4 w-4" />
               </Button>
             </Link>
+            <Link to="/creator-guide">
+              <Button size="lg" variant="outline" className="border-purple-400 text-purple-700 hover:bg-purple-50 px-6">
+                Creator Guide
+              </Button>
+            </Link>
           </div>
         </div>
       </section>
