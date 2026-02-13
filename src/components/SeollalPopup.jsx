@@ -11,6 +11,7 @@ import { Button } from '@/components/ui/button'
 import { Calendar, Clock, Mail, AlertTriangle, CheckCircle } from 'lucide-react'
 
 const STORAGE_KEY = 'seollal-2026-popup-dismissed'
+const SNOOZE_KEY = 'seollal-2026-popup-snoozed-until'
 
 // Popup visible: Feb 13, 2026 00:00 UTC ~ Feb 19, 2026 00:00 UTC
 const SHOW_FROM = new Date('2026-02-13T00:00:00Z')
@@ -24,14 +25,23 @@ const SeollalPopup = () => {
     if (now < SHOW_FROM || now >= SHOW_UNTIL) return
 
     const dismissed = localStorage.getItem(STORAGE_KEY)
-    if (!dismissed) {
-      setIsOpen(true)
-    }
+    if (dismissed) return
+
+    const snoozedUntil = localStorage.getItem(SNOOZE_KEY)
+    if (snoozedUntil && now < new Date(snoozedUntil)) return
+
+    setIsOpen(true)
   }, [])
 
   const handleClose = () => {
     setIsOpen(false)
     localStorage.setItem(STORAGE_KEY, 'true')
+  }
+
+  const handleSnooze = () => {
+    setIsOpen(false)
+    const snoozeUntil = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString()
+    localStorage.setItem(SNOOZE_KEY, snoozeUntil)
   }
 
   return (
@@ -122,9 +132,12 @@ const SeollalPopup = () => {
         </div>
 
         {/* Footer */}
-        <DialogFooter className="px-6 pb-5">
+        <DialogFooter className="px-6 pb-5 flex-col gap-2">
           <Button onClick={handleClose} className="w-full">
             Got it, thanks!
+          </Button>
+          <Button variant="ghost" onClick={handleSnooze} className="w-full text-muted-foreground text-xs">
+            Don't show for 24 hours
           </Button>
         </DialogFooter>
       </DialogContent>
