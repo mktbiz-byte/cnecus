@@ -35,9 +35,11 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
     schema: 'public',
   },
   fetch: (url, options = {}) => {
+    // Storage 요청(업로드/다운로드)은 대용량 파일(최대 2GB) 지원을 위해 timeout 미적용
+    const isStorageRequest = url.includes('/storage/')
     return fetch(url, {
       ...options,
-      signal: AbortSignal.timeout(30000),
+      signal: isStorageRequest ? undefined : AbortSignal.timeout(30000),
     })
   }
 })
@@ -255,7 +257,41 @@ export const database = {
           }
           
           if (!appsData || appsData.length === 0) {
-            console.log('Applications 테이블에 데이터 없음')
+            // applications 테이블에 데이터 없으면 campaign_applications 테이블 조회 (US 스키마)
+            console.log('Applications 테이블에 데이터 없음, campaign_applications 테이블 확인')
+            const { data: caData, error: caError } = await supabase
+              .from('campaign_applications')
+              .select('*')
+              .order('created_at', { ascending: false })
+
+            if (!caError && caData && caData.length > 0) {
+              console.log('campaign_applications에서 데이터 발견:', caData.length, '개')
+
+              const { data: userProfiles } = await supabase
+                .from('user_profiles')
+                .select('*')
+              const { data: campaigns } = await supabase
+                .from('campaigns')
+                .select('id, title')
+
+              return caData.map(application => {
+                const userProfile = userProfiles?.find(up => up.user_id === application.user_id)
+                const campaign = campaigns?.find(c => c.id === application.campaign_id)
+                return {
+                  ...application,
+                  user_name: userProfile?.name || application.applicant_name || '-',
+                  user_email: userProfile?.email || '-',
+                  user_age: userProfile?.age || application.age || '-',
+                  user_skin_type: userProfile?.skin_type || application.skin_type || '-',
+                  user_instagram_url: userProfile?.instagram_url || application.instagram_url || '',
+                  user_tiktok_url: userProfile?.tiktok_url || application.tiktok_url || '',
+                  user_youtube_url: userProfile?.youtube_url || application.youtube_url || '',
+                  user_bio: userProfile?.bio || application.bio || '',
+                  campaign_title: campaign?.title || '캠페인 정보 없음'
+                }
+              })
+            }
+
             return []
           }
           
@@ -467,8 +503,9 @@ export const database = {
 
     async getByUserAndCampaign(userId, campaignId) {
       return safeQuery(async () => {
-        console.log('getByUserAndCampaign 호출 - applications 테이블 사용:', { userId, campaignId })
-        
+        console.log('getByUserAndCampaign 호출:', { userId, campaignId })
+
+        // applications 테이블 우선 조회
         const { data, error } = await supabase
           .from('applications')
           .select('*')
@@ -476,14 +513,21 @@ export const database = {
           .eq('campaign_id', campaignId)
           .order('created_at', { ascending: false })
           .limit(1)
-        
-        if (error) {
-          console.error('getByUserAndCampaign 오류:', error)
-          return null
+
+        let result = data && data.length > 0 ? data[0] : null
+
+        // applications에 없으면 campaign_applications 테이블 조회 (US 스키마)
+        if (!result) {
+          const { data: caData } = await supabase
+            .from('campaign_applications')
+            .select('*')
+            .eq('user_id', userId)
+            .eq('campaign_id', campaignId)
+            .order('created_at', { ascending: false })
+            .limit(1)
+          result = caData && caData.length > 0 ? caData[0] : null
         }
-        
-        // 배열의 첫 번째 요소 반환 (가장 최신 신청서)
-        const result = data && data.length > 0 ? data[0] : null
+
         console.log('기존 신청서 조회 결과:', result)
         return result
       })
@@ -491,18 +535,32 @@ export const database = {
 
     async create(applicationData) {
       return safeQuery(async () => {
-        console.log('Application 생성 시작 - applications 테이블 사용:', applicationData)
-        const { data, error } = await supabase
+        console.log('Application 생성 시작:', applicationData)
+        // applications 테이블 우선 시도
+        let { data, error } = await supabase
           .from('applications')
           .insert([applicationData])
           .select()
           .single()
-        
+
+        // applications 테이블 실패 시 campaign_applications 테이블 시도 (US 스키마)
+        if (error) {
+          console.log('applications 테이블 insert 실패, campaign_applications 시도:', error.message)
+          const result = await supabase
+            .from('campaign_applications')
+            .insert([applicationData])
+            .select()
+            .single()
+
+          data = result.data
+          error = result.error
+        }
+
         if (error) {
           console.error('Application 생성 오류:', error)
           throw error
         }
-        
+
         console.log('Application 생성 성공:', data)
         return data
       })
@@ -526,18 +584,31 @@ export const database = {
         // Note: virtual_selected_at and rejected_at columns don't exist in schema
         // Status is tracked via the 'status' field only
 
-        // Use campaign_applications table (the actual table name)
-        const { data, error } = await supabase
-          .from('campaign_applications')
+        // applications 테이블 우선 시도
+        let { data, error } = await supabase
+          .from('applications')
           .update(updateData)
           .eq('id', id)
           .select()
-        
+
+        // applications 테이블에서 실패하거나 데이터 없으면 campaign_applications 시도
+        if (error || !data || data.length === 0) {
+          console.log('applications 테이블 업데이트 실패, campaign_applications 테이블 시도')
+          const result = await supabase
+            .from('campaign_applications')
+            .update(updateData)
+            .eq('id', id)
+            .select()
+
+          data = result.data
+          error = result.error
+        }
+
         if (error) {
           console.error('Application status update error:', error)
           throw error
         }
-        
+
         console.log('Application status update successful:', data)
         return data && data.length > 0 ? data[0] : null
       })

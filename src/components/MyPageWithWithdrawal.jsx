@@ -420,70 +420,90 @@ const MyPageWithWithdrawal = () => {
     try {
       setLoading(true)
 
-      // 🚀 모든 데이터를 병렬로 로딩 (속도 대폭 향상)
-      // Get applications with campaign data (personalized_guide is in applications table)
-      const { data: applicationsWithGuide } = await supabase
+      // 🚀 모든 데이터를 병렬로 로딩
+      // Step 1: applications 조회 (campaigns join 시도)
+      const { data: appsData, error: appsError } = await supabase
         .from('applications')
-        .select(`
-          *,
-          campaigns (
-            id,
-            title,
-            title_en,
-            brand,
-            brand_en,
-            brand_name_en,
-            product_name_en,
-            product_description_en,
-            product_features_en,
-            image_url,
-            campaign_type,
-            reward_amount,
-            video_deadline,
-            sns_deadline,
-            application_deadline,
-            week1_deadline,
-            week2_deadline,
-            week3_deadline,
-            week4_deadline,
-            week1_sns_deadline,
-            week2_sns_deadline,
-            week3_sns_deadline,
-            week4_sns_deadline,
-            requires_ad_code,
-            meta_ad_code_requested,
-            requires_clean_video,
-            video_guide_url,
-            reference_video_url,
-            shooting_guide,
-            google_drive_url,
-            google_slides_url,
-            required_dialogues_en,
-            required_scenes_en,
-            required_hashtags_en,
-            shooting_scenes_en,
-            video_duration_en,
-            video_tempo_en,
-            video_tone_en,
-            additional_details_en,
-            additional_shooting_requests_en,
-            shooting_scenes_ba_photo,
-            shooting_scenes_no_makeup,
-            shooting_scenes_closeup,
-            shooting_scenes_product_closeup,
-            shooting_scenes_product_texture,
-            shooting_scenes_outdoor,
-            shooting_scenes_couple,
-            shooting_scenes_child,
-            shooting_scenes_troubled_skin,
-            shooting_scenes_wrinkles,
-            target_platforms
-          )
-        `)
+        .select('*, campaigns(*)')
         .eq('user_id', user.id)
         .order('created_at', { ascending: false })
 
-      const [profileData, _, pointTransactionsResult] = await Promise.all([
+      console.log('[DEBUG] applications query:', { appsData: appsData?.length, appsError: appsError?.message })
+
+      let applicationsWithGuide = appsData
+
+      // applications 쿼리 실패 시 campaign_applications fallback
+      if (appsError || !appsData) {
+        console.warn('[DEBUG] applications 실패, campaign_applications 시도:', appsError?.message)
+        const { data: caData, error: caError } = await supabase
+          .from('campaign_applications')
+          .select('*, campaigns(*)')
+          .eq('user_id', user.id)
+          .order('created_at', { ascending: false })
+        console.log('[DEBUG] campaign_applications query:', { caData: caData?.length, caError: caError?.message })
+        applicationsWithGuide = caData
+      }
+
+      // Step 2: campaigns join이 null인지 체크 → 직접 campaigns 조회로 보완
+      if (applicationsWithGuide && applicationsWithGuide.length > 0) {
+        const firstApp = applicationsWithGuide[0]
+        const c = firstApp.campaigns
+        console.log('[DEBUG] 첫 application campaigns join 결과:', c)
+        console.log('[DEBUG] campaign 주요 필드:', c ? {
+          id: c.id,
+          title: c.title,
+          title_en: c.title_en,
+          video_deadline: c.video_deadline,
+          sns_deadline: c.sns_deadline,
+          application_deadline: c.application_deadline,
+          posting_deadline: c.posting_deadline,
+          google_drive_url: c.google_drive_url,
+          google_slides_url: c.google_slides_url,
+          shooting_guide: c.shooting_guide ? 'EXISTS (jsonb)' : null,
+          brand_name_en: c.brand_name_en,
+          product_name_en: c.product_name_en,
+          required_dialogues_en: c.required_dialogues_en,
+          required_scenes_en: c.required_scenes_en,
+          requires_clean_video: c.requires_clean_video,
+          requires_ad_code: c.requires_ad_code,
+          meta_ad_code_requested: c.meta_ad_code_requested,
+          _allKeys: Object.keys(c).filter(k => c[k] != null).join(', ')
+        } : 'NULL')
+
+        // campaigns가 null이면 RLS 또는 FK 문제 → 직접 조회
+        const hasMissingCampaigns = applicationsWithGuide.some(app => !app.campaigns && app.campaign_id)
+        if (hasMissingCampaigns) {
+          console.warn('[DEBUG] campaigns join이 null → campaigns 직접 조회 시도')
+          const campaignIds = [...new Set(applicationsWithGuide.filter(a => a.campaign_id).map(a => a.campaign_id))]
+          console.log('[DEBUG] 조회할 campaign IDs:', campaignIds)
+
+          const { data: campaignsData, error: campaignsError } = await supabase
+            .from('campaigns')
+            .select('*')
+            .in('id', campaignIds)
+
+          console.log('[DEBUG] campaigns 직접 조회 결과:', {
+            count: campaignsData?.length,
+            error: campaignsError?.message,
+            firstCampaign: campaignsData?.[0] ? Object.keys(campaignsData[0]).slice(0, 10) : 'null'
+          })
+
+          if (campaignsData && campaignsData.length > 0) {
+            // campaigns 데이터를 applications에 수동 매핑
+            const campaignMap = {}
+            campaignsData.forEach(c => { campaignMap[c.id] = c })
+            applicationsWithGuide = applicationsWithGuide.map(app => ({
+              ...app,
+              campaigns: app.campaigns || campaignMap[app.campaign_id] || null
+            }))
+            console.log('[DEBUG] campaigns 수동 매핑 완료, 첫번째:', applicationsWithGuide[0]?.campaigns?.title)
+          } else {
+            console.error('[DEBUG] campaigns 직접 조회도 실패 - RLS 정책 확인 필요')
+          }
+        }
+      }
+
+      const [profileData, _, pointTransactionsResult, videoSubmissionsResult] = await Promise.all([
         // 1. 프로필 정보
         database.userProfiles.get(user.id),
         // 2. 신청 내역 (already loaded above with shooting_guide)
@@ -491,6 +511,12 @@ const MyPageWithWithdrawal = () => {
         // 3. 포인트 거래 내역 (출금 + 전체)
         supabase
           .from('point_transactions')
+          .select('*')
+          .eq('user_id', user.id)
+          .order('created_at', { ascending: false }),
+        // 4. 영상 제출 이력 (버전 관리 + 수정 요청)
+        supabase
+          .from('video_submissions')
           .select('*')
           .eq('user_id', user.id)
           .order('created_at', { ascending: false })
@@ -518,8 +544,31 @@ const MyPageWithWithdrawal = () => {
         })
       }
 
-      // 신청 내역 설정 (with shooting_guide from campaigns)
-      setApplications(applicationsWithGuide || [])
+      // Process video_submissions to attach revision_requests to applications
+      const videoSubmissions = videoSubmissionsResult?.data || []
+      const enrichedApplications = (applicationsWithGuide || []).map(app => {
+        // Find revision requests from video_submissions for this application
+        const appSubmissions = videoSubmissions.filter(vs => vs.application_id === app.id)
+        const revisionRequests = appSubmissions
+          .filter(vs => vs.status === 'revision_requested')
+          .map(vs => ({
+            id: vs.id,
+            comment: vs.revision_notes || vs.admin_comment || '',
+            comment_en: vs.revision_notes_en || vs.admin_comment_en || '',
+            created_at: vs.updated_at || vs.created_at,
+            video_number: vs.video_number,
+            week_number: vs.week_number,
+            version: vs.version
+          }))
+        return {
+          ...app,
+          revision_requests: revisionRequests,
+          video_submissions: appSubmissions
+        }
+      })
+
+      // 신청 내역 설정 (with shooting_guide from campaigns + revision data)
+      setApplications(enrichedApplications)
 
       // 포인트 거래 내역 처리
       const { data: pointData, error: pointError } = pointTransactionsResult
@@ -972,8 +1021,97 @@ const MyPageWithWithdrawal = () => {
   }
 
   // Check if application has personalized guide (stored in applications.personalized_guide)
+  // Parse personalized_guide into unified format (3 types: ai_guide, external_url, external_pdf, text)
+  const parseGuide = (personalized_guide) => {
+    if (!personalized_guide) return null
+    let guide = personalized_guide
+    if (typeof guide === 'string') {
+      try { guide = JSON.parse(guide) } catch {
+        return { type: 'text', content: guide }
+      }
+    }
+    if (guide.type === 'external_url') {
+      return { type: 'external_url', url: guide.url, title: guide.title || 'Filming Guide' }
+    }
+    if (guide.type === 'external_pdf') {
+      return { type: 'external_pdf', url: guide.fileUrl, fileName: guide.fileName, title: guide.title || 'Filming Guide' }
+    }
+    if (guide.scenes && Array.isArray(guide.scenes)) {
+      return { type: 'ai_guide', scenes: guide.scenes, style: guide.dialogue_style, tempo: guide.tempo, mood: guide.mood }
+    }
+    return null
+  }
+
+  // Korean scene_type → English mapping
+  const SCENE_TYPE_KO_EN = {
+    '훅': 'Hook',
+    '제품 소개': 'Product Introduction',
+    '제품소개': 'Product Introduction',
+    '사용법': 'How to Use',
+    '사용 방법': 'How to Use',
+    '사용 장면': 'Usage Scene',
+    '효과': 'Results',
+    '효과/결과': 'Results',
+    '비포/애프터': 'Before & After',
+    '비포 애프터': 'Before & After',
+    '비포&애프터': 'Before & After',
+    '마무리': 'Closing',
+    '엔딩': 'Closing',
+    '클로징': 'Closing',
+    '오프닝': 'Opening',
+    '인트로': 'Intro',
+    '언박싱': 'Unboxing',
+    '개봉기': 'Unboxing',
+    '텍스처': 'Texture',
+    '질감': 'Texture',
+    '발색': 'Swatches',
+    '착용': 'Wear Test',
+    '착용감': 'Wear Test',
+    '후기': 'Review',
+    '리뷰': 'Review',
+    '총평': 'Final Thoughts',
+    'CTA': 'CTA',
+    '콜투액션': 'Call to Action',
+    '추천': 'Recommendation',
+    '비교': 'Comparison',
+    '성분': 'Ingredients',
+    '성분 소개': 'Ingredients',
+    '피부 고민': 'Skin Concerns',
+    '루틴': 'Routine',
+    '데일리 루틴': 'Daily Routine',
+  }
+
+  const translateSceneType = (sceneType) => {
+    if (!sceneType) return 'Scene'
+    return SCENE_TYPE_KO_EN[sceneType] || sceneType
+  }
+
+  // Get English text from scene field: prefer _translated, fall back to base only if _translated is undefined
+  // (empty string "" means translation not done → base is Korean → don't use it)
+  const getSceneText = (scene, field) => {
+    const translated = scene[`${field}_translated`]
+    if (translated && translated.trim()) return translated
+    // Only use base field if _translated key doesn't exist at all (means guide was generated in English)
+    if (!((`${field}_translated`) in scene)) return scene[field] || ''
+    return ''
+  }
+
   const hasShootingGuide = (application) => {
-    return application.personalized_guide?.scenes?.length > 0
+    // Check personalized_guide (all 3 types)
+    const guide = parseGuide(application.personalized_guide)
+    if (guide) return true
+    // Check campaigns fields
+    const c = application.campaigns
+    if (!c) return false
+    if (c.shooting_guide) return true
+    if (c.ai_generated_guide) return true
+    if (c.brand_name_en || c.product_name_en || c.product_description_en) return true
+    if (c.required_dialogues_en?.length > 0 || c.required_scenes_en?.length > 0) return true
+    if (c.video_duration_en || c.video_tempo_en || c.video_tone_en) return true
+    if (c.google_drive_url || c.google_slides_url) return true
+    if (c.requires_ad_code || c.requires_clean_video || c.meta_ad_code_requested) return true
+    if (c.video_deadline || c.sns_deadline || c.end_date) return true
+    return false
   }
 
   // Open video upload modal
@@ -989,17 +1127,16 @@ const MyPageWithWithdrawal = () => {
     const file = e.target.files[0]
     if (!file) return
 
-    // Validate file type
-    const validTypes = ['video/mp4', 'video/quicktime', 'video/x-msvideo', 'video/webm', 'video/mpeg']
-    if (!validTypes.includes(file.type)) {
-      setError('Please upload a valid video file (MP4, MOV, AVI, WebM)')
+    // Validate file type (accept all video/* types)
+    if (!file.type.startsWith('video/')) {
+      setError('Please upload a valid video file')
       return
     }
 
-    // Validate file size (max 500MB)
-    const maxSize = 500 * 1024 * 1024
+    // Validate file size (max 2GB)
+    const maxSize = 2 * 1024 * 1024 * 1024
     if (file.size > maxSize) {
-      setError('File size must be less than 500MB')
+      setError('File size must be less than 2GB')
       return
     }
 
@@ -1031,17 +1168,34 @@ const MyPageWithWithdrawal = () => {
       // Check if this is a 4-week challenge
       const is4WeekChallenge = selectedApplication?.campaigns?.campaign_type === '4week_challenge'
 
-      // Upload to Supabase Storage
+      // Determine version
+      let version = 1
+      try {
+        const { data: existingSubs } = await supabase
+          .from('video_submissions')
+          .select('version')
+          .eq('application_id', selectedApplication.id)
+          .eq('week_number', is4WeekChallenge ? selectedWeekNumber : null)
+          .order('version', { ascending: false })
+          .limit(1)
+        if (existingSubs && existingSubs.length > 0) {
+          version = (existingSubs[0].version || 0) + 1
+        }
+      } catch (e) {
+        console.warn('Could not fetch existing version:', e)
+      }
+
+      // Upload to Supabase Storage (videos bucket, spec path pattern)
       const timestamp = Date.now()
       const fileExt = videoFile.name.split('.').pop()
-      const folder = is4WeekChallenge ? `week${selectedWeekNumber}` : 'main'
-      const fileName = `${selectedApplication.id}_${folder}_${timestamp}.${fileExt}`
-      const filePath = `videos/${selectedApplication.user_id}/${fileName}`
+      const videoSlot = is4WeekChallenge ? `week${selectedWeekNumber}` : 'main'
+      const fileName = `${videoSlot}_v${version}_${timestamp}.${fileExt}`
+      const filePath = `${selectedApplication.campaign_id}/${selectedApplication.user_id}/${fileName}`
 
       setUploadProgress(30)
 
       const { data: uploadData, error: uploadError } = await supabase.storage
-        .from('creator-videos')
+        .from('videos')
         .upload(filePath, videoFile, {
           cacheControl: '3600',
           upsert: true
@@ -1053,10 +1207,32 @@ const MyPageWithWithdrawal = () => {
 
       // Get public URL
       const { data: urlData } = supabase.storage
-        .from('creator-videos')
+        .from('videos')
         .getPublicUrl(filePath)
 
       const videoUrl = urlData.publicUrl
+
+      setUploadProgress(80)
+
+      // Insert into video_submissions table for version tracking
+      try {
+        await supabase.from('video_submissions').insert({
+          campaign_id: selectedApplication.campaign_id,
+          application_id: selectedApplication.id,
+          user_id: user.id,
+          video_number: is4WeekChallenge ? null : 1,
+          week_number: is4WeekChallenge ? selectedWeekNumber : null,
+          version: version,
+          video_file_url: videoUrl,
+          video_file_name: videoFile.name,
+          video_file_size: videoFile.size,
+          video_uploaded_at: new Date().toISOString(),
+          status: 'submitted',
+          submitted_at: new Date().toISOString()
+        })
+      } catch (e) {
+        console.warn('video_submissions insert failed:', e)
+      }
 
       setUploadProgress(90)
 
@@ -1066,14 +1242,13 @@ const MyPageWithWithdrawal = () => {
       }
 
       if (is4WeekChallenge) {
-        const weekVideoKey = `week${selectedWeekNumber}_video_url`
-        const weekVideoTimeKey = `week${selectedWeekNumber}_video_submitted_at`
-        updateData[weekVideoKey] = videoUrl
-        updateData[weekVideoTimeKey] = new Date().toISOString()
+        const weekUrlKey = `week${selectedWeekNumber}_url`
+        updateData[weekUrlKey] = videoUrl
       } else {
-        updateData.video_submission_url = videoUrl
-        updateData.video_url = videoUrl
-        updateData.video_submitted_at = new Date().toISOString()
+        updateData.video_file_url = videoUrl
+        updateData.video_file_name = videoFile.name
+        updateData.video_file_size = videoFile.size
+        updateData.video_uploaded_at = new Date().toISOString()
         updateData.status = 'video_submitted'
       }
 
@@ -1131,27 +1306,45 @@ const MyPageWithWithdrawal = () => {
   }
 
   // Handle video submission from new modal
-  const handleNewVideoSubmit = async ({ applicationId, videoUrl, cleanVideoUrl, weekNumber, is4Week }) => {
+  const handleNewVideoSubmit = async ({ applicationId, campaignId, userId, videoUrl, cleanVideoUrl, videoFileName, videoFileSize, version, weekNumber, is4Week }) => {
     try {
+      // Insert into video_submissions table for version tracking
+      try {
+        await supabase.from('video_submissions').insert({
+          campaign_id: campaignId || selectedApplication?.campaign_id,
+          application_id: applicationId,
+          user_id: userId || user.id,
+          video_number: is4Week ? null : 1,
+          week_number: weekNumber || null,
+          version: version || 1,
+          video_file_url: videoUrl,
+          video_file_name: videoFileName || null,
+          video_file_size: videoFileSize || null,
+          video_uploaded_at: new Date().toISOString(),
+          clean_video_url: cleanVideoUrl || null,
+          status: 'submitted',
+          submitted_at: new Date().toISOString()
+        })
+      } catch (e) {
+        console.warn('video_submissions insert failed:', e)
+      }
+
       let updateData = {
-        updated_at: new Date().toISOString(),
-        revision_requested: false,
-        revision_notes: null
+        updated_at: new Date().toISOString()
       }
 
       if (is4Week && weekNumber) {
-        updateData[`week${weekNumber}_video_url`] = videoUrl
-        updateData[`week${weekNumber}_video_submitted_at`] = new Date().toISOString()
+        updateData[`week${weekNumber}_url`] = videoUrl
         updateData.status = 'video_submitted'
       } else {
-        updateData.video_url = videoUrl
-        updateData.video_submission_url = videoUrl
-        updateData.video_submitted_at = new Date().toISOString()
+        updateData.video_file_url = videoUrl
+        updateData.video_file_name = videoFileName || null
+        updateData.video_file_size = videoFileSize || null
+        updateData.video_uploaded_at = new Date().toISOString()
         updateData.status = 'video_submitted'
       }
 
       if (cleanVideoUrl) {
-        // For 4-week, save clean video per-week; for standard, save to single field
         if (is4Week && weekNumber) {
           updateData[`week${weekNumber}_clean_video_url`] = cleanVideoUrl
         } else {
@@ -1187,15 +1380,15 @@ const MyPageWithWithdrawal = () => {
       }
 
       if (is4Week && weekNumber) {
+        // 4-week challenge: store SNS URL per-week if column exists, also update main field
         updateData[`week${weekNumber}_sns_url`] = snsUrl
-        updateData[`week${weekNumber}_sns_submitted_at`] = new Date().toISOString()
+        updateData.sns_upload_url = snsUrl
       } else {
         updateData.sns_upload_url = snsUrl
         updateData.status = 'sns_uploaded'
       }
 
       if (partnershipCode) {
-        // For 4-week, save partnership code per-week; for standard, save to single field
         if (is4Week && weekNumber) {
           updateData[`week${weekNumber}_partnership_code`] = partnershipCode
         } else {
@@ -1204,12 +1397,33 @@ const MyPageWithWithdrawal = () => {
       }
 
       if (cleanVideoUrl) {
-        // For 4-week, save clean video per-week; for standard, save to single field
         if (is4Week && weekNumber) {
           updateData[`week${weekNumber}_clean_video_url`] = cleanVideoUrl
         } else {
           updateData.clean_video_url = cleanVideoUrl
         }
+      }
+
+      // Also update the video_submissions record if exists
+      try {
+        const { data: latestSub } = await supabase
+          .from('video_submissions')
+          .select('id')
+          .eq('application_id', applicationId)
+          .eq('week_number', is4Week ? weekNumber : null)
+          .order('version', { ascending: false })
+          .limit(1)
+
+        if (latestSub && latestSub.length > 0) {
+          await supabase.from('video_submissions').update({
+            sns_upload_url: snsUrl,
+            partnership_code: partnershipCode || null,
+            clean_video_url: cleanVideoUrl || null,
+            updated_at: new Date().toISOString()
+          }).eq('id', latestSub[0].id)
+        }
+      } catch (e) {
+        console.warn('video_submissions SNS update failed:', e)
       }
 
       const { error: updateError } = await supabase
@@ -1760,15 +1974,15 @@ const MyPageWithWithdrawal = () => {
                   </div>
                 </div>
                 <div className="p-5 sm:p-6">
-              
+
               <div className="space-y-4">
-                {applications.length === 0 ? (
+                {applications.filter(a => !['selected', 'filming', 'video_submitted', 'revision_requested', 'approved', 'sns_uploaded', 'completed'].includes(a.status)).length === 0 ? (
                   <div className="text-center py-12">
                     <Briefcase className="mx-auto h-12 w-12 text-slate-300 mb-3" />
                     <p className="text-sm font-medium text-slate-400">{t.noData}</p>
                   </div>
                 ) : (
-                  applications.map((application) => {
+                  applications.filter(a => !['selected', 'filming', 'video_submitted', 'revision_requested', 'approved', 'sns_uploaded', 'completed'].includes(a.status)).map((application) => {
                     // Get campaign type
                     const campaignType = application.campaigns?.campaign_type || 'regular'
                     const is4WeekChallenge = campaignType === '4week_challenge'
@@ -1789,7 +2003,7 @@ const MyPageWithWithdrawal = () => {
                       if (!is4WeekChallenge) return []
                       const submissions = []
                       for (let i = 1; i <= 4; i++) {
-                        const videoKey = `week${i}_video_url`
+                        const videoKey = `week${i}_url`
                         const snsKey = `week${i}_sns_url`
                         submissions.push({
                           week: i,
@@ -1922,12 +2136,12 @@ const MyPageWithWithdrawal = () => {
                               onClick={() => openVideoUploadModal(application)}
                               className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-bold bg-indigo-600 text-white hover:bg-indigo-500 shadow-sm transition-colors"
                             >
-                              <Camera className="w-3.5 h-3.5" /> {is4WeekChallenge ? 'Submit Weekly Video' : (application.video_submission_url ? 'Update Video' : 'Submit Video')}
+                              <Camera className="w-3.5 h-3.5" /> {is4WeekChallenge ? 'Submit Weekly Video' : (application.video_file_url ? 'Update Video' : 'Submit Video')}
                             </button>
 
-                            {application.video_submission_url && !is4WeekChallenge && (
+                            {application.video_file_url && !is4WeekChallenge && (
                               <a
-                                href={application.video_submission_url}
+                                href={application.video_file_url}
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-bold bg-emerald-50 text-emerald-700 hover:bg-emerald-100 ring-1 ring-emerald-200/60 transition-colors"
@@ -1938,9 +2152,9 @@ const MyPageWithWithdrawal = () => {
                           </div>
 
                           {/* Video Submission Status - Standard Campaign */}
-                          {application.video_submission_url && !is4WeekChallenge && (
+                          {application.video_file_url && !is4WeekChallenge && (
                             <div className="flex items-center text-sm text-green-600 mb-4">
-                              ✅ Video submitted on {new Date(application.video_submitted_at).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })}
+                              ✅ Video submitted on {new Date(application.video_uploaded_at).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })}
                             </div>
                           )}
 
@@ -1954,82 +2168,132 @@ const MyPageWithWithdrawal = () => {
                           )}
 
                           {/* Expandable Shooting Guide - Using personalized_guide from applications */}
-                          {expandedGuides[application.id] && hasShootingGuide(application) && (
+                          {expandedGuides[application.id] && hasShootingGuide(application) && (() => {
+                            const guideData = parseGuide(application.personalized_guide)
+                            return (
                             <div className="mt-4 p-4 bg-gray-50 rounded-lg">
                               <h4 className="font-semibold text-gray-900 mb-4 flex items-center">
-                                📖 Shooting Guide
+                                Shooting Guide
                               </h4>
 
-                              {/* Guide Info */}
-                              {(application.personalized_guide?.mood || application.personalized_guide?.tempo) && (
+                              {/* External URL Guide */}
+                              {guideData?.type === 'external_url' && guideData.url && (
+                                <a
+                                  href={guideData.url}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="flex items-center gap-4 p-4 bg-white rounded-xl border-2 border-purple-200 hover:border-purple-400 hover:shadow-md transition-all group mb-4"
+                                >
+                                  <div className="w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center flex-shrink-0">
+                                    <ExternalLink className="w-6 h-6 text-purple-600" />
+                                  </div>
+                                  <div className="flex-1 min-w-0">
+                                    <p className="font-bold text-purple-800 text-sm">{guideData.title}</p>
+                                    <p className="text-xs text-gray-500 mt-0.5 truncate">{guideData.url}</p>
+                                  </div>
+                                  <div className="flex-shrink-0 bg-purple-600 text-white px-3 py-1.5 rounded-lg text-xs font-medium">
+                                    Open
+                                  </div>
+                                </a>
+                              )}
+
+                              {/* External PDF Guide */}
+                              {guideData?.type === 'external_pdf' && guideData.url && (
+                                <a
+                                  href={guideData.url}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="flex items-center gap-4 p-4 bg-white rounded-xl border-2 border-indigo-200 hover:border-indigo-400 hover:shadow-md transition-all group mb-4"
+                                >
+                                  <div className="w-12 h-12 bg-indigo-100 rounded-xl flex items-center justify-center flex-shrink-0">
+                                    <FileText className="w-6 h-6 text-indigo-600" />
+                                  </div>
+                                  <div className="flex-1 min-w-0">
+                                    <p className="font-bold text-indigo-800 text-sm">{guideData.title}</p>
+                                    <p className="text-xs text-gray-500 mt-0.5">{guideData.fileName || 'PDF Guide'}</p>
+                                  </div>
+                                  <div className="flex-shrink-0 bg-indigo-600 text-white px-3 py-1.5 rounded-lg text-xs font-medium">
+                                    Download
+                                  </div>
+                                </a>
+                              )}
+
+                              {/* Text Guide */}
+                              {guideData?.type === 'text' && guideData.content && (
+                                <div className="mb-4 p-4 bg-white rounded-lg border border-gray-200">
+                                  <pre className="text-sm text-gray-700 whitespace-pre-wrap font-sans leading-relaxed">{guideData.content}</pre>
+                                </div>
+                              )}
+
+                              {/* AI Guide - mood/tempo/style info */}
+                              {guideData?.type === 'ai_guide' && (guideData.mood || guideData.tempo) && (
                                 <div className="mb-4 p-3 bg-purple-50 rounded-lg flex flex-wrap gap-2">
-                                  {application.personalized_guide?.mood && (
+                                  {guideData.mood && (
                                     <span className="text-xs bg-purple-200 text-purple-800 px-2 py-1 rounded">
-                                      Mood: {application.personalized_guide.mood}
+                                      Mood: {guideData.mood}
                                     </span>
                                   )}
-                                  {application.personalized_guide?.tempo && (
+                                  {guideData.tempo && (
                                     <span className="text-xs bg-purple-200 text-purple-800 px-2 py-1 rounded">
-                                      Tempo: {application.personalized_guide.tempo}
+                                      Tempo: {guideData.tempo}
                                     </span>
                                   )}
-                                  {application.personalized_guide?.dialogue_style && (
+                                  {guideData.style && (
                                     <span className="text-xs bg-purple-200 text-purple-800 px-2 py-1 rounded">
-                                      Style: {application.personalized_guide.dialogue_style}
+                                      Style: {guideData.style}
                                     </span>
                                   )}
                                 </div>
                               )}
 
-                              {/* Scenes - Using _translated fields for English */}
-                              <div className="space-y-3">
-                                {application.personalized_guide?.scenes?.map((scene, index) => (
-                                  <div key={index} className="border border-gray-200 rounded-lg overflow-hidden bg-white">
-                                    <div className="bg-gray-100 px-4 py-2 flex justify-between items-center">
-                                      <h5 className="font-medium text-gray-800">
-                                        Scene {scene.order || index + 1}: {scene.scene_type}
-                                      </h5>
-                                    </div>
-                                    <div className="p-4 space-y-3">
-                                      {/* What to Film - scene_description_translated */}
-                                      {scene.scene_description_translated && (
-                                        <div>
-                                          <h6 className="text-sm font-medium text-gray-700 mb-1">📷 What to Film</h6>
-                                          <p className="text-sm text-gray-600 pl-5">
-                                            {scene.scene_description_translated}
-                                          </p>
-                                        </div>
-                                      )}
-                                      {/* Script - dialogue_translated */}
-                                      {scene.dialogue_translated && (
-                                        <div>
-                                          <h6 className="text-sm font-medium text-gray-700 mb-1">💬 Script / What to Say</h6>
-                                          <div className="bg-green-50 p-2 rounded pl-5">
-                                            <p className="text-sm text-gray-700 italic">
-                                              "{scene.dialogue_translated}"
+                              {/* AI Guide - Scenes */}
+                              {guideData?.type === 'ai_guide' && guideData.scenes?.length > 0 && (
+                                <div className="space-y-3">
+                                  {guideData.scenes.map((scene, index) => (
+                                    <div key={index} className="border border-gray-200 rounded-lg overflow-hidden bg-white">
+                                      <div className="bg-gray-100 px-4 py-2 flex justify-between items-center">
+                                        <h5 className="font-medium text-gray-800">
+                                          Scene {scene.order || index + 1}: {translateSceneType(scene.scene_type)}
+                                        </h5>
+                                      </div>
+                                      <div className="p-4 space-y-3">
+                                        {getSceneText(scene, 'scene_description') && (
+                                          <div>
+                                            <h6 className="text-sm font-medium text-gray-700 mb-1">What to Film</h6>
+                                            <p className="text-sm text-gray-600 pl-5">
+                                              {getSceneText(scene, 'scene_description')}
                                             </p>
                                           </div>
-                                        </div>
-                                      )}
-                                      {/* Tips - shooting_tip_translated */}
-                                      {scene.shooting_tip_translated && (
-                                        <div>
-                                          <h6 className="text-sm font-medium text-gray-700 mb-1">💡 Tips</h6>
-                                          <p className="text-sm text-gray-600 pl-5">
-                                            {scene.shooting_tip_translated}
-                                          </p>
-                                        </div>
-                                      )}
+                                        )}
+                                        {getSceneText(scene, 'dialogue') && (
+                                          <div>
+                                            <h6 className="text-sm font-medium text-gray-700 mb-1">Script / What to Say</h6>
+                                            <div className="bg-green-50 p-2 rounded pl-5">
+                                              <p className="text-sm text-gray-700 italic">
+                                                "{getSceneText(scene, 'dialogue')}"
+                                              </p>
+                                            </div>
+                                          </div>
+                                        )}
+                                        {getSceneText(scene, 'shooting_tip') && (
+                                          <div>
+                                            <h6 className="text-sm font-medium text-gray-700 mb-1">Tips</h6>
+                                            <p className="text-sm text-gray-600 pl-5">
+                                              {getSceneText(scene, 'shooting_tip')}
+                                            </p>
+                                          </div>
+                                        )}
+                                      </div>
                                     </div>
-                                  </div>
-                                ))}
-                              </div>
+                                  ))}
+                                </div>
+                              )}
 
-                              {/* Required Scenes & Dialogues */}
+                              {/* Required Scenes & Dialogues (from personalized_guide) */}
                               {(application.personalized_guide?.required_scenes?.length > 0 ||
                                 application.personalized_guide?.required_dialogues?.length > 0) && (
                                 <div className="mt-4 p-3 bg-amber-50 border border-amber-200 rounded-lg">
-                                  <h5 className="font-medium text-amber-800 mb-2">⚠️ Required Elements</h5>
+                                  <h5 className="font-medium text-amber-800 mb-2">Required Elements</h5>
                                   {application.personalized_guide?.required_scenes?.length > 0 && (
                                     <div className="mb-2">
                                       <p className="text-xs font-medium text-amber-700">Required Scenes:</p>
@@ -2053,7 +2317,8 @@ const MyPageWithWithdrawal = () => {
                                 </div>
                               )}
                             </div>
-                          )}
+                            )
+                          })()}
 
                           {/* No Guide Message */}
                           {!hasShootingGuide(application) && (
@@ -2412,8 +2677,8 @@ const MyPageWithWithdrawal = () => {
           </div>
         )}
 
-        {/* Video Upload Modal */}
-        {showVideoUploadModal && (
+        {/* Video Upload Modal (inline - legacy, only shows when no campaign selected) */}
+        {showVideoUploadModal && !selectedCampaign && (
           <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm overflow-y-auto h-full w-full z-50 flex items-start justify-center pt-10 sm:pt-20">
             <div className="mx-4 w-full max-w-md bg-white rounded-2xl shadow-2xl ring-1 ring-slate-200/60 overflow-hidden">
               <div className="p-5 sm:p-6">
@@ -2451,7 +2716,7 @@ const MyPageWithWithdrawal = () => {
                     <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Select Week *</label>
                     <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                       {[1, 2, 3, 4].map(week => {
-                        const existingVideo = selectedApplication?.[`week${week}_video_url`]
+                        const existingVideo = selectedApplication?.[`week${week}_url`]
                         const deadline = selectedApplication?.custom_deadlines?.[`week${week}_deadline`] || selectedApplication?.campaigns?.[`week${week}_deadline`]
                         const isSelected = selectedWeekNumber === week
                         return (
@@ -2466,7 +2731,7 @@ const MyPageWithWithdrawal = () => {
                         )
                       })}
                     </div>
-                    {selectedApplication?.[`week${selectedWeekNumber}_video_url`] && (
+                    {selectedApplication?.[`week${selectedWeekNumber}_url`] && (
                       <p className="mt-2 text-[10px] text-amber-600 font-medium">Week {selectedWeekNumber} already has a video. Uploading will replace it.</p>
                     )}
                   </div>
@@ -2482,7 +2747,7 @@ const MyPageWithWithdrawal = () => {
                       <div className="flex flex-col items-center">
                         <Camera className="w-10 h-10 text-slate-300 group-hover:text-indigo-400 mb-2 transition-colors" />
                         <p className="text-sm font-semibold text-slate-600">Click to select video</p>
-                        <p className="text-[10px] text-slate-400 mt-1">MP4, MOV, AVI, WebM (max 500MB)</p>
+                        <p className="text-[10px] text-slate-400 mt-1">All video formats (max 2GB)</p>
                       </div>
                     </button>
                   ) : (
@@ -2523,7 +2788,7 @@ const MyPageWithWithdrawal = () => {
                   <h4 className="text-xs font-bold text-slate-600 mb-1">Tips</h4>
                   <ul className="text-[10px] text-slate-400 space-y-0.5">
                     <li>Upload video in the highest quality possible</li>
-                    <li>Supported: MP4, MOV, AVI, WebM (max 500MB)</li>
+                    <li>Supported: All video formats (max 2GB)</li>
                   </ul>
                 </div>
 

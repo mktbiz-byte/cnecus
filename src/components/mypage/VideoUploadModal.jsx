@@ -10,29 +10,25 @@ const VideoUploadModal = ({
   onSubmit
 }) => {
   const [videoFile, setVideoFile] = useState(null)
-  const [cleanVideoFile, setCleanVideoFile] = useState(null)
   const [selectedWeek, setSelectedWeek] = useState(1)
   const [loading, setLoading] = useState(false)
   const [uploadProgress, setUploadProgress] = useState(0)
   const [error, setError] = useState('')
 
   const videoInputRef = useRef(null)
-  const cleanVideoInputRef = useRef(null)
 
   const is4Week = campaign?.campaign_type === '4week_challenge'
-  const requiresCleanVideo = campaign?.requires_clean_video
 
   // Reset form when modal opens
   useEffect(() => {
     if (isOpen) {
       setVideoFile(null)
-      setCleanVideoFile(null)
       setError('')
       setUploadProgress(0)
       // Find the first week without a video submission
       if (is4Week) {
         for (let i = 1; i <= 4; i++) {
-          if (!application?.[`week${i}_video_url`]) {
+          if (!application?.[`week${i}_url`]) {
             setSelectedWeek(i)
             break
           }
@@ -62,40 +58,36 @@ const VideoUploadModal = ({
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i]
   }
 
-  const handleFileSelect = (e, isCleanVideo = false) => {
+  const handleFileSelect = (e) => {
     const file = e.target.files[0]
     if (!file) return
 
-    // Validate file type
-    const validTypes = ['video/mp4', 'video/quicktime', 'video/x-msvideo', 'video/x-ms-wmv', 'video/webm', 'video/mpeg']
-    if (!validTypes.includes(file.type)) {
-      setError('Please upload a valid video file (MP4, MOV, AVI, WMV, WebM)')
+    // Validate file type (accept all video/* types)
+    if (!file.type.startsWith('video/')) {
+      setError('Please upload a valid video file')
       return
     }
 
-    // Validate file size (max 500MB)
-    const maxSize = 500 * 1024 * 1024
+    // Validate file size (max 2GB)
+    const maxSize = 2 * 1024 * 1024 * 1024
     if (file.size > maxSize) {
-      setError('File size must be less than 500MB')
+      setError('File size must be less than 2GB')
       return
     }
 
     setError('')
-    if (isCleanVideo) {
-      setCleanVideoFile(file)
-    } else {
-      setVideoFile(file)
-    }
+    setVideoFile(file)
   }
 
-  const uploadToSupabase = async (file, folder) => {
+  const uploadToSupabase = async (file, folder, version = 1) => {
     const timestamp = Date.now()
     const fileExt = file.name.split('.').pop()
-    const fileName = `${application.id}_${folder}_${timestamp}.${fileExt}`
-    const filePath = `videos/${application.user_id}/${fileName}`
+    const videoSlot = folder
+    const fileName = `${videoSlot}_v${version}_${timestamp}.${fileExt}`
+    const filePath = `${application.campaign_id}/${application.user_id}/${fileName}`
 
     const { data, error: uploadError } = await supabase.storage
-      .from('creator-videos')
+      .from('videos')
       .upload(filePath, file, {
         cacheControl: '3600',
         upsert: true
@@ -107,7 +99,7 @@ const VideoUploadModal = ({
 
     // Get public URL
     const { data: urlData } = supabase.storage
-      .from('creator-videos')
+      .from('videos')
       .getPublicUrl(filePath)
 
     return urlData.publicUrl
@@ -122,33 +114,44 @@ const VideoUploadModal = ({
       return
     }
 
-    if (requiresCleanVideo && !cleanVideoFile) {
-      setError('Clean video is required for this campaign')
-      return
-    }
-
     setLoading(true)
     setUploadProgress(10)
 
     try {
+      // Determine version by checking existing submissions
+      let version = 1
+      try {
+        const { data: existingSubs } = await supabase
+          .from('video_submissions')
+          .select('version')
+          .eq('application_id', application.id)
+          .eq('week_number', is4Week ? selectedWeek : null)
+          .order('version', { ascending: false })
+          .limit(1)
+        if (existingSubs && existingSubs.length > 0) {
+          version = (existingSubs[0].version || 0) + 1
+        }
+      } catch (e) {
+        console.warn('Could not fetch existing version:', e)
+      }
+
       // Upload main video
       setUploadProgress(20)
-      const videoUrl = await uploadToSupabase(videoFile, is4Week ? `week${selectedWeek}` : 'main')
-      setUploadProgress(60)
-
-      // Upload clean video if required
-      let cleanVideoUrl = null
-      if (cleanVideoFile) {
-        cleanVideoUrl = await uploadToSupabase(cleanVideoFile, is4Week ? `week${selectedWeek}_clean` : 'clean')
-        setUploadProgress(90)
-      }
+      const videoSlot = is4Week ? `week${selectedWeek}` : 'main'
+      const videoUrl = await uploadToSupabase(videoFile, videoSlot, version)
+      setUploadProgress(90)
 
       setUploadProgress(100)
 
       await onSubmit({
         applicationId: application.id,
+        campaignId: application.campaign_id,
+        userId: application.user_id,
         videoUrl,
-        cleanVideoUrl,
+        cleanVideoUrl: null,
+        videoFileName: videoFile.name,
+        videoFileSize: videoFile.size,
+        version,
         weekNumber: is4Week ? selectedWeek : null,
         is4Week
       })
@@ -171,7 +174,7 @@ const VideoUploadModal = ({
         <div className="sticky top-0 bg-white border-b border-gray-200 p-3 sm:p-4 flex items-center justify-between">
           <div className="min-w-0 flex-1 mr-2">
             <h2 className="text-base sm:text-xl font-bold text-gray-900 truncate">
-              📤 {application?.status === 'revision_requested' ? 'Re-upload Video' : 'Upload Video'}
+              {application?.status === 'revision_requested' ? 'Re-upload Video' : 'Upload Video'}
             </h2>
             <p className="text-xs sm:text-sm text-gray-500">
               {is4Week ? '4-Week Challenge' : 'Standard Campaign'}
@@ -210,7 +213,7 @@ const VideoUploadModal = ({
               </label>
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                 {[1, 2, 3, 4].map(week => {
-                  const existingVideo = application?.[`week${week}_video_url`]
+                  const existingVideo = application?.[`week${week}_url`]
                   const deadline = getWeekDeadline(week)
                   const isSelected = selectedWeek === week
 
@@ -235,20 +238,15 @@ const VideoUploadModal = ({
                         </div>
                       )}
                       {existingVideo && (
-                        <div className="text-xs text-green-600 mt-1">✓ Uploaded</div>
+                        <div className="text-xs text-green-600 mt-1">Uploaded</div>
                       )}
                     </button>
                   )
                 })}
               </div>
-              {application?.[`week${selectedWeek}_video_url`] && (
+              {application?.[`week${selectedWeek}_url`] && (
                 <p className="text-xs text-amber-600 mt-2">
-                  ⚠️ Week {selectedWeek} already has a video. Uploading will replace it.
-                </p>
-              )}
-              {requiresCleanVideo && application?.[`week${selectedWeek}_clean_video_url`] && (
-                <p className="text-xs text-blue-600 mt-1">
-                  Week {selectedWeek} clean video already uploaded.
+                  Week {selectedWeek} already has a video. Uploading will replace it.
                 </p>
               )}
             </div>
@@ -264,7 +262,7 @@ const VideoUploadModal = ({
               ref={videoInputRef}
               type="file"
               accept="video/*"
-              onChange={(e) => handleFileSelect(e, false)}
+              onChange={handleFileSelect}
               className="hidden"
               disabled={loading}
             />
@@ -279,7 +277,7 @@ const VideoUploadModal = ({
                 <div className="flex flex-col items-center">
                   <Film className="w-8 h-8 sm:w-12 sm:h-12 text-gray-400 mb-2 sm:mb-3" />
                   <p className="text-xs sm:text-sm font-medium text-gray-700">Tap to select video</p>
-                  <p className="text-xs text-gray-500 mt-1">MP4, MOV, AVI, WebM (max 500MB)</p>
+                  <p className="text-xs text-gray-500 mt-1">All video formats (max 2GB)</p>
                 </div>
               </button>
             ) : (
@@ -307,65 +305,12 @@ const VideoUploadModal = ({
             )}
           </div>
 
-          {/* Clean Video Upload (if required) */}
-          {requiresCleanVideo && (
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Clean Video
-                <span className="ml-2 text-xs font-normal text-blue-600 bg-blue-100 px-2 py-0.5 rounded">
-                  Required
-                </span>
-              </label>
-
-              <input
-                ref={cleanVideoInputRef}
-                type="file"
-                accept="video/*"
-                onChange={(e) => handleFileSelect(e, true)}
-                className="hidden"
-                disabled={loading}
-              />
-
-              {!cleanVideoFile ? (
-                <button
-                  type="button"
-                  onClick={() => cleanVideoInputRef.current?.click()}
-                  disabled={loading}
-                  className="w-full border-2 border-dashed border-blue-300 rounded-xl p-3 sm:p-4 hover:border-blue-400 hover:bg-blue-50 active:bg-blue-50 transition-all disabled:opacity-50 min-h-[80px]"
-                >
-                  <div className="flex flex-col items-center">
-                    <Film className="w-6 h-6 sm:w-8 sm:h-8 text-blue-400 mb-1.5 sm:mb-2" />
-                    <p className="text-xs sm:text-sm font-medium text-gray-700">Tap to select clean video</p>
-                  </div>
-                </button>
-              ) : (
-                <div className="border border-blue-200 bg-blue-50 rounded-xl p-2.5 sm:p-3">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2 min-w-0 flex-1 mr-2">
-                      <CheckCircle className="w-5 h-5 sm:w-6 sm:h-6 text-blue-600 flex-shrink-0" />
-                      <div className="min-w-0">
-                        <p className="text-xs sm:text-sm font-medium text-gray-900 truncate">
-                          {cleanVideoFile.name}
-                        </p>
-                        <p className="text-xs text-gray-500">{formatFileSize(cleanVideoFile.size)}</p>
-                      </div>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => setCleanVideoFile(null)}
-                      disabled={loading}
-                      className="p-1.5 text-red-600 hover:bg-red-100 rounded-full disabled:opacity-50 flex-shrink-0 min-w-[32px] min-h-[32px] flex items-center justify-center"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
-                  </div>
-                </div>
-              )}
-
-              <div className="text-xs text-gray-500 mt-2 p-2 bg-blue-50 rounded">
-                <strong>Clean video:</strong> Same video but WITHOUT background music and subtitles.
-                This is needed for ad usage.
-              </div>
+          {/* Clean video info note (if campaign requires it) */}
+          {campaign?.requires_clean_video && (
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-2.5 sm:p-3">
+              <p className="text-xs text-blue-700">
+                <strong>Note:</strong> Clean video (without BGM/subtitles) will be submitted together with your SNS post in the next step.
+              </p>
             </div>
           )}
 
@@ -387,12 +332,12 @@ const VideoUploadModal = ({
 
           {/* Tips */}
           <div className="bg-amber-50 border border-amber-200 rounded-lg p-2.5 sm:p-3">
-            <h4 className="text-xs sm:text-sm font-medium text-amber-800 mb-1.5 sm:mb-2">💡 Tips</h4>
+            <h4 className="text-xs sm:text-sm font-medium text-amber-800 mb-1.5 sm:mb-2">Tips</h4>
             <ul className="text-xs text-amber-700 space-y-0.5 sm:space-y-1">
-              <li>• Upload video in the highest quality possible</li>
-              <li>• Supported formats: MP4, MOV, AVI, WebM</li>
-              <li>• Maximum file size: 500MB</li>
-              <li>• Use a stable internet connection for faster uploads</li>
+              <li>Upload video in the highest quality possible</li>
+              <li>Supported formats: All video formats (MP4, MOV, AVI, WebM, etc.)</li>
+              <li>Maximum file size: 2GB</li>
+              <li>Use a stable internet connection for faster uploads</li>
             </ul>
           </div>
 

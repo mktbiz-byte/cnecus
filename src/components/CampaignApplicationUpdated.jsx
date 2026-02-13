@@ -474,9 +474,9 @@ const CampaignApplicationUpdated = () => {
         {campaign && (
           <div className="mb-5 space-y-3">
             {/* Special Requirements Badges */}
-            {(campaign.requires_ad_code || campaign.requires_clean_video) && (
+            {(campaign.partnership_ad_code_required || campaign.requires_clean_video) && (
               <div className="flex flex-wrap gap-2">
-                {campaign.requires_ad_code && (
+                {campaign.partnership_ad_code_required && (
                   <Badge className="bg-amber-100 text-amber-700 border border-amber-200 text-xs">
                     📊 Meta Ad Code Required
                   </Badge>

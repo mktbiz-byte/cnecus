@@ -151,7 +151,7 @@ const WeeklySubmissionStatus = ({ application, campaign }) => {
       <div className="grid grid-cols-4 gap-2">
         {[1, 2, 3, 4].map(week => {
           const hasGuide = !!(application[`week${week}_guide_drive_url`] || application[`week${week}_guide_slides_url`])
-          const videoSubmitted = !!application[`week${week}_video_url`]
+          const videoSubmitted = !!application[`week${week}_url`]
           const cleanVideoSubmitted = !!application[`week${week}_clean_video_url`]
           const snsSubmitted = !!application[`week${week}_sns_url`]
           const hasPartnershipCode = !!application[`week${week}_partnership_code`]
@@ -347,9 +347,9 @@ const CampaignProgressCard = ({
             )}
 
             {/* View Submitted Content */}
-            {application.video_url && (
+            {application.video_file_url && (
               <a
-                href={application.video_url}
+                href={application.video_file_url}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="px-3 py-2 text-sm font-medium bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"

@@ -93,8 +93,11 @@ const CampaignWorkflowStepper = ({
   const completedCount = Object.values(stepStates).filter(s => s === 'done').length
   const progressPercent = status === 'completed' ? 100 : Math.round((completedCount / 4) * 100)
 
-  const videoDaysLeft = getDaysLeft(campaign?.video_deadline)
-  const snsDaysLeft = getDaysLeft(campaign?.sns_deadline)
+  // Fallback: video_deadline → end_date (application_deadline is for applications, not content delivery)
+  const effectiveVideoDeadline = campaign?.video_deadline || campaign?.end_date
+  const effectiveSnsDeadline = campaign?.sns_deadline
+  const videoDaysLeft = getDaysLeft(effectiveVideoDeadline)
+  const snsDaysLeft = getDaysLeft(effectiveSnsDeadline)
 
   return (
     <div className="bg-white border border-gray-200 rounded-2xl overflow-hidden shadow-sm mb-4">
@@ -154,7 +157,7 @@ const CampaignWorkflowStepper = ({
               <div>
                 <p className="text-[10px] text-gray-500 font-medium leading-none">Video Due</p>
                 <p className="text-xs sm:text-sm font-bold text-gray-900 leading-tight">
-                  {formatDate(campaign?.video_deadline)}
+                  {formatDate(effectiveVideoDeadline)}
                 </p>
               </div>
               {videoDaysLeft !== null && videoDaysLeft >= 0 && (
@@ -173,7 +176,7 @@ const CampaignWorkflowStepper = ({
               <div>
                 <p className="text-[10px] text-gray-500 font-medium leading-none">SNS Due</p>
                 <p className="text-xs sm:text-sm font-bold text-gray-900 leading-tight">
-                  {formatDate(campaign?.sns_deadline)}
+                  {formatDate(effectiveSnsDeadline)}
                 </p>
               </div>
               {snsDaysLeft !== null && snsDaysLeft >= 0 && (
@@ -259,12 +262,12 @@ const CampaignWorkflowStepper = ({
                 </p>
 
                 {/* Video already uploaded info */}
-                {application?.video_url && (
+                {application?.video_file_url && (
                   <div className="ml-8 bg-blue-50 border border-blue-200 rounded-lg p-2.5 flex items-center gap-2">
                     <Video className="w-4 h-4 text-blue-600 flex-shrink-0" />
                     <div className="flex-1 min-w-0">
                       <p className="text-xs font-medium text-blue-800">Previous video uploaded</p>
-                      <a href={application.video_url} target="_blank" rel="noopener noreferrer" className="text-[10px] text-blue-600 hover:underline truncate block">{application.video_url}</a>
+                      <a href={application.video_file_url} target="_blank" rel="noopener noreferrer" className="text-[10px] text-blue-600 hover:underline truncate block">{application.video_file_url}</a>
                     </div>
                   </div>
                 )}
@@ -294,12 +297,12 @@ const CampaignWorkflowStepper = ({
                 </div>
 
                 {/* Submitted video info */}
-                {application?.video_url && (
+                {application?.video_file_url && (
                   <div className="ml-8 bg-gray-50 border border-gray-200 rounded-lg p-2.5 flex items-center gap-2">
                     <Video className="w-4 h-4 text-gray-500 flex-shrink-0" />
                     <div className="flex-1 min-w-0">
                       <p className="text-[10px] text-gray-500">Submitted video:</p>
-                      <p className="text-xs font-medium text-gray-700 truncate">{application.video_url?.split('/').pop() || 'video'}</p>
+                      <p className="text-xs font-medium text-gray-700 truncate">{application.video_file_url?.split('/').pop() || 'video'}</p>
                     </div>
                     <span className="text-[10px] font-semibold bg-gray-200 text-gray-600 px-1.5 py-0.5 rounded">v{application.revision_requests?.length ? application.revision_requests.length + 1 : 1}</span>
                   </div>
@@ -480,7 +483,7 @@ const CampaignWorkflowStepper = ({
               <h4 className="text-[10px] font-bold text-orange-700 mb-2 uppercase tracking-wide">Weekly Progress</h4>
               <div className="grid grid-cols-4 gap-2">
                 {[1, 2, 3, 4].map(week => {
-                  const vid = !!application?.[`week${week}_video_url`]
+                  const vid = !!application?.[`week${week}_url`]
                   const sns = !!application?.[`week${week}_sns_url`]
                   const done = vid && sns
                   return (

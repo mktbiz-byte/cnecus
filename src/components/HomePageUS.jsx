@@ -741,7 +741,7 @@ const HomePageUS = () => {
                 <Badge variant="secondary" className={`text-sm px-3 py-1 border ${getCampaignTypeBadgeStyle(selectedCampaign.campaign_type)}`}>
                   {getCampaignTypeLabel(selectedCampaign.campaign_type)}
                 </Badge>
-                {selectedCampaign.requires_ad_code && (
+                {selectedCampaign.partnership_ad_code_required && (
                   <Badge className="bg-amber-100 text-amber-700 border border-amber-200">
                     📊 Meta Ad Code Required
                   </Badge>
