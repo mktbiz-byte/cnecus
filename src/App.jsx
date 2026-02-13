@@ -55,6 +55,9 @@ import ProtectedRoute from './components/ProtectedRoute';
 // 다국어 지원 초기화
 import i18n from './lib/i18n';
 
+// 설날 팝업
+import SeollalPopup from './components/SeollalPopup';
+
 const AppContent = () => {
   const { user } = useAuth();
 
@@ -70,6 +73,7 @@ const AppContent = () => {
 
   return (
     <div className="App">
+      <SeollalPopup />
       <Routes>
         {/* 메인 페이지 */}
         <Route path="/" element={<HomePageUS />} />
