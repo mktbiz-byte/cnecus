@@ -23,6 +23,7 @@ import AuthCallbackSafe from './components/AuthCallbackSafe';
 import TermsPage from './components/TermsPage';
 import PrivacyPage from './components/PrivacyPage';
 import CreatorContactForm from './components/CreatorContactForm';
+import CreatorGuidePage from './components/CreatorGuidePage';
 
 // 관리자 컴포넌트
 import AdminDashboardSimple from './components/admin/AdminDashboardSimple';
@@ -55,6 +56,9 @@ import ProtectedRoute from './components/ProtectedRoute';
 // 다국어 지원 초기화
 import i18n from './lib/i18n';
 
+// 설날 팝업
+import SeollalPopup from './components/SeollalPopup';
+
 const AppContent = () => {
   const { user } = useAuth();
 
@@ -70,6 +74,7 @@ const AppContent = () => {
 
   return (
     <div className="App">
+      <SeollalPopup />
       <Routes>
         {/* 메인 페이지 */}
         <Route path="/" element={<HomePageUS />} />
@@ -89,6 +94,7 @@ const AppContent = () => {
         <Route path="/terms" element={<TermsPage />} />
         <Route path="/privacy" element={<PrivacyPage />} />
         <Route path="/creator-contact" element={<CreatorContactForm />} />
+        <Route path="/creator-guide" element={<CreatorGuidePage />} />
 
         {/* 관리자 페이지 - 보안을 위해 /admin/ 경로 제거 */}
         <Route path="/secret-admin-login" element={<SecretAdminLogin />} />
