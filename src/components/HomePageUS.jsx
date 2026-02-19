@@ -387,6 +387,11 @@ const HomePageUS = () => {
                 <ArrowRight className="ml-2 h-4 w-4" />
               </Button>
             </Link>
+            <Link to="/creator-guide">
+              <Button size="lg" variant="outline" className="border-purple-400 text-purple-700 hover:bg-purple-50 px-6">
+                Creator Guide
+              </Button>
+            </Link>
           </div>
         </div>
       </section>
@@ -674,7 +679,7 @@ const HomePageUS = () => {
             <div>
               <h4 className="font-semibold mb-4">Support</h4>
               <ul className="space-y-2 text-gray-400 text-sm">
-                <li><a href="#" className="hover:text-white transition-colors">Help Center</a></li>
+                <li><Link to="/creator-guide" className="hover:text-white transition-colors">Help Center</Link></li>
                 <li><Link to="/terms" className="hover:text-white transition-colors">Terms of Service</Link></li>
                 <li><Link to="/privacy" className="hover:text-white transition-colors">Privacy Policy</Link></li>
               </ul>
