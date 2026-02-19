@@ -121,11 +121,16 @@ const VideoUploadModal = ({
       // Determine version by checking existing submissions
       let version = 1
       try {
-        const { data: existingSubs } = await supabase
+        let versionQuery = supabase
           .from('video_submissions')
           .select('version')
           .eq('application_id', application.id)
-          .eq('week_number', is4Week ? selectedWeek : null)
+        if (is4Week) {
+          versionQuery = versionQuery.eq('week_number', selectedWeek)
+        } else {
+          versionQuery = versionQuery.is('week_number', null)
+        }
+        const { data: existingSubs } = await versionQuery
           .order('version', { ascending: false })
           .limit(1)
         if (existingSubs && existingSubs.length > 0) {

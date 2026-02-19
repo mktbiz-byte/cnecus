@@ -1171,11 +1171,16 @@ const MyPageWithWithdrawal = () => {
       // Determine version
       let version = 1
       try {
-        const { data: existingSubs } = await supabase
+        let versionQuery = supabase
           .from('video_submissions')
           .select('version')
           .eq('application_id', selectedApplication.id)
-          .eq('week_number', is4WeekChallenge ? selectedWeekNumber : null)
+        if (is4WeekChallenge) {
+          versionQuery = versionQuery.eq('week_number', selectedWeekNumber)
+        } else {
+          versionQuery = versionQuery.is('week_number', null)
+        }
+        const { data: existingSubs } = await versionQuery
           .order('version', { ascending: false })
           .limit(1)
         if (existingSubs && existingSubs.length > 0) {
@@ -1236,14 +1241,13 @@ const MyPageWithWithdrawal = () => {
 
       setUploadProgress(90)
 
-      // Update application record
+      // Update application record - try applications first, fallback to campaign_applications
       let updateData = {
         updated_at: new Date().toISOString()
       }
 
       if (is4WeekChallenge) {
-        const weekUrlKey = `week${selectedWeekNumber}_url`
-        updateData[weekUrlKey] = videoUrl
+        updateData[`week${selectedWeekNumber}_url`] = videoUrl
       } else {
         updateData.video_file_url = videoUrl
         updateData.video_file_name = videoFile.name
@@ -1252,12 +1256,31 @@ const MyPageWithWithdrawal = () => {
         updateData.status = 'video_submitted'
       }
 
-      const { error: updateError } = await supabase
+      const { data: appData, error: appError } = await supabase
         .from('applications')
         .update(updateData)
         .eq('id', selectedApplication.id)
+        .select()
 
-      if (updateError) throw updateError
+      // If applications update failed, try campaign_applications with correct column names
+      if (appError || !appData || appData.length === 0) {
+        const caUpdateData = { updated_at: new Date().toISOString() }
+        if (is4WeekChallenge) {
+          caUpdateData[`week${selectedWeekNumber}_video_url`] = videoUrl
+        } else {
+          caUpdateData.video_url = videoUrl
+          caUpdateData.video_submitted_at = new Date().toISOString()
+          caUpdateData.status = 'video_submitted'
+        }
+        const { error: caError } = await supabase
+          .from('campaign_applications')
+          .update(caUpdateData)
+          .eq('id', selectedApplication.id)
+        if (caError) {
+          console.error('Both table updates failed:', { appError, caError })
+          throw caError
+        }
+      }
 
       setUploadProgress(100)
 
@@ -1329,6 +1352,7 @@ const MyPageWithWithdrawal = () => {
         console.warn('video_submissions insert failed:', e)
       }
 
+      // Update application record - try applications first, fallback to campaign_applications
       let updateData = {
         updated_at: new Date().toISOString()
       }
@@ -1352,12 +1376,39 @@ const MyPageWithWithdrawal = () => {
         }
       }
 
-      const { error: updateError } = await supabase
+      const { data: appData, error: appError } = await supabase
         .from('applications')
         .update(updateData)
         .eq('id', applicationId)
+        .select()
 
-      if (updateError) throw updateError
+      // If applications update failed, try campaign_applications with correct column names
+      if (appError || !appData || appData.length === 0) {
+        const caUpdateData = {
+          updated_at: new Date().toISOString(),
+          status: 'video_submitted'
+        }
+        if (is4Week && weekNumber) {
+          caUpdateData[`week${weekNumber}_video_url`] = videoUrl
+          if (cleanVideoUrl) {
+            caUpdateData[`week${weekNumber}_clean_video_url`] = cleanVideoUrl
+          }
+        } else {
+          caUpdateData.video_url = videoUrl
+          caUpdateData.video_submitted_at = new Date().toISOString()
+          if (cleanVideoUrl) {
+            caUpdateData.clean_video_url = cleanVideoUrl
+          }
+        }
+        const { error: caError } = await supabase
+          .from('campaign_applications')
+          .update(caUpdateData)
+          .eq('id', applicationId)
+        if (caError) {
+          console.error('Both table updates failed:', { appError, caError })
+          throw caError
+        }
+      }
 
       const message = is4Week
         ? `Week ${weekNumber} video submitted successfully!`
@@ -1406,11 +1457,16 @@ const MyPageWithWithdrawal = () => {
 
       // Also update the video_submissions record if exists
       try {
-        const { data: latestSub } = await supabase
+        let subQuery = supabase
           .from('video_submissions')
           .select('id')
           .eq('application_id', applicationId)
-          .eq('week_number', is4Week ? weekNumber : null)
+        if (is4Week) {
+          subQuery = subQuery.eq('week_number', weekNumber)
+        } else {
+          subQuery = subQuery.is('week_number', null)
+        }
+        const { data: latestSub } = await subQuery
           .order('version', { ascending: false })
           .limit(1)
 
@@ -1426,12 +1482,45 @@ const MyPageWithWithdrawal = () => {
         console.warn('video_submissions SNS update failed:', e)
       }
 
-      const { error: updateError } = await supabase
+      // Try applications first, fallback to campaign_applications
+      const { data: appData, error: appError } = await supabase
         .from('applications')
         .update(updateData)
         .eq('id', applicationId)
+        .select()
 
-      if (updateError) throw updateError
+      if (appError || !appData || appData.length === 0) {
+        // Build campaign_applications compatible update data
+        const caUpdateData = {
+          updated_at: new Date().toISOString(),
+          sns_upload_url: snsUrl,
+          sns_url: snsUrl,
+          sns_submitted_at: new Date().toISOString()
+        }
+        if (is4Week && weekNumber) {
+          caUpdateData[`week${weekNumber}_sns_url`] = snsUrl
+        } else {
+          caUpdateData.status = 'sns_uploaded'
+        }
+        if (partnershipCode) {
+          caUpdateData.partnership_code = partnershipCode
+        }
+        if (cleanVideoUrl) {
+          if (is4Week && weekNumber) {
+            caUpdateData[`week${weekNumber}_clean_video_url`] = cleanVideoUrl
+          } else {
+            caUpdateData.clean_video_url = cleanVideoUrl
+          }
+        }
+        const { error: caError } = await supabase
+          .from('campaign_applications')
+          .update(caUpdateData)
+          .eq('id', applicationId)
+        if (caError) {
+          console.error('Both table updates failed:', { appError, caError })
+          throw caError
+        }
+      }
 
       const message = is4Week
         ? `Week ${weekNumber} SNS link submitted successfully!`
