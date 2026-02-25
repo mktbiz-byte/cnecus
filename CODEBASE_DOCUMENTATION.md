@@ -33,7 +33,7 @@
 | **폼** | React Hook Form + Zod | 폼 관리 및 유효성 검증 |
 | **날짜** | date-fns | 날짜 처리 |
 | **이메일** | Nodemailer (서버), EmailJS (클라이언트) | 이메일 발송 |
-| **파일관리** | Google Drive API (googleapis) | 크리에이터별 폴더/슬라이드 자동 생성 |
+| **파일관리** | Google Drive API (googleapis) — **package.json 미등록** | 크리에이터별 폴더/슬라이드 자동 생성 (코드 존재하나 `googleapis` 패키지 미설치) |
 | **패키지 매니저** | pnpm 10 | 의존성 관리 |
 
 ---
@@ -173,7 +173,7 @@ cnecus/
 
 ## 5. 라우트 구조
 
-### 5.1 공개 라우트 (인증 불필요)
+### 5.1 공개 라우트 (인증 불필요, ProtectedRoute 미적용)
 
 | 경로 | 컴포넌트 | 설명 |
 |------|----------|------|
@@ -184,8 +184,12 @@ cnecus/
 | `/terms` | `TermsPage` | 이용약관 |
 | `/privacy` | `PrivacyPage` | 개인정보처리방침 |
 | `/creator-guide` | `CreatorGuidePage` | 크리에이터 가이드 |
+| `/secret-admin-login` | `SecretAdminLogin` | 관리자 비밀 로그인 (ProtectedRoute 없음) |
+| `/test-admin-login` | `TestAdminLogin` | 테스트 관리자 로그인 (ProtectedRoute 없음) |
 
-### 5.2 사용자 라우트 (로그인 필요)
+### 5.2 사용자 라우트 (ProtectedRoute 미적용, 컴포넌트 내부에서 인증 확인)
+
+> **주의**: 아래 라우트들은 App.jsx에서 `ProtectedRoute`로 감싸지 않음. 각 컴포넌트 내부에서 `useAuth()` 훅을 통해 로그인 여부를 확인하며, 미로그인 시 리디렉션 또는 제한된 UI를 표시합니다.
 
 | 경로 | 컴포넌트 | 설명 |
 |------|----------|------|
@@ -197,12 +201,10 @@ cnecus/
 | `/company-report/:campaignId` | `CompanyReportNew` | 회사 캠페인 리포트 |
 | `/creator-contact` | `CreatorContactForm` | 크리에이터 연락처 제출 |
 
-### 5.3 관리자 라우트 (ProtectedRoute + requireAdmin=true)
+### 5.3 관리자 라우트 (ProtectedRoute + requireAdmin=true 적용)
 
 | 경로 | 컴포넌트 | 설명 |
 |------|----------|------|
-| `/secret-admin-login` | `SecretAdminLogin` | 관리자 비밀 로그인 |
-| `/test-admin-login` | `TestAdminLogin` | 테스트 관리자 로그인 |
 | `/dashboard` | `AdminDashboardSimple` | 관리자 대시보드 (통계 개요) |
 | `/campaigns-manage` | `AdminCampaignsWithQuestions` | 캠페인 관리 (CRUD + 질문) |
 | `/campaign-create` | `CampaignCreationWithTranslator` | 캠페인 생성 (다국어 번역 포함) |
@@ -219,6 +221,16 @@ cnecus/
 | `/withdrawals-manage` | `AdminWithdrawals` | 출금 요청 관리 |
 | `/system-settings` | `SystemSettings` | 시스템 설정 |
 | `/email-settings` | `EmailSettings` | 이메일 SMTP 설정 |
+
+### 5.4 App.jsx에서 import 되었지만 라우트에 미사용 (Dead Import)
+
+아래 컴포넌트들은 App.jsx에서 import 되어 있지만 실제 `<Route>`에 매핑되지 않은 상태입니다:
+- `CampaignApplicationPage` (`./components/CampaignApplicationPage`) — `CampaignApplicationUpdated`로 대체됨
+- `CompanyReport_multilingual` (`./components/admin/CompanyReport_multilingual`) — `CompanyReportNew`로 대체됨
+- `JapanWithdrawalRequest` (`./components/JapanWithdrawalRequest`) — JP 버전용, US에서 미사용
+- `ProfileManagement` (`./components/ProfileManagement`) — `ProfileSettings`로 대체됨
+- `ConfirmedCreatorsReport_multilingual` (`./components/admin/ConfirmedCreatorsReport_multilingual`) — `ConfirmedCreatorsNew`/`AdminConfirmedCreators`로 대체됨
+- `SNSUploadFinalReport_multilingual` (`./components/admin/SNSUploadFinalReport_multilingual`) — `SNSUploadNew`로 대체됨
 
 ---
 
@@ -337,11 +349,12 @@ updated_at      TIMESTAMPTZ
 ```
 
 #### `withdrawal_requests`
-출금 요청 (PayPal)
+출금 요청 (PayPal) — `database.withdrawals`에서 사용
 ```
 id              UUID (PK)
 user_id         UUID (FK → auth.users)
 amount          INTEGER
+withdrawal_method TEXT — 코드에서 'paypal' 삽입 (SQL 스키마에는 미정의이나 코드에서 참조)
 paypal_email    TEXT
 paypal_name     TEXT
 reason          TEXT
@@ -351,8 +364,25 @@ transaction_id  TEXT (PayPal 트랜잭션 ID)
 platform_region VARCHAR(10)
 processed_at    TIMESTAMPTZ
 processed_by    UUID
+notes           TEXT
 created_at      TIMESTAMPTZ
 updated_at      TIMESTAMPTZ
+```
+
+#### `withdrawals` (별도 테이블)
+출금 요청 — `withdrawal_api.js`의 `withdrawalAPI`에서 사용
+```
+id, user_id, amount, bank_info (JSONB — paypal_email/paypal_name 포함)
+status, notes, requested_at, processed_at, processed_by
+updated_at
+```
+
+#### `user_points` (별도 테이블)
+포인트 관리 — `withdrawal_api.js`의 `userPointsAPI`에서 사용
+```
+id, user_id, campaign_id, points (INTEGER)
+reason, status ('approved' 등)
+approved_at, created_at
 ```
 
 ### 6.2 부가 테이블
@@ -429,6 +459,12 @@ id, user_id, ... (이메일 구독 관리)
 - **Dual Table Fallback**: `applications` 테이블 우선 조회 → 실패 시 `campaign_applications` 테이블로 폴백 (스키마 마이그레이션 과도기 대응)
 - Storage 요청은 타임아웃 미적용 (대용량 파일 업로드 지원)
 
+**주의 — `getByCampaign` 중복 정의 버그**:
+`database.applications` 객체 내에 `getByCampaign` 메서드가 2번 정의되어 있음 (supabase.js 421행, 672행).
+JavaScript 객체 특성상 **672행의 두 번째 정의가 421행을 오버라이드**함.
+- 421행 (오버라이드됨): `applications` 테이블 우선 → `campaign_applications` 폴백 + user_profiles 병합
+- 672행 (실제 사용됨): `campaign_applications` 테이블만 조회 + user_profiles 병합
+
 ### 7.2 `src/contexts/AuthContext.jsx` — 인증 컨텍스트
 
 **제공하는 값**:
@@ -500,32 +536,69 @@ id, user_id, ... (이메일 구독 관리)
 
 ### 7.7 `src/lib/emailService.js` — 이메일 템플릿/발송
 
-**이메일 유형**:
-1. `SIGNUP_COMPLETE` — 회원가입 완료
-2. `APPLICATION_SUBMITTED` — 캠페인 지원 완료
-3. `APPLICATION_APPROVED` — 지원 승인 (크리에이터 확정)
-4. `APPLICATION_REJECTED` — 지원 거절
-5. `SHIPPING_UPDATE` — 배송 업데이트
-6. `CAMPAIGN_DEADLINE_REMINDER` — 캠페인 마감 리마인더
-7. `POINTS_ADDED` — 포인트 적립
-8. `WITHDRAWAL_APPROVED` — 출금 승인
-9. `WITHDRAWAL_REJECTED` — 출금 거절
+**내보내는 함수**:
+- `sendEmail(templateType, recipientEmail, data)` — 이메일 발송 (Supabase 로그 기록 + Gmail SMTP 전송)
+- `scheduleReminderEmails(campaignId, deadline)` — 캠페인 마감 리마인더 예약
+- `emailTriggers` — 이벤트별 이메일 트리거 함수 객체
+- `EMAIL_TEMPLATES` — 이메일 HTML 템플릿 정의
+
+**이메일 템플릿 유형** (EMAIL_TEMPLATES 객체의 실제 키):
+1. `SIGNUP_COMPLETE` — 회원가입 완료 환영 메일
+2. `APPLICATION_SUBMITTED` — 캠페인 지원 접수 확인
+3. `APPLICATION_APPROVED` — 지원 승인 (크리에이터 확정 + Google Drive 링크)
+4. `CONTACT_INFO_REQUEST` — 확정 크리에이터 배송지/연락처 수집 요청
+5. `GUIDE_DELIVERED` — 캠페인 가이드/자료 전달 안내
+6. `DEADLINE_TODAY` — 캠페인 마감 당일 리마인더
+7. `POINT_REQUEST_SUBMITTED` — 포인트 출금 요청 접수 확인
+8. `POINT_TRANSFER_COMPLETED` — 포인트 송금/입금 완료 통지
+
+**이메일 트리거 함수** (emailTriggers):
+- `onSignupComplete(user)` → SIGNUP_COMPLETE
+- `onApplicationSubmitted(application, campaign, user)` → APPLICATION_SUBMITTED
+- `onApplicationApproved(application, campaign, user)` → APPLICATION_APPROVED + 마감 리마인더 예약
+- `onGuideDelivered(campaign, user)` → GUIDE_DELIVERED
+- `onPointRequestSubmitted(pointRequest, user, bankInfo)` → POINT_REQUEST_SUBMITTED
+- `onPointTransferCompleted(transfer, user, campaign)` → POINT_TRANSFER_COMPLETED
 
 ### 7.8 `src/lib/googleDriveService.js` — Google Drive 연동
 
 **기능**: 확정 크리에이터에게 Google Drive 폴더와 가이드 슬라이드를 자동 생성
-**API**: Google Drive API v3 + Google Slides API v1 (서비스 계정 인증)
+**API**: Google Drive API v3 + Google Slides API v1 (JWT 서비스 계정 인증)
+**주의**: `googleapis` 패키지가 package.json에 등록되어 있지 않아 별도 설치 필요 (`pnpm add googleapis`)
 
-**주요 메서드**:
-- `initialize(credentials)` — 서비스 계정으로 초기화
-- `createFolder(name, parentId)` — 폴더 생성
-- `shareWithUser(fileId, email, role)` — 파일/폴더 공유
-- `createPresentation(title, parentId)` — Google Slides 생성
-- `createFolderStructureForUser(brand, userName, email)` — 브랜드/사용자별 폴더 구조 자동 생성
+**클래스**: `GoogleDriveService` (싱글톤 `googleDriveService`로 export)
 
-### 7.9 `src/lib/withdrawal_api.js` — 출금/포인트 API
+**전체 메서드**:
+- `initialize(credentials)` — JWT 서비스 계정으로 초기화 (Drive + Slides 클라이언트 생성)
+- `isInitialized()` — 초기화 상태 확인
+- `createFolder(folderName, parentFolderId)` — 폴더 생성
+- `shareWithUser(fileId, emailAddress, role='writer')` — 파일/폴더 공유 권한 부여
+- `createPresentation(title, parentFolderId)` — Google Slides 프레젠테이션 생성
+- `createFolderStructureForUser(brandName, userName, userEmail)` — 브랜드 폴더 → 사용자 폴더 → 가이드 슬라이드 자동 생성
+- `getFileInfo(fileId)` — 파일/폴더 정보 조회
 
-`database.withdrawals`와 별도로 `withdrawals` 테이블과 `user_points` 테이블에 접근하는 추가 API
+### 7.9 `src/lib/withdrawal_api.js` — 출금/포인트 API (별도 테이블 사용)
+
+> **주의 — 이중 테이블 시스템**: 이 파일은 `database.withdrawals`/`database.userPoints`와 **다른 테이블**을 사용합니다.
+> - `withdrawal_api.js` → `withdrawals` 테이블, `user_points` 테이블
+> - `supabase.js database.withdrawals` → `withdrawal_requests` 테이블
+> - `supabase.js database.userPoints` → `point_transactions` 테이블
+>
+> 두 시스템이 병존하므로 사용 시 어느 테이블을 참조하는지 주의 필요.
+
+**내보내는 객체**: `withdrawalAPI`, `userPointsAPI`
+
+**withdrawalAPI** (`withdrawals` 테이블):
+- `getAll()` — 전체 출금 요청 조회 (user_profiles JOIN)
+- `getByUser(userId)` — 사용자별 출금 내역
+- `create(withdrawalData)` — 출금 요청 생성 (bank_info JSONB에 PayPal 정보 저장)
+- `updateStatus(id, status, processedBy, notes)` — 상태 업데이트
+- `delete(id)` — 출금 요청 삭제
+
+**userPointsAPI** (`user_points` 테이블):
+- `getUserTotalPoints(userId)` — 총 포인트 합계 (status='approved'인 것만)
+- `getUserPoints(userId)` — 포인트 내역 조회 (campaigns JOIN)
+- `deductPoints(userId, amount, reason)` — 포인트 차감 (음수 points 삽입)
 
 ### 7.10 `src/components/ProtectedRoute.jsx` — 관리자 라우트 가드
 
@@ -834,11 +907,16 @@ pnpm lint
 
 ---
 
-## 18. 알려진 기술적 특이사항
+## 18. 알려진 기술적 특이사항 및 주의점
 
-1. **applications vs campaign_applications**: 두 테이블이 병존하며 fallback 패턴 사용. 향후 하나로 통합 필요.
-2. **백업 파일 다수 존재**: `*_backup.jsx`, `*_fixed.jsx`, `*_old.jsx` 등 과거 버전 파일이 다수 존재. 정리 필요.
-3. **통계 표시 배수**: `VITE_STATS_*_MULTIPLIER` 환경변수로 홈페이지 통계를 실제 수치보다 크게 표시 (마케팅 목적).
-4. **이메일 발송**: 실제 이메일 발송은 Netlify Function (서버사이드)에서 처리. 클라이언트 사이드 emailService는 주로 템플릿 관리.
-5. **Google Drive 연동**: 서비스 계정 기반이므로 credentials JSON 필요. 환경에 따라 미사용 가능.
-6. **Supabase 키**: 코드에 fallback 값으로 하드코딩된 URL/키가 있음 (`.env` 미설정 시 사용). 프로덕션에서는 반드시 `.env` 설정 필요.
+1. **applications vs campaign_applications (이중 테이블)**: 두 테이블이 병존하며 fallback 패턴 사용. `supabase.js`에서 `applications` 우선 조회 후 `campaign_applications`로 폴백. 향후 하나로 통합 필요.
+2. **withdrawal_requests vs withdrawals (이중 출금 테이블)**: `supabase.js`의 `database.withdrawals`는 `withdrawal_requests` 테이블, `withdrawal_api.js`의 `withdrawalAPI`는 `withdrawals` 테이블을 각각 사용. 어떤 API를 호출하느냐에 따라 다른 테이블에 기록됨.
+3. **point_transactions vs user_points (이중 포인트 테이블)**: `supabase.js`의 `database.userPoints`는 `point_transactions` 테이블, `withdrawal_api.js`의 `userPointsAPI`는 `user_points` 테이블을 각각 사용.
+4. **`getByCampaign` 중복 정의 버그**: `database.applications` 객체에서 `getByCampaign` 메서드가 421행과 672행에서 2번 정의됨. 672행이 421행을 오버라이드하여 `campaign_applications` 테이블만 조회하는 버전이 실행됨.
+5. **Dead Import 6개**: App.jsx에서 `CampaignApplicationPage`, `CompanyReport_multilingual`, `JapanWithdrawalRequest`, `ProfileManagement`, `ConfirmedCreatorsReport_multilingual`, `SNSUploadFinalReport_multilingual`이 import만 되고 라우트에 미사용.
+6. **googleapis 미설치**: `googleDriveService.js`에서 `import { google } from 'googleapis'`를 사용하지만 package.json에 `googleapis` 패키지 미등록. 실행 시 에러 발생 가능.
+7. **백업 파일 다수 존재**: `*_backup.jsx`, `*_fixed.jsx`, `*_old.jsx`, `*_complete.jsx` 등 과거 버전 파일이 다수 존재. 정리 필요.
+8. **통계 표시 배수**: `VITE_STATS_*_MULTIPLIER` 환경변수로 홈페이지 통계를 실제 수치보다 크게 표시 (마케팅 목적).
+9. **이메일 발송 이중 경로**: `emailService.js`의 `sendEmail()`은 localStorage에서 SMTP 설정을 읽어 `gmailEmailService.js`로 직접 발송 시도. SMTP 미설정 시 콘솔 로그만 출력. Netlify Function(`send-gmail.js`)은 별도 서버사이드 발송 경로.
+10. **Supabase 키 하드코딩**: `supabase.js`에 fallback 값으로 Supabase URL과 anon key가 하드코딩됨. `.env` 미설정 시 이 값이 사용됨. 프로덕션에서는 반드시 `.env` 설정 필요.
+11. **withdrawal_method 컬럼 불일치**: `supabase.js`의 `database.withdrawals.create()`에서 `withdrawal_method: 'paypal'`을 삽입하지만, `COMPLETE_US_SCHEMA.sql`의 `withdrawal_requests` 테이블 정의에 해당 컬럼이 없음. 실제 Supabase DB에 별도 추가되었을 수 있음.
