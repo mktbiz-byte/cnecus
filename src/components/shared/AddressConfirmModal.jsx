@@ -11,8 +11,8 @@ const AddressConfirmModal = ({ open, onClose, onConfirm, address = {} }) => {
 
   const formatted = formatAddressForDisplay({
     recipient_name: address.shipping_recipient_name,
-    line1: address.shipping_address_line1 || address.shipping_address,
-    line2: address.shipping_address_line2 || address.detail_address,
+    line1: address.shipping_address,
+    line2: address.detail_address,
     city: address.shipping_city,
     state: address.shipping_state,
     zip: address.shipping_zip || address.postal_code,

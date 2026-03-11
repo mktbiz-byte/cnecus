@@ -61,7 +61,7 @@ const ProfilePage = ({ embedded = false }) => {
     }
 
     // Step 6: Shipping Address
-    if (data.shipping_country && data.shipping_address_line1 && data.shipping_city) {
+    if (data.shipping_country && data.shipping_address && data.shipping_city) {
       completed.add(6)
     }
 
@@ -133,10 +133,15 @@ const ProfilePage = ({ embedded = false }) => {
         updated_at: new Date().toISOString()
       }
 
-      // Clean up undefined values
+      // Clean up undefined values and non-DB fields
       Object.keys(saveData).forEach(key => {
         if (saveData[key] === undefined) delete saveData[key]
       })
+      // Remove fields that don't exist in user_profiles table
+      delete saveData.shipping_address_line1
+      delete saveData.shipping_address_line2
+      // age column is integer — don't send string age_range values to it
+      if (typeof saveData.age === 'string') delete saveData.age
 
       await database.userProfiles.upsert(saveData)
 

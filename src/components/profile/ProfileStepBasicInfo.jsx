@@ -121,10 +121,10 @@ const ProfileStepBasicInfo = ({ data, onChange, user }) => {
           </Select>
         </div>
 
-        {/* Age */}
+        {/* Age Range */}
         <div className="space-y-2">
           <Label className="text-sm text-gray-700">Age Range</Label>
-          <Select value={data.age || ''} onValueChange={(val) => update('age', val)}>
+          <Select value={data.age_range || ''} onValueChange={(val) => update('age_range', val)}>
             <SelectTrigger><SelectValue placeholder="Select" /></SelectTrigger>
             <SelectContent>
               {AGE_RANGES.map(a => <SelectItem key={a} value={a}>{a}</SelectItem>)}
