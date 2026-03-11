@@ -21,7 +21,7 @@ import ProfileStepPersonalDetails from './ProfileStepPersonalDetails'
 import ProfileStepShippingAddress from './ProfileStepShippingAddress'
 import { STEP_LABELS } from './profileConstants'
 
-const ProfilePage = () => {
+const ProfilePage = ({ embedded = false }) => {
   const { user } = useAuth()
   const [profileData, setProfileData] = useState({})
   const [currentStep, setCurrentStep] = useState(1)
@@ -229,7 +229,11 @@ const ProfilePage = () => {
   }
 
   if (loading) {
-    return (
+    return embedded ? (
+      <div className="flex items-center justify-center py-12">
+        <Loader2 className="h-8 w-8 animate-spin text-purple-600" />
+      </div>
+    ) : (
       <div className="min-h-screen bg-gradient-to-br from-purple-50 to-blue-50 flex items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin text-purple-600" />
       </div>
@@ -237,9 +241,10 @@ const ProfilePage = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 to-blue-50 py-4 sm:py-8">
-      <div className="max-w-2xl mx-auto px-4">
-        {/* Header */}
+    <div className={embedded ? '' : 'min-h-screen bg-gradient-to-br from-purple-50 to-blue-50 py-4 sm:py-8'}>
+      <div className={embedded ? 'space-y-6' : 'max-w-2xl mx-auto px-4'}>
+        {/* Header - hidden in embedded mode */}
+        {!embedded && (
         <div className="mb-6">
           <Link
             to="/"
@@ -251,6 +256,7 @@ const ProfilePage = () => {
           <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Profile Settings</h1>
           <p className="text-gray-600 mt-1">Complete your profile to get more campaign opportunities</p>
         </div>
+        )}
 
         {/* Messages */}
         {error && (
@@ -336,8 +342,8 @@ const ProfilePage = () => {
           </CardContent>
         </Card>
 
-        {/* Password Card */}
-        <Card>
+        {/* Password Card - hidden in embedded mode */}
+        {!embedded && <Card>
           <CardHeader>
             <CardTitle className="flex items-center text-lg">
               <Lock className="h-5 w-5 mr-2" />
@@ -381,7 +387,7 @@ const ProfilePage = () => {
               {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Change Password'}
             </Button>
           </CardContent>
-        </Card>
+        </Card>}
       </div>
     </div>
   )
