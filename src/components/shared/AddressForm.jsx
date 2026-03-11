@@ -85,11 +85,8 @@ const AddressForm = ({ value = {}, onChange, showRecipientName = true }) => {
       <div className="space-y-2">
         <Label className="text-sm text-gray-700">Address Line 1 *</Label>
         <Input
-          value={value.shipping_address_line1 || value.shipping_address || ''}
-          onChange={(e) => {
-            update('shipping_address_line1', e.target.value)
-            update('shipping_address', e.target.value)
-          }}
+          value={value.shipping_address_line1 || ''}
+          onChange={(e) => update('shipping_address_line1', e.target.value)}
           placeholder="Street address"
         />
       </div>
@@ -98,11 +95,8 @@ const AddressForm = ({ value = {}, onChange, showRecipientName = true }) => {
       <div className="space-y-2">
         <Label className="text-sm text-gray-700">Address Line 2</Label>
         <Input
-          value={value.shipping_address_line2 || value.detail_address || ''}
-          onChange={(e) => {
-            update('shipping_address_line2', e.target.value)
-            update('detail_address', e.target.value)
-          }}
+          value={value.shipping_address_line2 || ''}
+          onChange={(e) => update('shipping_address_line2', e.target.value)}
           placeholder="Apt, suite, unit, etc. (optional)"
         />
       </div>
@@ -152,11 +146,8 @@ const AddressForm = ({ value = {}, onChange, showRecipientName = true }) => {
         <div className="space-y-2">
           <Label className="text-sm text-gray-700">{getZipLabel()} *</Label>
           <Input
-            value={value.shipping_zip || value.postal_code || ''}
-            onChange={(e) => {
-              update('shipping_zip', e.target.value)
-              update('postal_code', e.target.value)
-            }}
+            value={value.shipping_zip || ''}
+            onChange={(e) => update('shipping_zip', e.target.value)}
             placeholder={getZipLabel()}
           />
         </div>

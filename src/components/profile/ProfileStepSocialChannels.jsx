@@ -20,11 +20,8 @@ const ProfileStepSocialChannels = ({ data, onChange }) => {
           <div className="space-y-1">
             <Label className="text-xs text-gray-500">Handle / URL</Label>
             <Input
-              value={data.instagram_handle || data.instagram_url || ''}
-              onChange={(e) => {
-                update('instagram_handle', e.target.value)
-                update('instagram_url', e.target.value)
-              }}
+              value={data.instagram_url || ''}
+              onChange={(e) => update('instagram_url', e.target.value)}
               placeholder="@username or URL"
             />
           </div>
@@ -50,11 +47,8 @@ const ProfileStepSocialChannels = ({ data, onChange }) => {
           <div className="space-y-1">
             <Label className="text-xs text-gray-500">Handle / URL</Label>
             <Input
-              value={data.tiktok_handle || data.tiktok_url || ''}
-              onChange={(e) => {
-                update('tiktok_handle', e.target.value)
-                update('tiktok_url', e.target.value)
-              }}
+              value={data.tiktok_url || ''}
+              onChange={(e) => update('tiktok_url', e.target.value)}
               placeholder="@username or URL"
             />
           </div>
@@ -80,11 +74,8 @@ const ProfileStepSocialChannels = ({ data, onChange }) => {
           <div className="space-y-1">
             <Label className="text-xs text-gray-500">Channel URL</Label>
             <Input
-              value={data.youtube_handle || data.youtube_url || ''}
-              onChange={(e) => {
-                update('youtube_handle', e.target.value)
-                update('youtube_url', e.target.value)
-              }}
+              value={data.youtube_url || ''}
+              onChange={(e) => update('youtube_url', e.target.value)}
               placeholder="Channel URL"
             />
           </div>
