@@ -45,7 +45,7 @@ const ProfilePage = ({ embedded = false }) => {
     if (data.name && data.profile_image_url) completed.add(1)
 
     // Step 2: Social Channels (at least 1 SNS)
-    if (data.instagram_handle || data.instagram_url || data.tiktok_handle || data.tiktok_url || data.youtube_handle || data.youtube_url) {
+    if (data.instagram_url || data.tiktok_url || data.youtube_url) {
       completed.add(2)
     }
 
@@ -61,7 +61,7 @@ const ProfilePage = ({ embedded = false }) => {
     }
 
     // Step 6: Shipping Address
-    if (data.shipping_country && (data.shipping_address || data.shipping_address_line1) && data.shipping_city) {
+    if (data.shipping_country && data.shipping_address_line1 && data.shipping_city) {
       completed.add(6)
     }
 
