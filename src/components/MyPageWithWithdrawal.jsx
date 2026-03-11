@@ -23,34 +23,40 @@ import {
 } from './mypage'
 import ProfilePage from './profile/ProfilePage'
 
-// PayPal 정보 추출 헬퍼 함수
-const extractPayPalFromDescription = (description) => {
+// Payoneer 정보 추출 헬퍼 함수 (기존 PayPal 데이터도 호환)
+const extractPaymentInfoFromDescription = (description) => {
   if (!description) return ''
-  
-  // "출금 신청: 50000포인트 (PayPal: MKT@HOWLAB.CO.KR)" 형식에서 이메일 추출
+
+  // "출금 신청: 50000포인트 (Payoneer: MKT@HOWLAB.CO.KR)" 형식에서 이메일 추출
+  const payoneerMatch1 = description.match(/\(Payoneer:\s*([^)]+)\)/)
+  if (payoneerMatch1) {
+    return payoneerMatch1[1].trim()
+  }
+
+  // 기존 PayPal 데이터 호환 - "(PayPal: email)" 형식
   const paypalMatch1 = description.match(/\(PayPal:\s*([^)]+)\)/)
   if (paypalMatch1) {
     return paypalMatch1[1].trim()
   }
-  
-  // "PayPal: email@example.com" 형식에서 이메일 추출
-  const paypalMatch2 = description.match(/PayPal:\s*([^)]+)/)
+
+  // "Payoneer: email@example.com" 형식에서 이메일 추출
+  const payoneerMatch2 = description.match(/Payoneer:\s*([^\s,)]+)/)
+  if (payoneerMatch2) {
+    return payoneerMatch2[1].trim()
+  }
+
+  // 기존 PayPal 데이터 호환 - "PayPal: email" 형식
+  const paypalMatch2 = description.match(/PayPal:\s*([^\s,)]+)/)
   if (paypalMatch2) {
     return paypalMatch2[1].trim()
   }
-  
-  // "출금 신청: 20000 (PayPal: 123)" 형식에서 정보 추출
-  const paypalMatch3 = description.match(/\(PayPal:\s*([^)]+)\)/)
-  if (paypalMatch3) {
-    return paypalMatch3[1].trim()
-  }
-  
+
   // 이메일 패턴 직접 추출
   const emailMatch = description.match(/([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})/)
   if (emailMatch) {
     return emailMatch[1]
   }
-  
+
   return ''
 }
 
@@ -164,8 +170,8 @@ const MyPageWithWithdrawal = () => {
       withdrawRequest: '출금 신청',
       withdrawRequestTitle: '포인트 출금 신청',
       withdrawAmount: '출금 금액',
-      paypalEmail: 'PayPal 이메일',
-      paypalName: 'PayPal 계정명',
+      paypalEmail: 'Payoneer 이메일',
+      paypalName: 'Payoneer 계정명',
       withdrawReason: '출금 사유',
       submitWithdrawRequest: '출금 신청하기',
       accountDeletion: '회원 탈퇴',
@@ -252,8 +258,8 @@ const MyPageWithWithdrawal = () => {
       withdrawRequest: '出金申請',
       withdrawRequestTitle: 'ポイント出金申請',
       withdrawAmount: '出金金額',
-      paypalEmail: 'PayPal メール',
-      paypalName: 'PayPal アカウント名',
+      paypalEmail: 'Payoneer メール',
+      paypalName: 'Payoneer アカウント名',
       withdrawReason: '出金理由',
       submitWithdrawRequest: '出金申請する',
       accountDeletion: '退会',
@@ -347,8 +353,8 @@ const MyPageWithWithdrawal = () => {
       withdrawRequest: 'Request Withdrawal',
       withdrawRequestTitle: 'Point Withdrawal Request',
       withdrawAmount: 'Withdrawal Amount',
-      paypalEmail: 'PayPal Email',
-      paypalName: 'PayPal Account Name',
+      paypalEmail: 'Payoneer Email',
+      paypalName: 'Payoneer Account Name',
       withdrawReason: 'Reason',
       submitWithdrawRequest: 'Submit Request',
       accountDeletion: 'Account Deletion',
@@ -591,8 +597,8 @@ const MyPageWithWithdrawal = () => {
             user_id: item.user_id,
             amount: Math.abs(item.amount),
             status: status,
-            paypal_email: extractPayPalFromDescription(item.description),
-            paypal_name: extractPayPalFromDescription(item.description),
+            paypal_email: extractPaymentInfoFromDescription(item.description),
+            paypal_name: extractPaymentInfoFromDescription(item.description),
             reason: item.description,
             created_at: item.created_at,
             updated_at: item.updated_at
@@ -2332,7 +2338,7 @@ const MyPageWithWithdrawal = () => {
                           <tr key={withdrawal.id} className="hover:bg-slate-50/50 transition-colors">
                             <td className="px-3 sm:px-4 py-3 whitespace-nowrap">
                               <span className="inline-flex items-center gap-1.5 text-sm font-semibold text-slate-900">
-                                <Wallet className="w-4 h-4 text-indigo-500" /> PayPal
+                                <Wallet className="w-4 h-4 text-indigo-500" /> Payoneer
                               </span>
                             </td>
                             <td className="px-3 sm:px-4 py-3 whitespace-nowrap text-sm font-bold text-slate-900">
@@ -2488,7 +2494,7 @@ const MyPageWithWithdrawal = () => {
                 {/* Point value guide */}
                 <div className="mb-5 p-3 bg-indigo-50 rounded-xl ring-1 ring-indigo-200/60">
                   <p className="text-xs font-bold text-indigo-900">1 Point = $1.00 USD</p>
-                  <p className="text-[10px] text-indigo-600 mt-0.5">Withdrawals are processed via PayPal in USD</p>
+                  <p className="text-[10px] text-indigo-600 mt-0.5">Withdrawals are processed via Payoneer in USD</p>
                 </div>
 
                 <div className="space-y-4">
@@ -2506,13 +2512,13 @@ const MyPageWithWithdrawal = () => {
                   <div>
                     <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5">{t.paypalEmail} *</label>
                     <input type="email" value={withdrawForm.paypalEmail} onChange={(e) => setWithdrawForm({...withdrawForm, paypalEmail: e.target.value})}
-                      placeholder="your-paypal@email.com"
+                      placeholder="your-payoneer@email.com"
                       className="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent" />
                   </div>
                   <div>
                     <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5">{t.paypalName} *</label>
                     <input type="text" value={withdrawForm.paypalName} onChange={(e) => setWithdrawForm({...withdrawForm, paypalName: e.target.value})}
-                      placeholder="Your full name as registered on PayPal"
+                      placeholder="Your full name as registered on Payoneer"
                       className="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent" />
                   </div>
                   <div>

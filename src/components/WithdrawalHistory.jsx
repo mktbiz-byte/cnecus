@@ -141,7 +141,7 @@ const WithdrawalHistory = ({ userId }) => {
                     </p>
                   )}
                   <p className="mt-1">
-                    PayPal: {withdrawal.bank_info?.paypal_email}
+                    Payoneer: {withdrawal.bank_info?.paypal_email}
                   </p>
                 </div>
 

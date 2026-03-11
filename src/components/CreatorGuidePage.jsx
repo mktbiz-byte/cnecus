@@ -60,7 +60,7 @@ const faqItems = [
   },
   {
     q: 'How do I get paid?',
-    a: 'Payments are made via PayPal. Once your campaign is marked as completed, points are added to your account. You can then request a withdrawal from your My Page.',
+    a: 'Payments are made via Payoneer. Once your campaign is marked as completed, points are added to your account. You can then request a withdrawal from your My Page.',
   },
   {
     q: 'What is a "clean video"?',
@@ -76,7 +76,7 @@ const faqItems = [
   },
   {
     q: 'What is the minimum withdrawal amount?',
-    a: 'The minimum withdrawal is 10 Points ($10 USD). Processing typically takes 1–3 business days via PayPal.',
+    a: 'The minimum withdrawal is 10 Points ($10 USD). Processing typically takes 1–3 business days via Payoneer.',
   },
   {
     q: 'Can I re-upload my video after submitting?',
@@ -453,7 +453,7 @@ const CreatorGuidePage = () => {
           <div className="space-y-3">
             <StepItem num={1}>Go to <strong>My Page</strong> and navigate to the <strong>Withdrawals</strong> tab.</StepItem>
             <StepItem num={2}>Click <strong>"Request Withdrawal"</strong> and enter the amount.</StepItem>
-            <StepItem num={3}>Enter your <strong>PayPal email</strong> and <strong>account name</strong>.</StepItem>
+            <StepItem num={3}>Enter your <strong>Payoneer email</strong> and <strong>account name</strong>.</StepItem>
             <StepItem num={4}>Submit your request. Our team will process it within <strong>1–3 business days</strong>.</StepItem>
           </div>
 
@@ -467,7 +467,7 @@ const CreatorGuidePage = () => {
           </div>
 
           <InfoBox color="green" icon={CheckCircle}>
-            Minimum withdrawal: <strong>10 Points ($10 USD)</strong>. Payments are processed via PayPal only.
+            Minimum withdrawal: <strong>10 Points ($10 USD)</strong>. Payments are processed via Payoneer only.
           </InfoBox>
         </PhaseSection>
 
@@ -580,7 +580,7 @@ const CreatorGuidePage = () => {
 
             <div className="mt-5 p-3 bg-green-50 border border-green-200 rounded-lg">
               <p className="text-sm text-green-800">
-                <strong>Point Conversion:</strong> 1 Point = $1.00 USD, paid via PayPal
+                <strong>Point Conversion:</strong> 1 Point = $1.00 USD, paid via Payoneer
               </p>
             </div>
           </div>

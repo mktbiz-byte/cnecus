@@ -49,7 +49,7 @@ const PrivacyPage = () => {
             <ul className="list-disc list-inside text-gray-600 space-y-2 mb-4">
               <li>Name and email address</li>
               <li>Social media account information</li>
-              <li>PayPal email for payment processing</li>
+              <li>Payoneer email for payment processing</li>
               <li>Shipping address for product deliveries</li>
               <li>Phone number (optional)</li>
             </ul>
@@ -81,7 +81,7 @@ const PrivacyPage = () => {
             </p>
             <ul className="list-disc list-inside text-gray-600 space-y-2">
               <li><strong>Brand Partners:</strong> Your profile information for campaign selection</li>
-              <li><strong>Payment Processors:</strong> PayPal for payment processing</li>
+              <li><strong>Payment Processors:</strong> Payoneer for payment processing</li>
               <li><strong>Service Providers:</strong> Third parties who help operate our platform</li>
               <li><strong>Legal Requirements:</strong> When required by law or to protect our rights</li>
             </ul>

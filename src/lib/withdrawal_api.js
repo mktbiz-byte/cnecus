@@ -1,4 +1,4 @@
-// PayPal 출금 시스템 API
+// Payoneer 출금 시스템 API
 import { database } from './supabase'
 
 // withdrawals 테이블 API 추가

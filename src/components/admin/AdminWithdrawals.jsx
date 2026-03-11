@@ -7,29 +7,41 @@ import {
   Search, Filter, RefreshCw, X, Check, CheckSquare, Square
 } from 'lucide-react'
 
-// PayPal 정보 추출 헬퍼 함수
-const extractPayPalFromDescription = (description) => {
-  if (!description) return 'No PayPal info'
-  
-  // "출금 신청: 50000포인트 (PayPal: MKT@HOWLAB.CO.KR)" 형식에서 이메일 추출
+// Payoneer 정보 추출 헬퍼 함수 (기존 PayPal 데이터도 호환)
+const extractPaymentInfoFromDescription = (description) => {
+  if (!description) return 'No Payoneer info'
+
+  // "출금 신청: 50000포인트 (Payoneer: MKT@HOWLAB.CO.KR)" 형식에서 이메일 추출
+  const payoneerMatch = description.match(/Payoneer:\s*([^)]+)\)/)
+  if (payoneerMatch) {
+    return payoneerMatch[1].trim()
+  }
+
+  // 기존 PayPal 데이터 호환 - "(PayPal: email)" 형식
   const paypalMatch = description.match(/PayPal:\s*([^)]+)\)/)
   if (paypalMatch) {
     return paypalMatch[1].trim()
   }
-  
-  // "PayPal: email@example.com" 형식에서 이메일 추출
+
+  // "Payoneer: email@example.com" 형식에서 이메일 추출
+  const payoneerMatch2 = description.match(/Payoneer:\s*([^\s,)]+)/)
+  if (payoneerMatch2) {
+    return payoneerMatch2[1].trim()
+  }
+
+  // 기존 PayPal 데이터 호환 - "PayPal: email" 형식
   const paypalMatch2 = description.match(/PayPal:\s*([^\s,)]+)/)
   if (paypalMatch2) {
     return paypalMatch2[1].trim()
   }
-  
+
   // 이메일 패턴 직접 추출
   const emailMatch = description.match(/([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})/)
   if (emailMatch) {
     return emailMatch[1]
   }
-  
-  return 'No PayPal info'
+
+  return 'No Payoneer info'
 }
 
 const AdminWithdrawals = () => {
@@ -170,7 +182,7 @@ const AdminWithdrawals = () => {
       
       // point_transactions 데이터를 출금 요청 형식으로 변환
       const processedData = await Promise.all((withdrawalsData || []).map(async (item) => {
-        const paypalInfo = extractPayPalFromDescription(item.description || '')
+        const paypalInfo = extractPaymentInfoFromDescription(item.description || '')
         
         // 사용자 정보 별도 조회
         let userInfo = { name: '-', email: '-', phone: '-' }
@@ -202,7 +214,7 @@ const AdminWithdrawals = () => {
           id: item.id,
           user_id: item.user_id,
           amount: Math.abs(item.amount), // 양수로 변환
-          method: 'PayPal',
+          method: 'Payoneer',
           paypal_email: paypalInfo,
           status: status,
           created_at: item.created_at,
@@ -740,9 +752,9 @@ const AdminWithdrawals = () => {
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm text-gray-900">PayPal</div>
+                        <div className="text-sm text-gray-900">Payoneer</div>
                         <div className="text-sm text-gray-500">
-                          {extractPayPalFromDescription(withdrawal.description)}
+                          {extractPaymentInfoFromDescription(withdrawal.description)}
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
@@ -879,7 +891,7 @@ const AdminWithdrawals = () => {
                   <option value="">{t.selectReason}</option>
                   <option value="계정 정보 불일치">계정 정보 불일치</option>
                   <option value="최소 출금 금액 미달">최소 출금 금액 미달</option>
-                  <option value="PayPal 계정 오류">PayPal 계정 오류</option>
+                  <option value="Payoneer 계정 오류">Payoneer 계정 오류</option>
                   <option value="서류 미제출">필요 서류 미제출</option>
                   <option value="중복 신청">중복 신청</option>
                   <option value="계정 제재">계정 제재 상태</option>

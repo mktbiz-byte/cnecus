@@ -75,7 +75,7 @@ const TermsPage = () => {
           <section>
             <h2 className="text-lg sm:text-xl md:text-2xl font-semibold text-gray-800 mb-3 sm:mb-4">5. Payment Terms</h2>
             <p className="text-gray-600 leading-relaxed mb-4">
-              Creators will receive compensation as specified in each campaign. Payments are processed via PayPal
+              Creators will receive compensation as specified in each campaign. Payments are processed via Payoneer
               within 30 days of content approval. CNEC reserves the right to withhold payment if:
             </p>
             <ul className="list-disc list-inside text-gray-600 space-y-2">
