@@ -29,10 +29,23 @@ const HomePageUS = () => {
   const [selectedCampaign, setSelectedCampaign] = useState(null)
   const [detailModal, setDetailModal] = useState(false)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const [profileComplete, setProfileComplete] = useState(true)
+  const [profileBannerDismissed, setProfileBannerDismissed] = useState(false)
 
   useEffect(() => {
     loadPageData()
   }, [])
+
+  // Check profile completion for logged-in users
+  useEffect(() => {
+    if (user) {
+      database.userProfiles.get(user.id).then(profile => {
+        if (!profile || !profile.profile_completed) {
+          setProfileComplete(false)
+        }
+      }).catch(() => {})
+    }
+  }, [user])
 
   const loadPageData = async () => {
     try {
@@ -300,6 +313,12 @@ const HomePageUS = () => {
                   <Link to="/mypage">
                     <Button variant="outline" size="sm">My Page</Button>
                   </Link>
+                  <Link to="/profile">
+                    <Button variant="outline" size="sm" className={!profileComplete ? 'border-purple-400 text-purple-600 animate-pulse' : ''}>
+                      <User className="h-3 w-3 mr-1" />
+                      Profile
+                    </Button>
+                  </Link>
                   <Button variant="outline" size="sm" onClick={signOut}>Sign Out</Button>
                 </div>
               ) : (
@@ -328,6 +347,7 @@ const HomePageUS = () => {
                 {user ? (
                   <>
                     <Link to="/mypage"><Button variant="outline" className="w-full justify-start">My Page</Button></Link>
+                    <Link to="/profile"><Button variant="outline" className="w-full justify-start"><User className="h-4 w-4 mr-2" />Profile Settings</Button></Link>
                     <Button variant="outline" className="w-full justify-start" onClick={signOut}>Sign Out</Button>
                   </>
                 ) : (
@@ -341,6 +361,39 @@ const HomePageUS = () => {
           )}
         </div>
       </header>
+
+      {/* Profile Completion Banner */}
+      {user && !profileComplete && !profileBannerDismissed && (
+        <div className="bg-gradient-to-r from-purple-600 via-indigo-600 to-pink-500 text-white">
+          <div className="container mx-auto px-4 py-3 sm:py-4">
+            <div className="flex items-center justify-between gap-3">
+              <div className="flex items-center gap-3 flex-1 min-w-0">
+                <div className="hidden sm:flex w-10 h-10 rounded-full bg-white/20 items-center justify-center flex-shrink-0">
+                  <User className="h-5 w-5 text-white" />
+                </div>
+                <div className="min-w-0">
+                  <p className="font-semibold text-sm sm:text-base">Complete your profile to get selected for campaigns!</p>
+                  <p className="text-xs sm:text-sm text-white/80 mt-0.5">Brands prefer creators with complete profiles. Set up yours in just a few minutes.</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-2 flex-shrink-0">
+                <Link to="/mypage">
+                  <Button size="sm" className="bg-white text-purple-700 hover:bg-white/90 font-semibold text-xs sm:text-sm px-3 sm:px-4">
+                    Set Up Profile
+                    <ArrowRight className="h-3 w-3 ml-1" />
+                  </Button>
+                </Link>
+                <button
+                  onClick={() => setProfileBannerDismissed(true)}
+                  className="p-1.5 rounded-full hover:bg-white/20 transition-colors"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Hero Section - Compact */}
       <section className="py-10 md:py-16 text-center relative overflow-hidden">
