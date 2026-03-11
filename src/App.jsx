@@ -44,7 +44,6 @@ import CampaignReportEnhanced from './components/admin/CampaignReportEnhanced';
 import EmailTemplateManager from './components/admin/EmailTemplateManager';
 import UserApprovalManagerEnhanced from './components/admin/UserApprovalManagerEnhanced';
 import AdminWithdrawals from './components/admin/AdminWithdrawals';
-import AdminPointsCharge from './components/admin/AdminPointsCharge';
 import SystemSettings from './components/admin/SystemSettings';
 import EmailSettings from './components/admin/EmailSettings';
 
@@ -114,7 +113,6 @@ const AppContent = () => {
         <Route path="/users-manage" element={<ProtectedRoute requireAdmin={true}><UserApprovalManagerEnhanced /></ProtectedRoute>} />
         <Route path="/user-approval" element={<ProtectedRoute requireAdmin={true}><UserApprovalManagerEnhanced /></ProtectedRoute>} />
         <Route path="/withdrawals-manage" element={<ProtectedRoute requireAdmin={true}><AdminWithdrawals /></ProtectedRoute>} />
-        <Route path="/points-charge" element={<ProtectedRoute requireAdmin={true}><AdminPointsCharge /></ProtectedRoute>} />
         <Route path="/system-settings" element={<ProtectedRoute requireAdmin={true}><SystemSettings /></ProtectedRoute>} />
         <Route path="/email-settings" element={<ProtectedRoute requireAdmin={true}><EmailSettings /></ProtectedRoute>} />
       </Routes>
