@@ -85,8 +85,8 @@ const AddressForm = ({ value = {}, onChange, showRecipientName = true }) => {
       <div className="space-y-2">
         <Label className="text-sm text-gray-700">Address Line 1 *</Label>
         <Input
-          value={value.shipping_address_line1 || ''}
-          onChange={(e) => update('shipping_address_line1', e.target.value)}
+          value={value.shipping_address || ''}
+          onChange={(e) => update('shipping_address', e.target.value)}
           placeholder="Street address"
         />
       </div>
@@ -95,8 +95,8 @@ const AddressForm = ({ value = {}, onChange, showRecipientName = true }) => {
       <div className="space-y-2">
         <Label className="text-sm text-gray-700">Address Line 2</Label>
         <Input
-          value={value.shipping_address_line2 || ''}
-          onChange={(e) => update('shipping_address_line2', e.target.value)}
+          value={value.detail_address || ''}
+          onChange={(e) => update('detail_address', e.target.value)}
           placeholder="Apt, suite, unit, etc. (optional)"
         />
       </div>

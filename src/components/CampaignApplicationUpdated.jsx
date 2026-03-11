@@ -59,8 +59,8 @@ const CampaignApplicationUpdated = () => {
     // Shipping address
     shipping_country: 'US',
     shipping_recipient_name: '',
-    shipping_address_line1: '',
-    shipping_address_line2: '',
+    shipping_address: '',
+    detail_address: '',
     shipping_city: '',
     shipping_state: '',
     shipping_zip: '',
@@ -119,8 +119,8 @@ const CampaignApplicationUpdated = () => {
           // Shipping from existing application
           shipping_country: existingApp.shipping_country || prev.shipping_country,
           shipping_recipient_name: existingApp.shipping_recipient_name || prev.shipping_recipient_name,
-          shipping_address_line1: existingApp.shipping_address_line1 || prev.shipping_address_line1,
-          shipping_address_line2: existingApp.shipping_address_line2 || prev.shipping_address_line2,
+          shipping_address: existingApp.shipping_address_line1 || prev.shipping_address,
+          detail_address: existingApp.shipping_address_line2 || prev.detail_address,
           shipping_city: existingApp.shipping_city || prev.shipping_city,
           shipping_state: existingApp.shipping_state || prev.shipping_state,
           shipping_zip: existingApp.shipping_zip || prev.shipping_zip,
@@ -136,8 +136,8 @@ const CampaignApplicationUpdated = () => {
             ...prev,
             shipping_country: profileData.shipping_country || 'US',
             shipping_recipient_name: profileData.shipping_recipient_name || profileData.name || '',
-            shipping_address_line1: profileData.shipping_address || '',
-            shipping_address_line2: profileData.detail_address || '',
+            shipping_address: profileData.shipping_address || '',
+            detail_address: profileData.detail_address || '',
             shipping_city: profileData.shipping_city || '',
             shipping_state: profileData.shipping_state || '',
             shipping_zip: profileData.shipping_zip || profileData.postal_code || '',
@@ -193,7 +193,7 @@ const CampaignApplicationUpdated = () => {
     }
 
     // Show address confirmation if address is filled but not confirmed
-    if (formData.shipping_address_line1 && !formData.shipping_address_confirmed) {
+    if (formData.shipping_address && !formData.shipping_address_confirmed) {
       setShowAddressConfirm(true)
       return
     }
@@ -248,8 +248,8 @@ const CampaignApplicationUpdated = () => {
         // Shipping address
         shipping_country: formData.shipping_country || null,
         shipping_recipient_name: formData.shipping_recipient_name || null,
-        shipping_address_line1: formData.shipping_address_line1 || null,
-        shipping_address_line2: formData.shipping_address_line2 || null,
+        shipping_address_line1: formData.shipping_address || null,
+        shipping_address_line2: formData.detail_address || null,
         shipping_city: formData.shipping_city || null,
         shipping_state: formData.shipping_state || null,
         shipping_zip: formData.shipping_zip || null,
@@ -269,14 +269,14 @@ const CampaignApplicationUpdated = () => {
       }
 
       // Optionally update profile address
-      if (updateProfileAddress && formData.shipping_address_line1) {
+      if (updateProfileAddress && formData.shipping_address) {
         try {
           await database.userProfiles.upsert({
             user_id: user.id,
             shipping_country: formData.shipping_country,
             shipping_recipient_name: formData.shipping_recipient_name,
-            shipping_address: formData.shipping_address_line1,
-            detail_address: formData.shipping_address_line2,
+            shipping_address: formData.shipping_address,
+            detail_address: formData.detail_address,
             shipping_city: formData.shipping_city,
             shipping_state: formData.shipping_state,
             shipping_zip: formData.shipping_zip,
@@ -1019,8 +1019,8 @@ const CampaignApplicationUpdated = () => {
                           ...prev,
                           shipping_country: userProfile.shipping_country || 'US',
                           shipping_recipient_name: userProfile.shipping_recipient_name || userProfile.name || '',
-                          shipping_address_line1: userProfile.shipping_address || '',
-                          shipping_address_line2: userProfile.detail_address || '',
+                          shipping_address: userProfile.shipping_address || '',
+                          detail_address: userProfile.detail_address || '',
                           shipping_city: userProfile.shipping_city || '',
                           shipping_state: userProfile.shipping_state || '',
                           shipping_zip: userProfile.shipping_zip || userProfile.postal_code || '',
