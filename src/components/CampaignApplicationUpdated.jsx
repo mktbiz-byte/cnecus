@@ -13,8 +13,10 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import {
   Loader2, ArrowLeft, Users, Calendar,
   CheckCircle, AlertCircle, User, Shield, Sparkles,
-  Instagram, Youtube, Hash
+  Instagram, Youtube, Hash, MapPin
 } from 'lucide-react'
+import AddressForm from '@/components/shared/AddressForm'
+import AddressConfirmModal from '@/components/shared/AddressConfirmModal'
 
 const CampaignApplicationUpdated = () => {
   const { id } = useParams()
@@ -32,6 +34,9 @@ const CampaignApplicationUpdated = () => {
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
   const [showProfileModal, setShowProfileModal] = useState(false)
+  const [showAddressConfirm, setShowAddressConfirm] = useState(false)
+  const [useProfileAddress, setUseProfileAddress] = useState(false)
+  const [updateProfileAddress, setUpdateProfileAddress] = useState(true)
 
   // Full form with SNS info (stored in applications table)
   const [formData, setFormData] = useState({
@@ -50,7 +55,17 @@ const CampaignApplicationUpdated = () => {
     answer_3: '',
     answer_4: '',
     additional_info: '',
-    content_agreement: false
+    content_agreement: false,
+    // Shipping address
+    shipping_country: 'US',
+    shipping_recipient_name: '',
+    shipping_address_line1: '',
+    shipping_address_line2: '',
+    shipping_city: '',
+    shipping_state: '',
+    shipping_zip: '',
+    shipping_phone: '',
+    shipping_address_confirmed: false
   })
 
   useEffect(() => {
@@ -100,8 +115,35 @@ const CampaignApplicationUpdated = () => {
           answer_3: existingApp.answer_3 || '',
           answer_4: existingApp.answer_4 || '',
           additional_info: existingApp.additional_info || '',
-          content_agreement: existingApp.portrait_rights_consent || false
+          content_agreement: existingApp.portrait_rights_consent || false,
+          // Shipping from existing application
+          shipping_country: existingApp.shipping_country || prev.shipping_country,
+          shipping_recipient_name: existingApp.shipping_recipient_name || prev.shipping_recipient_name,
+          shipping_address_line1: existingApp.shipping_address_line1 || prev.shipping_address_line1,
+          shipping_address_line2: existingApp.shipping_address_line2 || prev.shipping_address_line2,
+          shipping_city: existingApp.shipping_city || prev.shipping_city,
+          shipping_state: existingApp.shipping_state || prev.shipping_state,
+          shipping_zip: existingApp.shipping_zip || prev.shipping_zip,
+          shipping_phone: existingApp.shipping_phone || prev.shipping_phone,
+          shipping_address_confirmed: existingApp.shipping_address_confirmed || false,
         }))
+      } else if (profileData) {
+        // Pre-fill from profile if no existing application
+        const hasProfileAddress = profileData.shipping_address || profileData.shipping_city
+        if (hasProfileAddress) {
+          setUseProfileAddress(true)
+          setFormData(prev => ({
+            ...prev,
+            shipping_country: profileData.shipping_country || 'US',
+            shipping_recipient_name: profileData.shipping_recipient_name || profileData.name || '',
+            shipping_address_line1: profileData.shipping_address || '',
+            shipping_address_line2: profileData.detail_address || '',
+            shipping_city: profileData.shipping_city || '',
+            shipping_state: profileData.shipping_state || '',
+            shipping_zip: profileData.shipping_zip || profileData.postal_code || '',
+            shipping_phone: profileData.shipping_phone || profileData.phone_number || '',
+          }))
+        }
       }
 
       // Check if profile is complete (has name)
@@ -150,9 +192,32 @@ const CampaignApplicationUpdated = () => {
       return
     }
 
+    // Show address confirmation if address is filled but not confirmed
+    if (formData.shipping_address_line1 && !formData.shipping_address_confirmed) {
+      setShowAddressConfirm(true)
+      return
+    }
+
+    await submitApplication()
+  }
+
+  const handleAddressConfirm = async () => {
+    setFormData(prev => ({
+      ...prev,
+      shipping_address_confirmed: true,
+      shipping_address_confirmed_at: new Date().toISOString()
+    }))
+    setShowAddressConfirm(false)
+    // Submit after confirming
+    await submitApplication(true)
+  }
+
+  const submitApplication = async (addressConfirmed = false) => {
     try {
       setSubmitting(true)
       setError('')
+
+      const isConfirmed = addressConfirmed || formData.shipping_address_confirmed
 
       // Submission data - DB 스키마 업데이트 완료로 모든 필드 저장 가능
       const submissionData = {
@@ -180,6 +245,18 @@ const CampaignApplicationUpdated = () => {
         answer_4: formData.answer_4 || null,
         additional_info: formData.additional_info || null,
         portrait_rights_consent: formData.content_agreement,
+        // Shipping address
+        shipping_country: formData.shipping_country || null,
+        shipping_recipient_name: formData.shipping_recipient_name || null,
+        shipping_address_line1: formData.shipping_address_line1 || null,
+        shipping_address_line2: formData.shipping_address_line2 || null,
+        shipping_city: formData.shipping_city || null,
+        shipping_state: formData.shipping_state || null,
+        shipping_zip: formData.shipping_zip || null,
+        shipping_phone: formData.shipping_phone || null,
+        shipping_address_confirmed: isConfirmed,
+        shipping_address_confirmed_at: isConfirmed ? new Date().toISOString() : null,
+        applicant_country: formData.shipping_country || null,
         status: 'pending',
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
@@ -189,6 +266,28 @@ const CampaignApplicationUpdated = () => {
         await database.applications.update(existingApplication.id, submissionData)
       } else {
         await database.applications.create(submissionData)
+      }
+
+      // Optionally update profile address
+      if (updateProfileAddress && formData.shipping_address_line1) {
+        try {
+          await database.userProfiles.upsert({
+            user_id: user.id,
+            shipping_country: formData.shipping_country,
+            shipping_recipient_name: formData.shipping_recipient_name,
+            shipping_address: formData.shipping_address_line1,
+            detail_address: formData.shipping_address_line2,
+            shipping_city: formData.shipping_city,
+            shipping_state: formData.shipping_state,
+            shipping_zip: formData.shipping_zip,
+            postal_code: formData.shipping_zip,
+            shipping_phone: formData.shipping_phone,
+            shipping_address_verified: isConfirmed,
+            shipping_address_verified_at: isConfirmed ? new Date().toISOString() : null,
+          })
+        } catch (profileErr) {
+          console.error('Profile address update error:', profileErr)
+        }
       }
 
       setSuccess(true)
@@ -331,6 +430,14 @@ const CampaignApplicationUpdated = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 to-blue-50 pb-8">
+      {/* Address Confirmation Modal */}
+      <AddressConfirmModal
+        open={showAddressConfirm}
+        onClose={() => setShowAddressConfirm(false)}
+        onConfirm={handleAddressConfirm}
+        address={formData}
+      />
+
       {/* Profile Completion Modal */}
       <Dialog open={showProfileModal} onOpenChange={setShowProfileModal}>
         <DialogContent className="max-w-sm">
@@ -888,11 +995,86 @@ const CampaignApplicationUpdated = () => {
             </label>
           </div>
 
-          {/* Trust Note */}
-          <div className="flex items-start gap-2 text-xs text-gray-400 px-1">
-            <Shield className="h-3.5 w-3.5 flex-shrink-0 mt-0.5" />
-            <span>Shipping address will only be requested if you're selected.</span>
-          </div>
+          {/* Shipping Address */}
+          <Card>
+            <CardContent className="pt-5 pb-4">
+              <h3 className="font-medium text-gray-800 mb-1 flex items-center gap-2">
+                <MapPin className="h-4 w-4 text-purple-600" />
+                Shipping Address
+              </h3>
+              <p className="text-xs text-gray-500 mb-4">
+                Where should products be shipped if you're selected?
+              </p>
+
+              {/* Use profile address checkbox */}
+              {userProfile?.shipping_address && (
+                <label className="flex items-center gap-2 mb-4 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={useProfileAddress}
+                    onChange={(e) => {
+                      setUseProfileAddress(e.target.checked)
+                      if (e.target.checked && userProfile) {
+                        setFormData(prev => ({
+                          ...prev,
+                          shipping_country: userProfile.shipping_country || 'US',
+                          shipping_recipient_name: userProfile.shipping_recipient_name || userProfile.name || '',
+                          shipping_address_line1: userProfile.shipping_address || '',
+                          shipping_address_line2: userProfile.detail_address || '',
+                          shipping_city: userProfile.shipping_city || '',
+                          shipping_state: userProfile.shipping_state || '',
+                          shipping_zip: userProfile.shipping_zip || userProfile.postal_code || '',
+                          shipping_phone: userProfile.shipping_phone || userProfile.phone_number || '',
+                          shipping_address_confirmed: false,
+                        }))
+                      }
+                    }}
+                    className="h-4 w-4 text-purple-600 rounded border-gray-300"
+                  />
+                  <span className="text-sm text-gray-600">Use my profile address</span>
+                </label>
+              )}
+
+              <AddressForm
+                value={formData}
+                onChange={(addr) => setFormData(prev => ({
+                  ...prev,
+                  ...addr,
+                  shipping_address_confirmed: false
+                }))}
+                showRecipientName={true}
+              />
+
+              {/* Also update profile checkbox */}
+              <label className="flex items-center gap-2 mt-4 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={updateProfileAddress}
+                  onChange={(e) => setUpdateProfileAddress(e.target.checked)}
+                  className="h-4 w-4 text-purple-600 rounded border-gray-300"
+                />
+                <span className="text-sm text-gray-600">Also update my profile address</span>
+              </label>
+
+              {/* Confirmed badge */}
+              {formData.shipping_address_confirmed && (
+                <div className="flex items-center gap-2 mt-3 text-green-600 text-sm">
+                  <CheckCircle className="h-4 w-4" />
+                  <span>Address confirmed</span>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Profile incomplete warning */}
+          {userProfile && !userProfile.profile_completed && (
+            <div className="flex items-start gap-2 text-xs text-amber-600 bg-amber-50 border border-amber-200 rounded-lg p-3">
+              <AlertCircle className="h-3.5 w-3.5 flex-shrink-0 mt-0.5" />
+              <span>
+                Complete your <a href="/profile" className="underline font-medium">profile</a> to increase your chances of being selected!
+              </span>
+            </div>
+          )}
 
           {/* Error */}
           {error && (

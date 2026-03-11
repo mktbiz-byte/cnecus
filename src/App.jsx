@@ -18,7 +18,7 @@ import MyPageWithWithdrawal from './components/MyPageWithWithdrawal';
 import PayPalWithdrawal from './components/PayPalWithdrawal';
 import JapanWithdrawalRequest from './components/JapanWithdrawalRequest';
 import ProfileManagement from './components/ProfileManagement';
-import ProfileSettings from './components/ProfileSettings';
+import ProfilePage from './components/profile/ProfilePage';
 import AuthCallbackSafe from './components/AuthCallbackSafe';
 import TermsPage from './components/TermsPage';
 import PrivacyPage from './components/PrivacyPage';
@@ -87,10 +87,10 @@ const AppContent = () => {
         {/* 사용자 페이지 */}
         <Route path="/campaign-application" element={<CampaignApplicationUpdated />} />
         <Route path="/mypage" element={<MyPageWithWithdrawal />} />
-        <Route path="/profile" element={<ProfileSettings />} />
+        <Route path="/profile" element={<ProfilePage />} />
         <Route path="/paypal-withdrawal" element={<PayPalWithdrawal />} />
         <Route path="/company-report/:campaignId" element={<CompanyReportNew />} />
-        <Route path="/profile-settings" element={<ProfileSettings />} />
+        <Route path="/profile-settings" element={<ProfilePage />} />
         <Route path="/terms" element={<TermsPage />} />
         <Route path="/privacy" element={<PrivacyPage />} />
         <Route path="/creator-contact" element={<CreatorContactForm />} />
