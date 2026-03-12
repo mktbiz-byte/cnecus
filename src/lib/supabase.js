@@ -967,7 +967,7 @@ export const database = {
         const insertData = {
           user_id: withdrawalData.user_id,
           amount: withdrawalData.amount,
-          withdrawal_method: 'paypal',
+          withdrawal_method: 'payoneer',
           paypal_email: withdrawalData.paypal_email,
           paypal_name: withdrawalData.paypal_name,
           reason: withdrawalData.reason || 'ポイント出金申請',
@@ -1021,7 +1021,7 @@ export const database = {
     async getAll() {
       return safeQuery(async () => {
         console.log('Bank transfers getAll() - US version does not use bank transfers')
-        // US 버전에서는 PayPal만 사용하므로 빈 배열 반환
+        // US 버전에서는 Payoneer만 사용하므로 빈 배열 반환
         return []
       })
     }

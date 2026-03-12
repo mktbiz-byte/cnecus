@@ -88,7 +88,7 @@ const AppContent = () => {
         <Route path="/campaign-application" element={<CampaignApplicationUpdated />} />
         <Route path="/mypage" element={<MyPageWithWithdrawal />} />
         <Route path="/profile" element={<ProfilePage />} />
-        <Route path="/paypal-withdrawal" element={<PayPalWithdrawal />} />
+        <Route path="/payoneer-withdrawal" element={<PayPalWithdrawal />} />
         <Route path="/company-report/:campaignId" element={<CompanyReportNew />} />
         <Route path="/profile-settings" element={<ProfilePage />} />
         <Route path="/terms" element={<TermsPage />} />

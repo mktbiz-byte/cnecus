@@ -276,7 +276,7 @@ const HomePageUS = () => {
       role: "TikTok Creator",
       followers: "250K",
       image: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&h=100&fit=crop",
-      text: "Finally a platform that understands short-form content! PayPal payments are so convenient.",
+      text: "Finally a platform that understands short-form content! Payoneer payments are so convenient.",
       rating: 5
     }
   ]
@@ -414,7 +414,7 @@ const HomePageUS = () => {
             K-Beauty <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-600 to-pink-600">Collaborations</span>
           </h1>
           <p className="text-lg md:text-xl text-gray-600 mb-6 max-w-2xl mx-auto">
-            Create content with top Korean beauty brands & get paid via PayPal
+            Create content with top Korean beauty brands & get paid via Payoneer
           </p>
 
           {/* Trust Badges - Inline */}
@@ -429,7 +429,7 @@ const HomePageUS = () => {
             </div>
             <div className="flex items-center text-xs text-gray-600 bg-white/80 rounded-full px-3 py-1.5">
               <DollarSign className="h-3 w-3 text-green-600 mr-1" />
-              PayPal
+              Payoneer
             </div>
           </div>
 
@@ -630,7 +630,7 @@ const HomePageUS = () => {
               { step: 1, icon: "📝", title: "Sign Up", desc: "Create free account" },
               { step: 2, icon: "🎯", title: "Apply", desc: "Choose campaigns" },
               { step: 3, icon: "📱", title: "Create", desc: "Make great content" },
-              { step: 4, icon: "💰", title: "Get Paid", desc: "Earn via PayPal" }
+              { step: 4, icon: "💰", title: "Get Paid", desc: "Earn via Payoneer" }
             ].map((item) => (
               <div key={item.step} className="text-center">
                 <div className="relative inline-block mb-3">

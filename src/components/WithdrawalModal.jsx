@@ -27,14 +27,14 @@ const WithdrawalModal = ({ isOpen, onClose, userId, availablePoints, onSuccess }
   const texts = {
     en: {
       title: 'Withdrawal Request',
-      description: 'Withdraw your points via PayPal. Please enter accurate information.',
+      description: 'Withdraw your points via Payoneer. Please enter accurate information.',
       availablePoints: 'Available Points',
       points: 'points',
       withdrawAmount: 'Withdrawal Amount',
-      paypalEmail: 'PayPal Email',
-      paypalName: 'PayPal Account Name',
-      enterName: 'Enter your PayPal account name',
-      nameNote: 'Please enter the name exactly as registered on PayPal.',
+      paypalEmail: 'Payoneer Email',
+      paypalName: 'Payoneer Account Name',
+      enterName: 'Enter your Payoneer account name',
+      nameNote: 'Please enter the name exactly as registered on Payoneer.',
       pointConversion: '1 Point = $1.00 USD',
       enterAmount: 'Enter amount to withdraw',
       cancel: 'Cancel',
@@ -43,21 +43,21 @@ const WithdrawalModal = ({ isOpen, onClose, userId, availablePoints, onSuccess }
       errors: {
         invalidAmount: 'Please enter a valid amount.',
         exceedsPoints: 'You cannot withdraw more than your available points.',
-        emailRequired: 'Please enter your PayPal email.',
-        nameRequired: 'Please enter your PayPal account name.',
+        emailRequired: 'Please enter your Payoneer email.',
+        nameRequired: 'Please enter your Payoneer account name.',
         submitError: 'An error occurred while submitting. Please try again.'
       }
     },
     ko: {
       title: '출금 신청',
-      description: 'PayPal을 통해 포인트를 출금합니다. 정확한 정보를 입력해주세요.',
+      description: 'Payoneer을 통해 포인트를 출금합니다. 정확한 정보를 입력해주세요.',
       availablePoints: '보유 포인트',
       points: '포인트',
       withdrawAmount: '출금 금액',
-      paypalEmail: 'PayPal 이메일',
-      paypalName: 'PayPal 계정 이름',
+      paypalEmail: 'Payoneer 이메일',
+      paypalName: 'Payoneer 계정 이름',
       enterName: '계정 이름을 입력하세요',
-      nameNote: 'PayPal에 등록된 이름을 정확히 입력해주세요.',
+      nameNote: 'Payoneer에 등록된 이름을 정확히 입력해주세요.',
       pointConversion: '1포인트 = 1엔으로 환산됩니다.',
       enterAmount: '출금할 금액을 입력하세요',
       cancel: '취소',
@@ -66,21 +66,21 @@ const WithdrawalModal = ({ isOpen, onClose, userId, availablePoints, onSuccess }
       errors: {
         invalidAmount: '유효한 금액을 입력하세요.',
         exceedsPoints: '보유 포인트보다 많은 금액을 출금할 수 없습니다.',
-        emailRequired: 'PayPal 이메일을 입력하세요.',
-        nameRequired: 'PayPal 계정 이름을 입력하세요.',
+        emailRequired: 'Payoneer 이메일을 입력하세요.',
+        nameRequired: 'Payoneer 계정 이름을 입력하세요.',
         submitError: '출금 신청 중 오류가 발생했습니다. 다시 시도해주세요.'
       }
     },
     ja: {
       title: '出金申請',
-      description: 'PayPalを通じてポイントを出金します。正確な情報を入力してください。',
+      description: 'Payoneerを通じてポイントを出金します。正確な情報を入力してください。',
       availablePoints: '保有ポイント',
       points: 'ポイント',
       withdrawAmount: '出金金額',
-      paypalEmail: 'PayPalメールアドレス',
-      paypalName: 'PayPalアカウント名',
+      paypalEmail: 'Payoneerメールアドレス',
+      paypalName: 'Payoneerアカウント名',
       enterName: 'アカウント名を入力してください',
-      nameNote: 'PayPalに登録されている名前を正確に入力してください。',
+      nameNote: 'Payoneerに登録されている名前を正確に入力してください。',
       pointConversion: '1ポイント = 1円で換算されます。',
       enterAmount: '出金する金額を入力してください',
       cancel: 'キャンセル',
@@ -89,8 +89,8 @@ const WithdrawalModal = ({ isOpen, onClose, userId, availablePoints, onSuccess }
       errors: {
         invalidAmount: '有効な金額を入力してください。',
         exceedsPoints: '保有ポイント以上の金額を出金することはできません。',
-        emailRequired: 'PayPalメールアドレスを入力してください。',
-        nameRequired: 'PayPalアカウント名を入力してください。',
+        emailRequired: 'Payoneerメールアドレスを入力してください。',
+        nameRequired: 'Payoneerアカウント名を入力してください。',
         submitError: '出金申請中にエラーが発生しました。もう一度お試しください。'
       }
     }
@@ -190,7 +190,7 @@ const WithdrawalModal = ({ isOpen, onClose, userId, availablePoints, onSuccess }
               type="email"
               value={paypalEmail}
               onChange={(e) => setPaypalEmail(e.target.value)}
-              placeholder="your-paypal@email.com"
+              placeholder="your-payoneer@email.com"
               required
             />
           </div>

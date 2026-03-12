@@ -30,15 +30,15 @@ const PayPalWithdrawal = () => {
   // Multi-language texts
   const texts = {
     en: {
-      title: 'PayPal Withdrawal',
+      title: 'Payoneer Withdrawal',
       currentPoints: 'Current Points',
       minimumWithdrawal: 'Minimum withdrawal: 10P',
       withdrawalHistory: 'Withdrawal History',
       requestWithdrawal: 'Request Withdrawal',
       amount: 'Withdrawal Amount',
-      paypalEmail: 'PayPal Email',
-      paypalName: 'PayPal Account Name',
-      confirmEmail: 'Confirm PayPal Email',
+      paypalEmail: 'Payoneer Email',
+      paypalName: 'Payoneer Account Name',
+      confirmEmail: 'Confirm Payoneer Email',
       submit: 'Submit Request',
       cancel: 'Cancel',
       status: {
@@ -50,7 +50,7 @@ const PayPalWithdrawal = () => {
       errors: {
         insufficientPoints: 'Insufficient points',
         minimumAmount: 'Minimum withdrawal is 10P',
-        emailMismatch: 'PayPal emails do not match',
+        emailMismatch: 'Payoneer emails do not match',
         invalidEmail: 'Please enter a valid email address',
         required: 'This field is required'
       },
@@ -59,15 +59,15 @@ const PayPalWithdrawal = () => {
       }
     },
     ko: {
-      title: 'PayPal 출금',
+      title: 'Payoneer 출금',
       currentPoints: '현재 포인트',
       minimumWithdrawal: '최소 출금 금액: 1,000P',
       withdrawalHistory: '출금 내역',
       requestWithdrawal: '출금 신청',
       amount: '출금 금액',
-      paypalEmail: 'PayPal 이메일',
-      paypalName: 'PayPal 계정 이름',
-      confirmEmail: 'PayPal 이메일 확인',
+      paypalEmail: 'Payoneer 이메일',
+      paypalName: 'Payoneer 계정 이름',
+      confirmEmail: 'Payoneer 이메일 확인',
       submit: '출금 신청',
       cancel: '취소',
       status: {
@@ -79,7 +79,7 @@ const PayPalWithdrawal = () => {
       errors: {
         insufficientPoints: '포인트가 부족합니다',
         minimumAmount: '최소 출금 금액은 1,000P입니다',
-        emailMismatch: 'PayPal 이메일이 일치하지 않습니다',
+        emailMismatch: 'Payoneer 이메일이 일치하지 않습니다',
         invalidEmail: '유효한 이메일 주소를 입력하세요',
         required: '필수 입력 항목입니다'
       },
@@ -88,15 +88,15 @@ const PayPalWithdrawal = () => {
       }
     },
     ja: {
-      title: 'PayPal出金',
+      title: 'Payoneer出金',
       currentPoints: '現在のポイント',
       minimumWithdrawal: '最小出金額：1,000P',
       withdrawalHistory: '出金履歴',
       requestWithdrawal: '出金申請',
       amount: '出金額',
-      paypalEmail: 'PayPalメール',
-      paypalName: 'PayPalアカウント名',
-      confirmEmail: 'PayPalメール確認',
+      paypalEmail: 'Payoneerメール',
+      paypalName: 'Payoneerアカウント名',
+      confirmEmail: 'Payoneerメール確認',
       submit: '出金申請',
       cancel: 'キャンセル',
       status: {
@@ -108,7 +108,7 @@ const PayPalWithdrawal = () => {
       errors: {
         insufficientPoints: 'ポイントが不足しています',
         minimumAmount: '最小出金額は1,000Pです',
-        emailMismatch: 'PayPalメールが一致しません',
+        emailMismatch: 'Payoneerメールが一致しません',
         invalidEmail: '有効なメールアドレスを入力してください',
         required: '必須入力項目です'
       },
@@ -201,7 +201,7 @@ const PayPalWithdrawal = () => {
       await database.userPoints.deductPoints(
         user.id, 
         parseInt(withdrawalForm.amount),
-        `PayPal 출금 신청 - ${withdrawalForm.paypal_email}`
+        `Payoneer 출금 신청 - ${withdrawalForm.paypal_email}`
       )
       
       setSuccess(t.success.withdrawalRequested)
@@ -367,7 +367,7 @@ const PayPalWithdrawal = () => {
                     value={withdrawalForm.paypal_email}
                     onChange={(e) => setWithdrawalForm(prev => ({ ...prev, paypal_email: e.target.value }))}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    placeholder="paypal@example.com"
+                    placeholder="your-payoneer@email.com"
                   />
                 </div>
                 
@@ -393,7 +393,7 @@ const PayPalWithdrawal = () => {
                     value={withdrawalForm.confirm_email}
                     onChange={(e) => setWithdrawalForm(prev => ({ ...prev, confirm_email: e.target.value }))}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    placeholder="paypal@example.com"
+                    placeholder="your-payoneer@email.com"
                   />
                 </div>
                 
