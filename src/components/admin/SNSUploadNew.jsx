@@ -307,7 +307,26 @@ const SNSUploadNew = () => {
         throw new Error(`포인트 지급 실패: ${pointError.message}`)
       }
 
-      // 2. 기존 pending_reward 상태 업데이트 (있는 경우)
+      // 2. user_profiles.points 업데이트 (마이페이지 잔액 표시용)
+      const { data: currentProfile, error: profileFetchError } = await supabase
+        .from('user_profiles')
+        .select('points')
+        .eq('user_id', application.user_id)
+        .single()
+
+      if (!profileFetchError && currentProfile) {
+        const newPoints = (currentProfile.points || 0) + application.campaigns.reward_amount
+        const { error: profileUpdateError } = await supabase
+          .from('user_profiles')
+          .update({ points: newPoints })
+          .eq('user_id', application.user_id)
+
+        if (profileUpdateError) {
+          console.warn('프로필 포인트 업데이트 실패:', profileUpdateError)
+        }
+      }
+
+      // 3. 기존 pending_reward 상태 업데이트 (있는 경우)
       const { error: updatePendingError } = await supabase
         .from('point_transactions')
         .update({

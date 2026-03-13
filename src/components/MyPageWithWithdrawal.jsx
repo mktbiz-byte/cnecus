@@ -823,7 +823,7 @@ const MyPageWithWithdrawal = () => {
     }
 
     const requestAmount = parseInt(withdrawForm.amount)
-    const currentPoints = profile?.points || 0
+    const currentPoints = Math.max(profile?.points || 0, pointTransactions.reduce((sum, t) => sum + (t.amount || 0), 0))
 
     if (requestAmount > currentPoints) {
       setError('Cannot withdraw more than available points.')
@@ -1635,6 +1635,10 @@ const MyPageWithWithdrawal = () => {
     .reduce((sum, t) => sum + t.amount, 0)
   const totalWithdrawnAmount = withdrawals
     .reduce((sum, w) => sum + (w.amount || 0), 0)
+  // point_transactions 기반 잔액 계산 (user_profiles.points와 동기화 안 될 경우 대비)
+  const calculatedBalance = pointTransactions.reduce((sum, t) => sum + (t.amount || 0), 0)
+  // user_profiles.points와 계산된 값 중 더 큰 값 사용 (동기화 누락 대비)
+  const availableBalance = Math.max(profile?.points || 0, calculatedBalance)
   const completedCount = applications.filter(a => ['sns_uploaded', 'completed'].includes(a.status)).length
   const successRate = applications.length > 0
     ? Math.round((completedCount / applications.length) * 100)
@@ -1751,8 +1755,8 @@ const MyPageWithWithdrawal = () => {
                   <Wallet className="w-4 h-4 text-emerald-400" />
                   <p className="text-xs font-medium text-slate-400 uppercase tracking-wider">Available Balance</p>
                 </div>
-                <p className="text-2xl sm:text-3xl font-black text-white">{(profile?.points || 0).toLocaleString()}<span className="text-base font-medium text-slate-400 ml-1">P</span></p>
-                <p className="text-xs text-slate-500 mt-1">= ${(profile?.points || 0).toLocaleString()} USD</p>
+                <p className="text-2xl sm:text-3xl font-black text-white">{availableBalance.toLocaleString()}<span className="text-base font-medium text-slate-400 ml-1">P</span></p>
+                <p className="text-xs text-slate-500 mt-1">= ${availableBalance.toLocaleString()} USD</p>
               </div>
               <div className="bg-white/5 backdrop-blur-sm rounded-xl p-4 ring-1 ring-white/10">
                 <div className="flex items-center gap-2 mb-1">
@@ -2503,9 +2507,9 @@ const MyPageWithWithdrawal = () => {
                     <input type="number" value={withdrawForm.amount} onChange={(e) => setWithdrawForm({...withdrawForm, amount: e.target.value})}
                       placeholder="Enter points to withdraw"
                       className="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                      max={profile?.points || 0} />
+                      max={availableBalance} />
                     <p className="text-xs text-slate-400 mt-1.5">
-                      Available: <span className="font-bold text-slate-600">{(profile?.points || 0).toLocaleString()}P</span>
+                      Available: <span className="font-bold text-slate-600">{availableBalance.toLocaleString()}P</span>
                       {withdrawForm.amount && <span className="ml-2 font-bold text-emerald-600">(= ${parseInt(withdrawForm.amount || 0).toLocaleString()} USD)</span>}
                     </p>
                   </div>
