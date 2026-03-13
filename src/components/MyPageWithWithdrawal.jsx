@@ -529,7 +529,23 @@ const MyPageWithWithdrawal = () => {
           .order('created_at', { ascending: false })
       ])
 
-      // 프로필 설정
+      // 프로필 설정 — point_transactions 합계와 비교/보정
+      if (profileData) {
+        const profilePoints = profileData.points || 0
+        const txData = pointTransactionsResult?.data || []
+        const txTotal = txData.reduce((sum, tx) => sum + (tx.amount || 0), 0)
+
+        if (profilePoints === 0 && txTotal > 0) {
+          console.log(`[loadUserData] points 불일치 보정: profile=${profilePoints}, transactions=${txTotal}`)
+          profileData.points = txTotal
+
+          // user_profiles.points도 동기화 시도
+          await supabase
+            .from('user_profiles')
+            .update({ points: txTotal })
+            .eq('user_id', user.id)
+        }
+      }
       setProfile(profileData)
       if (profileData) {
         setEditForm({
@@ -830,8 +846,9 @@ const MyPageWithWithdrawal = () => {
       return
     }
 
-    if (requestAmount < 1000) {
-      setError('Minimum withdrawal amount is 1,000 points.')
+    const MIN_WITHDRAWAL = 10 // $10 USD minimum
+    if (requestAmount < MIN_WITHDRAWAL) {
+      setError(`Minimum withdrawal amount is ${MIN_WITHDRAWAL} points.`)
       return
     }
 
@@ -1969,12 +1986,22 @@ const MyPageWithWithdrawal = () => {
                           </p>
                         </div>
                         <span className={`inline-flex items-center px-2.5 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wider flex-shrink-0 ${
+                          application.status === 'selected' ? 'bg-blue-100 text-blue-700' :
                           application.status === 'approved' ? 'bg-emerald-100 text-emerald-700' :
+                          application.status === 'filming' ? 'bg-amber-100 text-amber-700' :
+                          application.status === 'video_submitted' ? 'bg-purple-100 text-purple-700' :
+                          application.status === 'revision_requested' ? 'bg-orange-100 text-orange-700' :
+                          application.status === 'sns_uploaded' ? 'bg-cyan-100 text-cyan-700' :
                           application.status === 'rejected' ? 'bg-red-100 text-red-700' :
                           application.status === 'completed' ? 'bg-indigo-100 text-indigo-700' :
                           'bg-amber-100 text-amber-700'
                         }`}>
-                          {application.status === 'approved' ? 'Approved' :
+                          {application.status === 'selected' ? 'Selected' :
+                           application.status === 'approved' ? 'Approved' :
+                           application.status === 'filming' ? 'Filming' :
+                           application.status === 'video_submitted' ? 'Video Submitted' :
+                           application.status === 'revision_requested' ? 'Revision Requested' :
+                           application.status === 'sns_uploaded' ? 'SNS Uploaded' :
                            application.status === 'rejected' ? 'Rejected' :
                            application.status === 'completed' ? 'Completed' :
                            'Pending'}
@@ -1982,7 +2009,7 @@ const MyPageWithWithdrawal = () => {
                       </div>
 
                       {/* Approved Campaign Content */}
-                      {(application.status === 'approved' || application.status === 'completed') && (
+                      {(['selected', 'approved', 'filming', 'video_submitted', 'revision_requested', 'sns_uploaded', 'completed'].includes(application.status)) && (
                         <div className="p-4 sm:p-5 border-t border-slate-100">
                           {/* SNS Upload Warning */}
                           <div className="mb-4 p-3 bg-amber-50 rounded-xl ring-1 ring-amber-200/60">
