@@ -45,6 +45,7 @@ import UserApprovalManagerEnhanced from './components/admin/UserApprovalManagerE
 import AdminWithdrawals from './components/admin/AdminWithdrawals';
 import SystemSettings from './components/admin/SystemSettings';
 import EmailSettings from './components/admin/EmailSettings';
+import MeetingConsultations from './components/admin/MeetingConsultations';
 
 // 테스트용 관리자 로그인 컴포넌트
 import SecretAdminLogin from './components/SecretAdminLogin';
@@ -114,6 +115,7 @@ const AppContent = () => {
         <Route path="/withdrawals-manage" element={<ProtectedRoute requireAdmin={true}><AdminWithdrawals /></ProtectedRoute>} />
         <Route path="/system-settings" element={<ProtectedRoute requireAdmin={true}><SystemSettings /></ProtectedRoute>} />
         <Route path="/email-settings" element={<ProtectedRoute requireAdmin={true}><EmailSettings /></ProtectedRoute>} />
+        <Route path="/meeting-consultations" element={<ProtectedRoute requireAdmin={true}><MeetingConsultations /></ProtectedRoute>} />
       </Routes>
     </div>
   );
