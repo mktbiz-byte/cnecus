@@ -1,18 +1,17 @@
 import { useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { useLanguage } from '../../contexts/LanguageContext'
-import {
+import { 
   Home,
-  Award,
-  FileText,
-  Users,
-  CreditCard,
-  Settings,
+  Award, 
+  FileText, 
+  Users, 
+  CreditCard, 
+  Settings, 
   Mail,
   BarChart3,
   Menu,
-  X,
-  CalendarDays
+  X
 } from 'lucide-react'
 
 const AdminNavigation = () => {
@@ -32,8 +31,7 @@ const AdminNavigation = () => {
       withdrawals: '출금 관리',
       emailTemplates: '이메일 템플릿',
       statistics: '통계 분석',
-      settings: '시스템 설정',
-      meetingConsultations: '미팅 관리'
+      settings: '시스템 설정'
     },
     ja: {
       dashboard: 'ダッシュボード',
@@ -45,8 +43,7 @@ const AdminNavigation = () => {
       withdrawals: '出金管理',
       emailTemplates: 'メールテンプレート',
       statistics: '統計分析',
-      settings: 'システム設定',
-      meetingConsultations: 'ミーティング管理'
+      settings: 'システム設定'
     }
   }
 
@@ -94,11 +91,6 @@ const AdminNavigation = () => {
       path: '/email-templates',
       label: t.emailTemplates,
       icon: Mail
-    },
-    {
-      path: '/meeting-consultations',
-      label: t.meetingConsultations,
-      icon: CalendarDays
     },
     {
       path: '/system-settings',
