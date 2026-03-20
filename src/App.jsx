@@ -11,7 +11,6 @@ import LoginPageUS from './components/LoginPageUS';
 import SignupPageUS from './components/SignupPageUS';
 import CampaignApplicationPage from './components/CampaignApplicationPage';
 // import CompanyReport from './components/CompanyReport';
-// import CompanyReport from './components/CompanyReport_fixed';
 import CompanyReport_multilingual from './components/admin/CompanyReport_multilingual';
 import CompanyReportNew from './components/CompanyReportNew';
 import MyPageWithWithdrawal from './components/MyPageWithWithdrawal';
