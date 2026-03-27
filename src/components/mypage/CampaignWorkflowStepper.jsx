@@ -52,7 +52,7 @@ const computeStepStates = (application) => {
     return { video_submit: 'done', revision_check: 'reviewing', sns_delivery: 'locked', complete: 'locked', current: 2 }
   }
   // Selected / Filming - need to upload video
-  if (['filming', 'selected'].includes(status)) {
+  if (['filming', 'selected', 'virtual_selected'].includes(status)) {
     return { video_submit: 'active', revision_check: 'locked', sns_delivery: 'locked', complete: 'locked', current: 1 }
   }
   // Default

@@ -5,6 +5,7 @@ import { Calendar, ChevronDown, ChevronUp } from 'lucide-react'
 const STATUS_CONFIG = {
   'pending': { label: 'Applied', icon: '⏳', color: 'bg-gray-100 text-gray-800', step: 0 },
   'selected': { label: 'Reviewing Guide', icon: '📋', color: 'bg-purple-100 text-purple-800', step: 1 },
+  'virtual_selected': { label: 'Selected', icon: '✅', color: 'bg-purple-100 text-purple-800', step: 1 },
   'filming': { label: 'Filming', icon: '🎬', color: 'bg-amber-100 text-amber-800', step: 2 },
   'video_submitted': { label: 'Video Submitted', icon: '📤', color: 'bg-blue-100 text-blue-800', step: 3 },
   'revision_requested': { label: 'Revision Requested', icon: '⚠️', color: 'bg-red-100 text-red-800', step: 3 },
@@ -212,7 +213,7 @@ const CampaignProgressCard = ({
   const hasRevisions = application?.revision_requests?.length > 0
 
   // Only show for active campaigns (not pending)
-  const isActive = ['selected', 'filming', 'video_submitted', 'revision_requested', 'approved', 'sns_uploaded', 'completed'].includes(status)
+  const isActive = ['selected', 'virtual_selected', 'filming', 'video_submitted', 'revision_requested', 'approved', 'sns_uploaded', 'completed'].includes(status)
 
   if (!isActive) return null
 
@@ -323,7 +324,7 @@ const CampaignProgressCard = ({
             </button>
 
             {/* Upload Video - filming or revision_requested */}
-            {['filming', 'revision_requested', 'selected'].includes(status) && (
+            {['filming', 'revision_requested', 'selected', 'virtual_selected'].includes(status) && (
               <button
                 onClick={() => onUploadVideo?.(application, campaign)}
                 className={`px-3 py-2 text-sm font-medium rounded-lg transition-colors ${
