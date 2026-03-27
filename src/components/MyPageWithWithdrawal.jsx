@@ -1272,11 +1272,13 @@ const MyPageWithWithdrawal = () => {
 
       if (is4WeekChallenge) {
         updateData[`week${selectedWeekNumber}_url`] = videoUrl
+        updateData.video_submitted_at = new Date().toISOString()
       } else {
         updateData.video_file_url = videoUrl
         updateData.video_file_name = videoFile.name
         updateData.video_file_size = videoFile.size
         updateData.video_uploaded_at = new Date().toISOString()
+        updateData.video_submitted_at = new Date().toISOString()
         updateData.status = 'video_submitted'
       }
 
@@ -1307,6 +1309,24 @@ const MyPageWithWithdrawal = () => {
       }
 
       setUploadProgress(100)
+
+      // Send admin notification (best-effort)
+      try {
+        fetch('/.netlify/functions/notify-video-upload', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            creatorName: user?.full_name || user?.email || 'Unknown',
+            campaignTitle: selectedCampaign?.title_en || selectedCampaign?.title || '',
+            videoUrl: videoUrl,
+            applicationId: selectedApplication?.id,
+            weekNumber: is4WeekChallenge ? selectedWeekNumber : null,
+            is4Week: is4WeekChallenge
+          })
+        }).catch(e => console.warn('Notification failed:', e))
+      } catch (e) {
+        console.warn('Notification call failed:', e)
+      }
 
       const successMessage = is4WeekChallenge
         ? `Week ${selectedWeekNumber} video uploaded successfully!`
@@ -1384,11 +1404,13 @@ const MyPageWithWithdrawal = () => {
       if (is4Week && weekNumber) {
         updateData[`week${weekNumber}_url`] = videoUrl
         updateData.status = 'video_submitted'
+        updateData.video_submitted_at = new Date().toISOString()
       } else {
         updateData.video_file_url = videoUrl
         updateData.video_file_name = videoFileName || null
         updateData.video_file_size = videoFileSize || null
         updateData.video_uploaded_at = new Date().toISOString()
+        updateData.video_submitted_at = new Date().toISOString()
         updateData.status = 'video_submitted'
       }
 
@@ -1432,6 +1454,24 @@ const MyPageWithWithdrawal = () => {
           console.error('Both table updates failed:', { appError, caError })
           throw caError
         }
+      }
+
+      // Send admin notification (best-effort)
+      try {
+        fetch('/.netlify/functions/notify-video-upload', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            creatorName: user?.full_name || user?.email || 'Unknown',
+            campaignTitle: selectedCampaign?.title_en || selectedCampaign?.title || '',
+            videoUrl: videoUrl,
+            applicationId: applicationId,
+            weekNumber: weekNumber || null,
+            is4Week: is4Week
+          })
+        }).catch(e => console.warn('Notification failed:', e))
+      } catch (e) {
+        console.warn('Notification call failed:', e)
       }
 
       const message = is4Week
