@@ -25,7 +25,8 @@ const ShootingGuideModal = ({ isOpen, onClose, campaign, application }) => {
     }
     if (guide.type === 'external_url') return { type: 'external_url', url: guide.url, title: guide.title || 'Filming Guide' }
     if (guide.type === 'external_pdf') return { type: 'external_pdf', url: guide.fileUrl, fileName: guide.fileName, title: guide.title || 'Filming Guide' }
-    if (guide.scenes && Array.isArray(guide.scenes)) return { type: 'ai_guide', scenes: guide.scenes, style: guide.dialogue_style, tempo: guide.tempo, mood: guide.mood }
+    const sceneArray = guide.scenes || guide.shooting_scenes
+    if (sceneArray && Array.isArray(sceneArray)) return { type: 'ai_guide', scenes: sceneArray, style: guide.dialogue_style, tempo: guide.tempo, mood: guide.mood }
     return null
   }, [application?.personalized_guide])
 
@@ -101,26 +102,24 @@ const ShootingGuideModal = ({ isOpen, onClose, campaign, application }) => {
     return []
   }
 
-  // Guide document URLs - from CAMPAIGN (not application)
-  // 4-week: week{N}_external_url (link), week{N}_external_file_url (uploaded file)
-  // Standard: google_drive_url, google_slides_url
+  // Guide document URLs for 4-week challenges
+  // Per-week guide URLs are stored on campaign_applications (not campaigns)
+  // Column names: week{N}_guide_drive_url, week{N}_guide_slides_url
   const getWeekGuideUrls = (week) => {
-    const externalUrl = campaign?.[`week${week}_external_url`]
-    const fileUrl = campaign?.[`week${week}_external_file_url`]
-    const fileName = campaign?.[`week${week}_external_file_name`]
-    const title = campaign?.[`week${week}_external_title`]
-    const guideMode = campaign?.[`week${week}_guide_mode`]
-    return { externalUrl, fileUrl, fileName, title, guideMode, hasLinks: !!(externalUrl || fileUrl) }
+    const driveUrl = application?.[`week${week}_guide_drive_url`]
+    const slidesUrl = application?.[`week${week}_guide_slides_url`]
+    return { driveUrl, slidesUrl, hasLinks: !!(driveUrl || slidesUrl) }
   }
 
   // For standard campaigns, use campaign-level guide URLs
+  // For 4-week challenges, use application-level per-week guide URLs
+  const weekData = is4Week ? getWeekGuideUrls(selectedGuideWeek) : null
   const driveUrl = is4Week
-    ? getWeekGuideUrls(selectedGuideWeek).fileUrl
+    ? weekData?.driveUrl
     : campaign?.google_drive_url
   const slidesUrl = is4Week
-    ? getWeekGuideUrls(selectedGuideWeek).externalUrl
+    ? weekData?.slidesUrl
     : campaign?.google_slides_url
-  const weekGuideData = is4Week ? getWeekGuideUrls(selectedGuideWeek) : null
   const hasGuideLinks = driveUrl || slidesUrl
 
   // Check if any week has guides (for 4-week)
@@ -410,7 +409,7 @@ const ShootingGuideModal = ({ isOpen, onClose, campaign, application }) => {
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="font-bold text-purple-800 text-sm">
-                        {is4Week ? (weekGuideData?.fileName || `Week ${selectedGuideWeek} Guide File`) : 'PDF Guide (Google Drive)'}
+                        {is4Week ? `Week ${selectedGuideWeek} Guide File` : 'PDF Guide (Google Drive)'}
                       </p>
                       <p className="text-xs text-gray-500 mt-0.5 truncate">{driveUrl}</p>
                     </div>

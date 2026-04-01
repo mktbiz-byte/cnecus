@@ -1060,8 +1060,9 @@ const MyPageWithWithdrawal = () => {
     if (guide.type === 'external_pdf') {
       return { type: 'external_pdf', url: guide.fileUrl, fileName: guide.fileName, title: guide.title || 'Filming Guide' }
     }
-    if (guide.scenes && Array.isArray(guide.scenes)) {
-      return { type: 'ai_guide', scenes: guide.scenes, style: guide.dialogue_style, tempo: guide.tempo, mood: guide.mood }
+    const sceneArray = guide.scenes || guide.shooting_scenes
+    if (sceneArray && Array.isArray(sceneArray)) {
+      return { type: 'ai_guide', scenes: sceneArray, style: guide.dialogue_style, tempo: guide.tempo, mood: guide.mood }
     }
     return null
   }
@@ -2287,32 +2288,38 @@ const MyPageWithWithdrawal = () => {
                               )}
 
                               {/* Required Scenes & Dialogues (from personalized_guide) */}
-                              {(application.personalized_guide?.required_scenes?.length > 0 ||
-                                application.personalized_guide?.required_dialogues?.length > 0) && (
+                              {(() => {
+                                const parsedRaw = typeof application.personalized_guide === 'string'
+                                  ? (() => { try { return JSON.parse(application.personalized_guide) } catch { return null } })()
+                                  : application.personalized_guide
+                                const reqScenes = parsedRaw?.required_scenes
+                                const reqDialogues = parsedRaw?.required_dialogues
+                                return (reqScenes?.length > 0 || reqDialogues?.length > 0) ? (
                                 <div className="mt-4 p-3 bg-amber-50 border border-amber-200 rounded-lg">
                                   <h5 className="font-medium text-amber-800 mb-2">Required Elements</h5>
-                                  {application.personalized_guide?.required_scenes?.length > 0 && (
+                                  {reqScenes?.length > 0 && (
                                     <div className="mb-2">
                                       <p className="text-xs font-medium text-amber-700">Required Scenes:</p>
                                       <ul className="text-sm text-amber-800 list-disc pl-5">
-                                        {application.personalized_guide.required_scenes.map((item, i) => (
+                                        {reqScenes.map((item, i) => (
                                           <li key={i}>{item}</li>
                                         ))}
                                       </ul>
                                     </div>
                                   )}
-                                  {application.personalized_guide?.required_dialogues?.length > 0 && (
+                                  {reqDialogues?.length > 0 && (
                                     <div>
                                       <p className="text-xs font-medium text-amber-700">Required Dialogues:</p>
                                       <ul className="text-sm text-amber-800 list-disc pl-5">
-                                        {application.personalized_guide.required_dialogues.map((item, i) => (
+                                        {reqDialogues.map((item, i) => (
                                           <li key={i}>{item}</li>
                                         ))}
                                       </ul>
                                     </div>
                                   )}
                                 </div>
-                              )}
+                              ) : null
+                              })()}
                             </div>
                             )
                           })()}
